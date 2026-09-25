@@ -60,148 +60,116 @@ class PhysicalSetup extends StatelessWidget {
         ? 1 + (waist! - 60).round().clamp(0, waistItems.length - 2)
         : 0;
 
+    // الگوی خواب: ارتفاع لیست و فاصله‌ها از سیستم ریسپانسیو
+    final double listHeight = context.vM;
+    final double gapLabelList = context.vX3s;
+    final double gapSections = context.vS;
+    final double labelSize = context.baseScale * 0.95;
+
+    Widget section({
+      required String titleKey,
+      required List<String> rawItems,
+      required int initialIndex,
+      required void Function(int index) onChanged,
+    }) {
+      final items = rawItems
+          .map((value) => value == '----'
+              ? value
+              : value.toLocalizedDigits(context, languageCode: currentLang))
+          .toList();
+
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Displayer(
+            index: 2,
+            template: MotionTemplate.leftSlide,
+            child: TextFielder(
+              text: SetupText.getString(currentLang, titleKey),
+              template: TextTemplate.subtitle,
+              textAlign: TextAlign.center,
+              customStyle: TextStyle(
+                fontSize: labelSize,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+          ),
+          SizedBox(height: gapLabelList),
+          Displayer(
+            index: 3,
+            template: MotionTemplate.zoomFade,
+            child: SizedBox(
+              height: listHeight,
+              child: ListViewer(
+                items: items,
+                languageCode: currentLang,
+                initialIndex: initialIndex,
+                isVertical: false,
+                onSelectedItemChanged: onChanged,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    Widget divider() {
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: context.hM),
+        child: Container(
+          width: double.infinity,
+          height: 1,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      );
+    }
+
     return Column(
+      mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Displayer(
-              index: 2,
-              template: MotionTemplate.leftSlide,
-              child: TextFielder(
-                text: SetupText.getString(currentLang, 'weight_title'),
-                template: TextTemplate.subtitle,
-                textAlign: TextAlign.center,
-              ),
-            ),
-            SizedBox(height: context.vX2s),
-            Displayer(
-              index: 3,
-              template: MotionTemplate.zoomFade,
-              child: SizedBox(
-                height: context.vM,
-                child: ListViewer(
-                  items: weightItems
-                      .map((value) => value == '----'
-                          ? value
-                          : value.toLocalizedDigits(context,
-                              languageCode: currentLang))
-                      .toList(),
-                  languageCode: currentLang,
-                  initialIndex: initialWeightIndex,
-                  isVertical: false,
-                  onSelectedItemChanged: (index) {
-                    if (index == 0) {
-                      onWeightChanged(null);
-                    } else {
-                      onWeightChanged(30 + (index - 1) * 0.1);
-                    }
-                  },
-                ),
-              ),
-            ),
-          ],
+        section(
+          titleKey: 'weight_title',
+          rawItems: weightItems,
+          initialIndex: initialWeightIndex,
+          onChanged: (index) {
+            if (index == 0) {
+              onWeightChanged(null);
+            } else {
+              onWeightChanged(30 + (index - 1) * 0.1);
+            }
+          },
         ),
-        SizedBox(height: context.vXs),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: context.vM),
-          child: Container(
-            width: double.infinity,
-            height: 1,
-            color: Theme.of(context).colorScheme.primary,
-          ),
+        SizedBox(height: gapSections),
+        divider(),
+        SizedBox(height: gapSections),
+        section(
+          titleKey: 'height_title',
+          rawItems: heightItems,
+          initialIndex: initialHeightIndex,
+          onChanged: (index) {
+            if (index == 0) {
+              onHeightChanged(null);
+            } else {
+              onHeightChanged(50 + (index - 1).toDouble());
+            }
+          },
         ),
-        SizedBox(height: context.vXs),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Displayer(
-              index: 2,
-              template: MotionTemplate.leftSlide,
-              child: TextFielder(
-                text: SetupText.getString(currentLang, 'height_title'),
-                template: TextTemplate.subtitle,
-                textAlign: TextAlign.center,
-              ),
-            ),
-            SizedBox(height: context.vX2s),
-            Displayer(
-              index: 3,
-              template: MotionTemplate.zoomFade,
-              child: SizedBox(
-                height: context.vM,
-                child: ListViewer(
-                  items: heightItems
-                      .map((value) => value == '----'
-                          ? value
-                          : value.toLocalizedDigits(context,
-                              languageCode: currentLang))
-                      .toList(),
-                  languageCode: currentLang,
-                  initialIndex: initialHeightIndex,
-                  isVertical: false,
-                  onSelectedItemChanged: (index) {
-                    if (index == 0) {
-                      onHeightChanged(null);
-                    } else {
-                      onHeightChanged(50 + (index - 1).toDouble());
-                    }
-                  },
-                ),
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: context.vXs),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: context.vM),
-          child: Container(
-            width: double.infinity,
-            height: 1,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-        ),
-        SizedBox(height: context.vXs),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Displayer(
-              index: 2,
-              template: MotionTemplate.leftSlide,
-              child: TextFielder(
-                text: SetupText.getString(currentLang, 'waist_title'),
-                template: TextTemplate.subtitle,
-                textAlign: TextAlign.center,
-              ),
-            ),
-            SizedBox(height: context.vX2s),
-            Displayer(
-              index: 3,
-              template: MotionTemplate.zoomFade,
-              child: SizedBox(
-                height: context.vM,
-                child: ListViewer(
-                  items: waistItems
-                      .map((value) => value == '----'
-                          ? value
-                          : value.toLocalizedDigits(context,
-                              languageCode: currentLang))
-                      .toList(),
-                  languageCode: currentLang,
-                  initialIndex: initialWaistIndex,
-                  isVertical: false,
-                  onSelectedItemChanged: (index) {
-                    if (index == 0) {
-                      onWaistChanged(null);
-                    } else {
-                      onWaistChanged(60 + (index - 1).toDouble());
-                    }
-                  },
-                ),
-              ),
-            ),
-          ],
+        SizedBox(height: gapSections),
+        divider(),
+        SizedBox(height: gapSections),
+        section(
+          titleKey: 'waist_title',
+          rawItems: waistItems,
+          initialIndex: initialWaistIndex,
+          onChanged: (index) {
+            if (index == 0) {
+              onWaistChanged(null);
+            } else {
+              onWaistChanged(60 + (index - 1).toDouble());
+            }
+          },
         ),
       ],
     );

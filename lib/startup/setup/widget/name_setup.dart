@@ -6,14 +6,10 @@ import 'package:helsa/startup/setup/widget/setup_text.dart';
 
 class NameSetup extends StatelessWidget {
   final String currentLang;
-
   final TextEditingController firstNameController;
   final TextEditingController lastNameController;
-
-  // 👇 اضافه شده
   final FocusNode firstNameFocus;
   final FocusNode lastNameFocus;
-
   final VoidCallback onTextChanged;
 
   const NameSetup({
@@ -21,8 +17,6 @@ class NameSetup extends StatelessWidget {
     required this.currentLang,
     required this.firstNameController,
     required this.lastNameController,
-
-    // 👇 اضافه شده
     required this.firstNameFocus,
     required this.lastNameFocus,
     required this.onTextChanged,
@@ -30,7 +24,10 @@ class NameSetup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double gapFields = context.vX2s;
+
     return Column(
+      mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
         Displayer(
@@ -38,51 +35,27 @@ class NameSetup extends StatelessWidget {
           template: MotionTemplate.bottomSlide,
           child: TextBoxer(
             controller: firstNameController,
-
-            // 👇 فوکوس نام
             focusNode: firstNameFocus,
-
-            hintText: SetupText.getString(
-              currentLang,
-              'hint_first_name',
-            ),
-
+            hintText: SetupText.getString(currentLang, 'hint_first_name'),
             template: TextBoxTemplate.singleLine,
-
-            // دکمه Next روی کیبورد
             textInputAction: TextInputAction.next,
-
             onChanged: (val) => onTextChanged(),
-
-            // 👇 با زدن Next مستقیم برو روی نام خانوادگی
             onSubmitted: (_) {
               FocusScope.of(context).requestFocus(lastNameFocus);
             },
           ),
         ),
-        SizedBox(height: context.vX4s),
+        SizedBox(height: gapFields),
         Displayer(
           index: 3,
           template: MotionTemplate.bottomSlide,
           child: TextBoxer(
             controller: lastNameController,
-
-            // 👇 فوکوس نام خانوادگی
             focusNode: lastNameFocus,
-
-            hintText: SetupText.getString(
-              currentLang,
-              'hint_last_name',
-            ),
-
+            hintText: SetupText.getString(currentLang, 'hint_last_name'),
             template: TextBoxTemplate.singleLine,
-
-            // دکمه Done روی کیبورد
             textInputAction: TextInputAction.done,
-
             onChanged: (val) => onTextChanged(),
-
-            // 👇 بستن کیبورد
             onSubmitted: (_) {
               lastNameFocus.unfocus();
             },

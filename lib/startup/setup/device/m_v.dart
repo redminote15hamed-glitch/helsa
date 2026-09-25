@@ -1,4 +1,4 @@
-// lib/startup/language/device/m_v.dart
+// lib/startup/setup/device/m_v.dart
 
 import 'package:flutter/material.dart';
 
@@ -45,27 +45,32 @@ class SetupMobileVertical extends StatelessWidget {
                     isScrollable: true,
                     child: Column(
                       children: [
-                        const Spacer(),
-                        SizedBox(
-                          height: context.vX3l,
+                        SizedBox(height: context.vX2s),
+
+                        // عنوان: بدون ارتفاع ثابت — خودش اندازه می‌گیرد
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 500),
+                          child: TitleSetup(
+                            key: ValueKey('title_$currentStep'),
+                            currentLang: currentLang,
+                            step: currentStep,
+                          ),
+                        ),
+
+                        SizedBox(height: context.vS),
+
+                        // محتوا: فضای باقی‌مانده (نه vX5l ثابت)
+                        Expanded(
                           child: AnimatedSwitcher(
                             duration: const Duration(milliseconds: 500),
-                            child: TitleSetup(
-                              key: ValueKey(currentStep),
-                              currentLang: currentLang,
-                              step: currentStep,
+                            child: KeyedSubtree(
+                              key: ValueKey('content_$currentStep'),
+                              child: buildStepContent(currentLang),
                             ),
                           ),
                         ),
-                        SizedBox(height: context.vS),
-                        SizedBox(
-                          height: context.vX5l,
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 500),
-                            child: buildStepContent(currentLang),
-                          ),
-                        ),
-                        const Spacer(),
+
+                        SizedBox(height: context.vX2s),
                       ],
                     ),
                   ),

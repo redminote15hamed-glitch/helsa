@@ -39,7 +39,7 @@ class _SetupScreenState extends State<SetupScreen> {
   int? _selectedDiet;
   final List<int> _selectedRestrictions = [];
 
-  // 👇 اضافه شده: متغیرهای مربوط به ساعت خواب و بیداری
+  // متغیرهای مربوط به ساعت خواب و بیداری
   String? _selectedSleepTime;
   String? _selectedWakeTime;
 
@@ -80,23 +80,23 @@ class _SetupScreenState extends State<SetupScreen> {
     return _currentStep == 0
         ? _hasUserSelected
         : _currentStep == 1
-        ? _isNameFilled
-        : _currentStep == 2
-        ? (_selectedGender != null)
-        : _currentStep == 3
-        ? (_selectedAge != null)
-        : _currentStep == 4
-        ? (_selectedHeight != null &&
-              _selectedWeight != null &&
-              _selectedWaist != null)
-        : _currentStep == 5
-        ? (_selectedActivityLevel != null)
-        : _currentStep == 6
-        ? (_selectedDiet != null)
-        : _currentStep == 7
-        // تغییر از restrictions به اختیاری بودن یا بررسی انتخاب ساعت خواب/بیداری (در صورت نیاز می‌تونی شرطش رو دلخواه کنی)
-        ? true
-        : false;
+            ? _isNameFilled
+            : _currentStep == 2
+                ? (_selectedGender != null)
+                : _currentStep == 3
+                    ? (_selectedAge != null)
+                    : _currentStep == 4
+                        ? (_selectedHeight != null &&
+                            _selectedWeight != null &&
+                            _selectedWaist != null)
+                        : _currentStep == 5
+                            ? (_selectedActivityLevel != null)
+                            : _currentStep == 6
+                                ? (_selectedDiet != null)
+                                : _currentStep == 7
+                                    ? (_selectedSleepTime != null &&
+                                        _selectedWakeTime != null)
+                                    : false;
   }
 
   Widget _buildStepContent(String lang) {
@@ -172,7 +172,7 @@ class _SetupScreenState extends State<SetupScreen> {
       case 7:
         return SleepWakeSetup(
           key: const ValueKey(7),
-          currentLang: lang, // اصلاح شد و از lang ورودی استفاده میکنه
+          currentLang: lang,
           selectedSleepTime: _selectedSleepTime,
           selectedWakeTime: _selectedWakeTime,
           onSleepTimeSelected: (time) {

@@ -39,12 +39,10 @@ class ContinueButton extends StatelessWidget {
       } else if (stepIndex == 6) {
         errorMessage = SetupText.getString(currentLang, 'err_diet_level');
       } else if (stepIndex == 7) {
-        errorMessage =
-            SetupText.getString(currentLang, 'err_restriction_level');
+        errorMessage = SetupText.getString(currentLang, 'err_sleep');
       } else {
         errorMessage = SetupText.getString(currentLang, 'err_diet_level');
       }
-// ...
 
       SnackBarer.show(
         context,
@@ -59,11 +57,14 @@ class ContinueButton extends StatelessWidget {
     return Displayer(
       index: 6,
       template: MotionTemplate.bottomSlide,
-      child: Buttoner(
-        text: SetupText.getString(currentLang, 'continue'),
-        template: ButtonTemplate.flatOnSurface,
-        isSelected: isStepValid,
-        onTap: () => _handleTap(context),
+      child: Opacity(
+        opacity: isStepValid ? 1.0 : 0.5,
+        child: Buttoner(
+          text: SetupText.getString(currentLang, 'continue'),
+          template: ButtonTemplate.flatOnSurface,
+          isSelected: isStepValid,
+          onTap: () => _handleTap(context),
+        ),
       ),
     );
   }

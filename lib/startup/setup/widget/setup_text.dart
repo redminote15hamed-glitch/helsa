@@ -69,9 +69,11 @@ class SetupText extends StatelessWidget {
       'diet_desc_omnivore':
           'مصرف انواع گروه‌های غذایی شامل گوشت، مرغ، ماهی و فرآورده‌های گیاهی بدون محدودیت.',
       'diet_vegetarian': 'گیاه‌خواری',
-      'diet_desc_vegetarian': 'عدم مصرف گوشت و مرغ، به همراه مصرف تخم‌مرغ و لبنیات.',
+      'diet_desc_vegetarian':
+          'عدم مصرف گوشت و مرغ، به همراه مصرف تخم‌مرغ و لبنیات.',
       'diet_vegan': 'وگان (گیاه‌خواری مطلق)',
-      'diet_desc_vegan': 'استفاده انحصاری از محصولات گیاهی بدون هیچ‌گونه فرآورده حیوانی.',
+      'diet_desc_vegan':
+          'استفاده انحصاری از محصولات گیاهی بدون هیچ‌گونه فرآورده حیوانی.',
       'diet_keto': 'کتوژنیک',
       'diet_desc_keto': 'رژیم غذایی پرچربی و کم‌کربوهیدرات جهت مدیریت وزن.',
       'diet_low_carb': 'کم‌کربوهیدرات',
@@ -81,8 +83,13 @@ class SetupText extends StatelessWidget {
       'restriction_subtitle':
           'حساسیت‌ها یا محدودیت‌های غذایی خود را مشخص کنید.',
       'err_restriction_level': 'لطفاً حساسیت‌های غذایی خود را اعلام نمایید.',
-      'sleep_title': 'تنظیمات خواب',
+      'sleep_title': 'زمان خواب و بیداری',
       'sleep_subtitle': 'ساعات استراحت و خواب خود را مشخص کنید',
+      'sleep_time_label': 'زمان خواب',
+      'wake_time_label': 'زمان بیداری',
+      'sleep_required_error':
+          'لطفاً زمان خواب و زمان بیداری خود را انتخاب نمایید',
+      'err_sleep': 'لطفاً زمان خواب و زمان بیداری خود را انتخاب نمایید',
     },
     'en': {
       'title': 'Select Language',
@@ -108,7 +115,8 @@ class SetupText extends StatelessWidget {
       'weight_title': 'Weight (kg)',
       'height_title': 'Height (cm)',
       'waist_title': 'Waist (cm)',
-      'err_physical_data': 'Please complete your height, weight, and waist measurements.',
+      'err_physical_data':
+          'Please complete your height, weight, and waist measurements.',
       'err_activity_level': 'Please select your activity level.',
       'activity_sedentary': 'Sedentary',
       'activity_light_very': 'Very Light',
@@ -121,8 +129,7 @@ class SetupText extends StatelessWidget {
           '1-3 hours/week of light activity, including daily walks or light stretching.',
       'activity_desc_light':
           '3-5 hours/week of regular exercise, including gym sessions or brisk walking.',
-      'activity_desc_moderate':
-          '6-7 hours/week of intense physical activity.',
+      'activity_desc_moderate': '6-7 hours/week of intense physical activity.',
       'activity_desc_active':
           'Heavy daily training (1.5-2 hours) including professional workouts.',
       'activity_subtitle': 'Select your physical activity level.',
@@ -132,20 +139,26 @@ class SetupText extends StatelessWidget {
       'diet_desc_omnivore':
           'Consuming all food groups including meat, poultry, fish, and plant products without restriction.',
       'diet_vegetarian': 'Vegetarian',
-      'diet_desc_vegetarian': 'Excluding meat and poultry, while consuming eggs and dairy products.',
+      'diet_desc_vegetarian':
+          'Excluding meat and poultry, while consuming eggs and dairy products.',
       'diet_vegan': 'Vegan',
-      'diet_desc_vegan': 'Exclusively plant-based products without any animal-derived components.',
+      'diet_desc_vegan':
+          'Exclusively plant-based products without any animal-derived components.',
       'diet_keto': 'Ketogenic',
       'diet_desc_keto': 'High-fat, low-carb dietary approach.',
       'diet_low_carb': 'Low Carb',
-      'diet_desc_low_carb': 'Reduced carbohydrate intake for metabolic regulation.',
+      'diet_desc_low_carb':
+          'Reduced carbohydrate intake for metabolic regulation.',
       'err_diet_level': 'Please select your diet type.',
       'restriction_title': 'Food Allergies',
-      'restriction_subtitle':
-          'Specify your food allergies or restrictions.',
+      'restriction_subtitle': 'Specify your food allergies or restrictions.',
       'err_restriction_level': 'Please specify your dietary restrictions.',
-      'sleep_title': 'Sleep Settings',
+      'sleep_title': 'Sleep & Wake Time',
       'sleep_subtitle': 'Configure your resting and sleeping hours',
+      'sleep_time_label': 'Sleep time',
+      'wake_time_label': 'Wake time',
+      'sleep_required_error': 'Please select your sleep and wake times',
+      'err_sleep': 'Please select your sleep and wake times',
     },
     'fr': {
       'title': 'Choisir la langue',
@@ -185,8 +198,7 @@ class SetupText extends StatelessWidget {
           '1-3 h/semaine d’activité légère, incluant des promenades quotidiennes.',
       'activity_desc_light':
           '3-5 h/semaine d’exercice régulier, incluant des séances en salle de sport.',
-      'activity_desc_moderate':
-          '6-7 h/semaine d’activité physique intense.',
+      'activity_desc_moderate': '6-7 h/semaine d’activité physique intense.',
       'activity_desc_active':
           'Entraînement quotidien intense (1.5 à 2 heures).',
       'activity_subtitle': 'Sélectionnez votre niveau d’activité physique.',
@@ -199,21 +211,25 @@ class SetupText extends StatelessWidget {
       'diet_desc_vegetarian':
           'Sans viande ni volaille, avec œufs et produits laitiers.',
       'diet_vegan': 'Vegan',
-      'diet_desc_vegan':
-          'Produits exclusivement d’origine végétale.',
+      'diet_desc_vegan': 'Produits exclusivement d’origine végétale.',
       'diet_keto': 'Cétogène',
-      'diet_desc_keto':
-          'Régیم riche en graisses et pauvre en glucides.',
+      'diet_desc_keto': 'Régime riche en graisses et pauvre en glucides.',
       'diet_low_carb': 'Pauvre en Glucides',
-      'diet_desc_low_carb':
-          'Apport réduit en glucides.',
+      'diet_desc_low_carb': 'Apport réduit en glucides.',
       'err_diet_level': 'Veuillez sélectionner votre type de régime.',
       'restriction_title': 'Allergies Alimentaires',
       'restriction_subtitle':
           'Veuillez indiquer vos allergies ou restrictions alimentaires.',
-      'err_restriction_level': 'Veuillez spécifier vos restrictions alimentaires.',
-      'sleep_title': 'Paramètres de Sommeil',
+      'err_restriction_level':
+          'Veuillez spécifier vos restrictions alimentaires.',
+      'sleep_title': 'Temps de sommeil et de réveil',
       'sleep_subtitle': 'Configurez vos heures de repos et de sommeil',
+      'sleep_time_label': 'Heure de sommeil',
+      'wake_time_label': 'Heure de réveil',
+      'sleep_required_error':
+          'Veuillez sélectionner votre heure de sommeil et votre heure de réveil',
+      'err_sleep':
+          'Veuillez sélectionner votre heure de sommeil et votre heure de réveil',
     },
   };
 
@@ -225,21 +241,27 @@ class SetupText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final resolvedText = getString(languageCode, textKey);
-    
+
     // ترکیب استایل‌ها اگر پارامترهای مستقیم داده شده باشند
     final effectiveStyle = style?.copyWith(
-      fontSize: fontSize ?? style?.fontSize,
-      fontWeight: fontWeight ?? style?.fontWeight,
-      color: color ?? style?.color,
-    ) ?? TextStyle(
-      fontSize: fontSize,
-      fontWeight: fontWeight,
-      color: color,
-    );
+          fontSize: fontSize ?? style?.fontSize,
+          fontWeight: fontWeight ?? style?.fontWeight,
+          color: color ?? style?.color,
+        ) ??
+        TextStyle(
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: color,
+        );
 
     return Text(
       resolvedText,
-      style: effectiveStyle.fontSize == null && effectiveStyle.color == null && effectiveStyle.fontWeight == null && style == null ? null : effectiveStyle,
+      style: effectiveStyle.fontSize == null &&
+              effectiveStyle.color == null &&
+              effectiveStyle.fontWeight == null &&
+              style == null
+          ? null
+          : effectiveStyle,
       textAlign: textAlign,
     );
   }

@@ -32,6 +32,10 @@ class _ListViewButtonerState extends State<ListViewButtoner> {
   late PageController _pageController;
   late double _viewportFraction;
   int? _currentPage;
+  bool _ignoreNextSelectedSync = false;
+
+  static const _pageAnimDuration = Duration(milliseconds: 320);
+  static const _pageAnimCurve = Curves.easeOutCubic;
 
   @override
   void initState() {
@@ -53,12 +57,23 @@ class _ListViewButtonerState extends State<ListViewButtoner> {
   @override
   void didUpdateWidget(covariant ListViewButtoner oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.selectedIndex != _currentPage) {
-      _currentPage = widget.selectedIndex;
-      if (_pageController.hasClients && _currentPage != null) {
-        _pageController.jumpToPage(_currentPage!);
+
+    if (widget.selectedIndex != oldWidget.selectedIndex &&
+        widget.selectedIndex != _currentPage) {
+      if (_ignoreNextSelectedSync) {
+        _ignoreNextSelectedSync = false;
+      } else if (_pageController.hasClients && widget.selectedIndex != null) {
+        _currentPage = widget.selectedIndex;
+        _pageController.animateToPage(
+          widget.selectedIndex!,
+          duration: _pageAnimDuration,
+          curve: _pageAnimCurve,
+        );
+      } else {
+        _currentPage = widget.selectedIndex;
       }
     }
+
     if (widget.itemWidth != oldWidget.itemWidth) {
       _updateViewportFraction();
     }
@@ -66,15 +81,20 @@ class _ListViewButtonerState extends State<ListViewButtoner> {
 
   void _updateViewportFraction() {
     final double newViewportFraction = _calculateViewportFraction(context);
-    if (newViewportFraction != _viewportFraction) {
-      _viewportFraction = newViewportFraction;
-      final int currentPage = _currentPage ?? 0;
-      _pageController.dispose();
-      _pageController = PageController(
-        viewportFraction: _viewportFraction,
-        initialPage: currentPage,
-      );
-    }
+    if ((newViewportFraction - _viewportFraction).abs() < 0.001) return;
+
+    _viewportFraction = newViewportFraction;
+    final int currentPage = _currentPage ?? 0;
+    final oldController = _pageController;
+    _pageController = PageController(
+      viewportFraction: _viewportFraction,
+      initialPage: currentPage,
+    );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      oldController.dispose();
+      if (mounted) setState(() {});
+    });
   }
 
   double _calculateViewportFraction(BuildContext context) {
@@ -85,117 +105,179 @@ class _ListViewButtonerState extends State<ListViewButtoner> {
     return (totalPageWidth / screenWidth).clamp(0.3, 0.95);
   }
 
+  void _onPageChanged(int index) {
+    if (_currentPage == index) return;
+    setState(() => _currentPage = index);
+    _ignoreNextSelectedSync = true;
+    widget.onSelected(index);
+  }
+
+  void _onItemTap(int index) {
+    if (index == _currentPage) return;
+    if (_pageController.hasClients) {
+      _pageController.animateToPage(
+        index,
+        duration: _pageAnimDuration,
+        curve: _pageAnimCurve,
+      );
+    } else {
+      _ignoreNextSelectedSync = true;
+      setState(() => _currentPage = index);
+      widget.onSelected(index);
+    }
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final double width = widget.itemWidth ?? context.hX5l;
-    final double height = widget.itemHeight ?? context.vX5l;
+    final double wantedHeight = widget.itemHeight ?? context.vX5l;
 
-    return SizedBox(
-      height: height,
-      child: PageView.builder(
-        controller: _pageController,
-        scrollDirection: widget.isVertical ? Axis.vertical : Axis.horizontal,
-        onPageChanged: (index) {
-          setState(() => _currentPage = index);
-          widget.onSelected(index);
-        },
-        itemCount: widget.items.length,
-        itemBuilder: (context, index) {
-          final isSelected = (_currentPage != null) && (index == _currentPage);
-          final item = widget.items[index];
+    // ارتفاع را با فضای والد محدود می‌کنیم تا در شناور overflow نشود
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double maxH = constraints.maxHeight.isFinite
+            ? constraints.maxHeight
+            : wantedHeight;
+        final double height =
+            wantedHeight > maxH && maxH > 0 ? maxH : wantedHeight;
 
-          return AnimatedBuilder(
-            animation: _pageController,
-            builder: (context, child) {
-              double scale = 1.0;
-              if (_pageController.position.haveDimensions) {
-                scale = (1 - ((_pageController.page! - index).abs() * 0.25))
-                    .clamp(0.75, 1.0);
-              } else {
-                // منطق اصلاح شده: در صورت نبود انتخاب، دکمه اول همیشه بزرگ است
-                scale = (_currentPage == null && index == 0)
-                    ? 1.0
-                    : (_currentPage != null && index == _currentPage)
-                        ? 1.0
-                        : 0.85;
-              }
+        return SizedBox(
+          height: height,
+          child: PageView.builder(
+            controller: _pageController,
+            scrollDirection:
+                widget.isVertical ? Axis.vertical : Axis.horizontal,
+            onPageChanged: _onPageChanged,
+            itemCount: widget.items.length,
+            itemBuilder: (context, index) {
+              final isSelected =
+                  (_currentPage != null) && (index == _currentPage);
+              final item = widget.items[index];
 
-              return Transform.scale(
-                scale: scale,
-                child: child,
-              );
-            },
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: context.hX4s),
-              child: Buttoner(
-                text: "",
-                template: ButtonTemplate.squarePrimary,
-                isSelected: isSelected,
-                customWidth: width,
-                customHeight: height,
-                onTap: () => widget.onSelected(index),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(height: context.vX2s),
-                    Iconer(
-                      icon: item['icon'],
-                      template: IconTemplate.large,
-                      customColor: isSelected
-                          ? theme.colorScheme.surface
-                          : theme.colorScheme.primary,
-                    ),
-                    if (item['desc'] != null && item['desc'].isNotEmpty) ...[
-                      SizedBox(height: context.vX2s),
-                      Container(
-                        width: width * 0.85,
-                        height: height * 0.5,
-                        padding: EdgeInsets.symmetric(horizontal: context.hX2s),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surface.withValues(alpha: 0.7),
-                          borderRadius: BorderRadius.circular(context.x2s),
-                        ),
-                        child: Center(
-                          child: TextFielder(
-                            text: item['desc'],
-                            template: TextTemplate.caption,
-                            maxLines: 9,
+              return AnimatedBuilder(
+                animation: _pageController,
+                builder: (context, child) {
+                  double scale = 0.85;
+                  try {
+                    if (_pageController.hasClients &&
+                        _pageController.position.haveDimensions) {
+                      final page = _pageController.page;
+                      if (page != null) {
+                        scale = (1 - ((page - index).abs() * 0.25))
+                            .clamp(0.75, 1.0);
+                      }
+                    } else {
+                      scale = (_currentPage == null && index == 0)
+                          ? 1.0
+                          : (index == _currentPage)
+                              ? 1.0
+                              : 0.85;
+                    }
+                  } catch (_) {
+                    scale = (index == _currentPage) ? 1.0 : 0.85;
+                  }
+
+                  return Transform.scale(
+                    scale: scale,
+                    child: child,
+                  );
+                },
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: context.hX4s),
+                  child: Buttoner(
+                    text: "",
+                    template: ButtonTemplate.squarePrimary,
+                    isSelected: isSelected,
+                    customWidth: width,
+                    customHeight: height,
+                    onTap: () => _onItemTap(index),
+                    child: ClipRect(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(height: context.vX3s),
+                          Iconer(
+                            icon: item['icon'],
+                            template: IconTemplate.large,
+                            customColor: isSelected
+                                ? theme.colorScheme.surface
+                                : theme.colorScheme.primary,
+                          ),
+                          if (item['desc'] != null &&
+                              item['desc'].toString().isNotEmpty) ...[
+                            SizedBox(height: context.vX3s),
+                            Flexible(
+                              child: Container(
+                                width: width * 0.85,
+                                constraints: BoxConstraints(
+                                  maxHeight: height * 0.48,
+                                ),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: context.hX2s,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.surface
+                                      .withValues(alpha: 0.7),
+                                  borderRadius:
+                                      BorderRadius.circular(context.x2s),
+                                ),
+                                child: Center(
+                                  child: TextFielder(
+                                    text: item['desc'],
+                                    template: TextTemplate.caption,
+                                    maxLines: 6,
+                                    languageCode: widget.currentLang,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.center,
+                                    customStyle: TextStyle(
+                                      fontSize: isSelected
+                                          ? context.m * 0.85
+                                          : context.s,
+                                      color: isSelected
+                                          ? theme.colorScheme.onSurface
+                                          : theme.colorScheme.primary
+                                              .withValues(alpha: 0.8),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                          SizedBox(height: context.vX3s),
+                          TextFielder(
+                            text: item['title'],
+                            template: TextTemplate.body,
                             languageCode: widget.currentLang,
+                            maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.center,
                             customStyle: TextStyle(
-                              fontSize:
-                                  isSelected ? context.m * 0.9 : context.s,
                               color: isSelected
-                                  ? theme.colorScheme.onSurface
-                                  : theme.colorScheme.primary.withValues(alpha: 0.8),
+                                  ? theme.colorScheme.onPrimary
+                                  : theme.colorScheme.primary,
+                              fontWeight: isSelected
+                                  ? FontWeight.w900
+                                  : FontWeight.w400,
                             ),
                           ),
-                        ),
-                      ),
-                    ],
-                    SizedBox(height: context.vX2s),
-                    TextFielder(
-                      text: item['title'],
-                      template: TextTemplate.body,
-                      languageCode: widget.currentLang,
-                      customStyle: TextStyle(
-                        color: isSelected
-                            ? theme.colorScheme.onPrimary
-                            : theme.colorScheme.primary,
-                        fontWeight:
-                            isSelected ? FontWeight.w900 : FontWeight.w400,
+                          SizedBox(height: context.vX3s),
+                        ],
                       ),
                     ),
-                    SizedBox(height: context.vX2s),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          );
-        },
-      ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }

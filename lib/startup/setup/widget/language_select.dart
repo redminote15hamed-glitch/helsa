@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
 import 'package:helsa/setting/kit/textfielder.dart';
 import 'package:helsa/setting/kit/buttoner.dart';
-import 'package:helsa/setting/motion/displayer.dart'; // 👈 ایمپورت کیت انیمیشن موشن
+import 'package:helsa/setting/motion/displayer.dart';
 import 'package:helsa/startup/setup/widget/setup_text.dart';
 
 class LanguageSelect extends StatelessWidget {
@@ -22,26 +22,33 @@ class LanguageSelect extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // فاصله‌های یکدست با سیستم ریسپانسیو (مثل صفحه خواب)
+    final double gapSubtitle = context.vS;
+    final double gapButtons = context.vX2s;
+
     return Column(
+      mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        // ─── انیمیشن متن راهنما (ساب‌تایتل) ───
         Displayer(
-          index: 2, // شروع توالی بعد از عنوان اصلی صفحه
+          index: 2,
           template: MotionTemplate.bottomSlide,
           child: TextFielder(
             text: SetupText.getString(currentLang, 'subtitle'),
             template: TextTemplate.body,
             textAlign: TextAlign.center,
             customStyle: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.60),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.60),
+              fontSize: context.baseScale * 0.95,
             ),
           ),
         ),
 
-        SizedBox(height: context.vXs),
+        SizedBox(height: gapSubtitle),
 
-        // ─── انیمیشن دکمه فرانسوی ───
         Displayer(
           index: 3,
           template: MotionTemplate.bottomSlide,
@@ -52,8 +59,8 @@ class LanguageSelect extends StatelessWidget {
             onTap: () => onLanguageSelected('fr'),
           ),
         ),
-        SizedBox(height: context.vX2s),
-        // ─── انیمیشن دکمه فارسی ───
+        SizedBox(height: gapButtons),
+
         Displayer(
           index: 4,
           template: MotionTemplate.bottomSlide,
@@ -64,8 +71,8 @@ class LanguageSelect extends StatelessWidget {
             onTap: () => onLanguageSelected('fa'),
           ),
         ),
-        SizedBox(height: context.vX2s),
-        // ─── انیمیشن دکمه انگلیسی ───
+        SizedBox(height: gapButtons),
+
         Displayer(
           index: 5,
           template: MotionTemplate.bottomSlide,

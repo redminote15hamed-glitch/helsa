@@ -50,7 +50,6 @@ class ActivitySetup extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        // ─── متن راهنما (عنوان جدید) ───
         Displayer(
           index: 1,
           template: MotionTemplate.bottomSlide,
@@ -59,30 +58,36 @@ class ActivitySetup extends StatelessWidget {
             template: TextTemplate.body,
             textAlign: TextAlign.center,
             customStyle: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.60),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.60),
+              fontSize: context.baseScale * 0.95,
             ),
           ),
         ),
 
         SizedBox(height: context.vS),
 
-        // ─── لیست فعالیت‌ها ───
-        Displayer(
-          index: 2,
-          template: MotionTemplate.flipX,
-          child: ListViewButtoner(
-            items: activities.map((item) {
-              return {
-                'icon': item['icon'],
-                'title': SetupText.getString(currentLang, item['title']),
-                'desc': SetupText.getString(currentLang, item['desc']),
-              };
-            }).toList(),
-            selectedIndex: selectedLevel,
-            onSelected: onActivitySelected,
-            itemWidth: context.hX6l + context.hXl,
-            itemHeight: context.vX4l,
-            currentLang: currentLang,
+        // Expanded تا ارتفاع از والد (شناور/کوتاه) بگیرد و overflow نشود
+        Expanded(
+          child: Displayer(
+            index: 2,
+            template: MotionTemplate.flipX,
+            child: ListViewButtoner(
+              items: activities.map((item) {
+                return {
+                  'icon': item['icon'],
+                  'title': SetupText.getString(currentLang, item['title']),
+                  'desc': SetupText.getString(currentLang, item['desc']),
+                };
+              }).toList(),
+              selectedIndex: selectedLevel,
+              onSelected: onActivitySelected,
+              itemWidth: context.hX6l + context.hXl,
+              itemHeight: context.vX4l,
+              currentLang: currentLang,
+            ),
           ),
         ),
       ],

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:helsa/setting/kit/listviewer.dart';
-import 'package:helsa/setting/kit/textfielder.dart';
 import 'package:helsa/setting/motion/displayer.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
 import 'package:helsa/setting/utils/farsi_digit.dart';
 import 'package:helsa/startup/setup/widget/setup_text.dart';
 
+/// فقط محتوای استپ خواب — آیکون و عنوان در TitleSetup (step 7)
 class SleepWakeSetup extends StatelessWidget {
   final String currentLang;
   final String? selectedSleepTime;
@@ -84,72 +84,45 @@ class SleepWakeSetup extends StatelessWidget {
     final sleepIndex = _initialIndex(context, rawSleepTimes, selectedSleepTime);
     final wakeIndex = _initialIndex(context, rawWakeTimes, selectedWakeTime);
 
+    final double labelSize = context.baseScale * 0.95;
+    final double listHeight = context.vM;
+
     return Displayer(
       index: 0,
       template: MotionTemplate.leftSlide,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // آیکون خواب: ماه + تخت
+          // ساعت خواب + ماه کوچک کنار لیبل
           Displayer(
             index: 1,
             template: MotionTemplate.zoomFade,
-            child: SizedBox(
-              height: 90,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Icon(
-                    Icons.nightlight_round,
-                    size: 36,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.primary.withValues(alpha: 0.9),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    child: Icon(
-                      Icons.king_bed_rounded,
-                      size: 48,
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withValues(alpha: 0.85),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          SizedBox(height: context.vXs),
-
-          // عنوان
-          Displayer(
-            index: 2,
-            template: MotionTemplate.zoomFade,
-            child: TextFielder(
-              text: SetupText.getString(currentLang, 'sleep_title'),
-              template: TextTemplate.title,
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          SizedBox(height: context.vM),
-
-          // ساعت خواب
-          Displayer(
-            index: 3,
-            template: MotionTemplate.zoomFade,
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                TextFielder(
-                  text: SetupText.getString(currentLang, 'sleep_time_label'),
-                  template: TextTemplate.subtitle,
-                  textAlign: TextAlign.center,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.nightlight_round,
+                      size: context.baseScale * 1.1,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    SizedBox(width: context.hX2s),
+                    SetupText(
+                      'sleep_time_label',
+                      languageCode: currentLang,
+                      color: Colors.white70,
+                      fontSize: labelSize,
+                      fontWeight: FontWeight.w500,
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
-                SizedBox(height: context.vX2s),
+                SizedBox(height: context.vX3s),
                 SizedBox(
-                  height: context.vM,
+                  height: listHeight,
                   child: ListViewer(
                     items: sleepItems,
                     languageCode: currentLang,
@@ -170,20 +143,35 @@ class SleepWakeSetup extends StatelessWidget {
 
           SizedBox(height: context.vM),
 
-          // ساعت بیداری
+          // ساعت بیداری + خورشید کوچک کنار لیبل
           Displayer(
-            index: 4,
+            index: 2,
             template: MotionTemplate.zoomFade,
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                TextFielder(
-                  text: SetupText.getString(currentLang, 'wake_time_label'),
-                  template: TextTemplate.subtitle,
-                  textAlign: TextAlign.center,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.wb_sunny_rounded,
+                      size: context.baseScale * 1.1,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    SizedBox(width: context.hX2s),
+                    SetupText(
+                      'wake_time_label',
+                      languageCode: currentLang,
+                      color: Colors.white70,
+                      fontSize: labelSize,
+                      fontWeight: FontWeight.w500,
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
-                SizedBox(height: context.vX2s),
+                SizedBox(height: context.vX3s),
                 SizedBox(
-                  height: context.vM,
+                  height: listHeight,
                   child: ListViewer(
                     items: wakeItems,
                     languageCode: currentLang,

@@ -20,7 +20,12 @@ class GenderSetup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double gapBetween = context.m;
+    final double cardW = context.hX5l;
+    final double cardH = context.vX4l;
+
     return Column(
+      mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
         Row(
@@ -28,16 +33,26 @@ class GenderSetup extends StatelessWidget {
           children: [
             Displayer(
               index: 1,
-              template: MotionTemplate.flipY, // 👈 خانم به سمت چپ باز می‌شود
-              child:
-                  _buildGenderOption(context, 'female', Icons.female_rounded),
+              template: MotionTemplate.flipY,
+              child: _buildGenderOption(
+                context,
+                'female',
+                Icons.female_rounded,
+                cardW,
+                cardH,
+              ),
             ),
-            SizedBox(width: context.m),
+            SizedBox(width: gapBetween),
             Displayer(
-              index: 1, // 👈 ایندکس یکسان برای همزمانی
-              template:
-                  MotionTemplate.flipYReverse, // 👈 آقا به سمت راست باز می‌شود
-              child: _buildGenderOption(context, 'male', Icons.male_rounded),
+              index: 1,
+              template: MotionTemplate.flipYReverse,
+              child: _buildGenderOption(
+                context,
+                'male',
+                Icons.male_rounded,
+                cardW,
+                cardH,
+              ),
             ),
           ],
         ),
@@ -46,7 +61,12 @@ class GenderSetup extends StatelessWidget {
   }
 
   Widget _buildGenderOption(
-      BuildContext context, String gender, IconData icon) {
+    BuildContext context,
+    String gender,
+    IconData icon,
+    double width,
+    double height,
+  ) {
     final bool isSelected = selectedGender == gender;
     final theme = Theme.of(context);
     final Color contentColor =
@@ -57,26 +77,32 @@ class GenderSetup extends StatelessWidget {
       template: ButtonTemplate.squarePrimary,
       isSelected: isSelected,
       onTap: () => onGenderSelected(gender),
-      customWidth: context.hX5l,
-      customHeight: context.vX4l,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Iconer(
-            icon: icon,
-            template: IconTemplate.large,
-            customColor: contentColor,
-          ),
-          SizedBox(height: context.x2s),
-          TextFielder(
-            text: SetupText.getString(currentLang, 'gender_$gender'),
-            template: TextTemplate.button,
-            customStyle: TextStyle(
-              color: contentColor,
-              fontWeight: FontWeight.bold,
+      customWidth: width,
+      customHeight: height,
+      child: ClipRect(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Iconer(
+              icon: icon,
+              template: IconTemplate.large,
+              customColor: contentColor,
             ),
-          ),
-        ],
+            SizedBox(height: context.vX3s),
+            TextFielder(
+              text: SetupText.getString(currentLang, 'gender_$gender'),
+              template: TextTemplate.button,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              customStyle: TextStyle(
+                color: contentColor,
+                fontWeight: FontWeight.bold,
+                fontSize: context.baseScale * 0.95,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

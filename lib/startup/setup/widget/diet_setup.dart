@@ -50,7 +50,6 @@ class DietSetup extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        // ─── متن راهنما (عنوان جدید) ───
         Displayer(
           index: 1,
           template: MotionTemplate.bottomSlide,
@@ -59,30 +58,35 @@ class DietSetup extends StatelessWidget {
             template: TextTemplate.body,
             textAlign: TextAlign.center,
             customStyle: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.60),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.60),
+              fontSize: context.baseScale * 0.95,
             ),
           ),
         ),
 
         SizedBox(height: context.vS),
 
-        // ─── لیست رژیم‌های غذایی ───
-        Displayer(
-          index: 2,
-          template: MotionTemplate.flipX,
-          child: ListViewButtoner(
-            items: diets.map((item) {
-              return {
-                'icon': item['icon'],
-                'title': SetupText.getString(currentLang, item['title']),
-                'desc': SetupText.getString(currentLang, item['desc']),
-              };
-            }).toList(),
-            selectedIndex: selectedDiet,
-            onSelected: onDietSelected,
-            itemWidth: context.hX6l + context.hXl,
-            itemHeight: context.vX4l,
-            currentLang: currentLang,
+        Expanded(
+          child: Displayer(
+            index: 2,
+            template: MotionTemplate.flipX,
+            child: ListViewButtoner(
+              items: diets.map((item) {
+                return {
+                  'icon': item['icon'],
+                  'title': SetupText.getString(currentLang, item['title']),
+                  'desc': SetupText.getString(currentLang, item['desc']),
+                };
+              }).toList(),
+              selectedIndex: selectedDiet,
+              onSelected: onDietSelected,
+              itemWidth: context.hX6l + context.hXl,
+              itemHeight: context.vX4l,
+              currentLang: currentLang,
+            ),
           ),
         ),
       ],

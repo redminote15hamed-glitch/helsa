@@ -3,7 +3,7 @@ import 'package:helsa/setting/kit/listviewer.dart';
 import 'package:helsa/setting/motion/displayer.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
 import 'package:helsa/setting/utils/farsi_digit.dart';
-import 'package:helsa/setting/kit/textfielder.dart'; // حتما این را وارد کنید
+import 'package:helsa/setting/kit/textfielder.dart';
 import 'package:helsa/startup/setup/widget/setup_text.dart';
 
 class AgeSetup extends StatelessWidget {
@@ -30,10 +30,14 @@ class AgeSetup extends StatelessWidget {
       ),
     ];
 
+    // ارتفاع لیست افقی وابسته به صفحه (مثل SleepWakeSetup)
+    final double listHeight = context.vM;
+    final double gapAfterSubtitle = context.vS;
+
     return Column(
+      mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        // متن اضافه شده به بالای لیست
         Displayer(
           index: 1,
           template: MotionTemplate.bottomSlide,
@@ -42,23 +46,31 @@ class AgeSetup extends StatelessWidget {
             template: TextTemplate.body,
             textAlign: TextAlign.center,
             customStyle: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.60),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.60),
+              fontSize: context.baseScale * 0.95,
             ),
           ),
         ),
 
-        SizedBox(height: context.vL),
+        SizedBox(height: gapAfterSubtitle),
+
         Displayer(
           index: 3,
           template: MotionTemplate.zoomFade,
-          child: ListViewer(
-            items: items,
-            languageCode: currentLang,
-            initialIndex: selectedAge ?? 0,
-            isVertical: false,
-            onSelectedItemChanged: (index) {
-              onAgeSelected(index == 0 ? null : index);
-            },
+          child: SizedBox(
+            height: listHeight,
+            child: ListViewer(
+              items: items,
+              languageCode: currentLang,
+              initialIndex: selectedAge ?? 0,
+              isVertical: false,
+              onSelectedItemChanged: (index) {
+                onAgeSelected(index == 0 ? null : index);
+              },
+            ),
           ),
         ),
       ],

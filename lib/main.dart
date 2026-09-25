@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:helsa/startup/splash/splash_screen.dart';
 import 'package:helsa/setting/color/theme_color.dart';
 import 'package:helsa/setting/color/edge_to_edge.dart';
+import 'package:flutter/gestures.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,6 +36,7 @@ class _MyAppState extends State<MyApp> {
     final effectiveTheme = _customTheme ?? AppTheme.getTheme(context);
 
     return MaterialApp(
+      scrollBehavior: MyCustomScrollBehavior(),
       title: 'Helsa',
       debugShowCheckedModeBanner: false,
       theme: effectiveTheme,
@@ -44,4 +46,12 @@ class _MyAppState extends State<MyApp> {
       home: SplashScreen(onThemeChanged: _updateTheme),
     );
   }
+}
+
+class MyCustomScrollBehavior extends MaterialScrollBehavior {
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+      };
 }

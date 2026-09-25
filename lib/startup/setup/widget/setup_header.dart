@@ -3,16 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:helsa/setting/kit/header.dart';
 import 'package:helsa/setting/kit/circle_inkwell.dart';
 import 'package:helsa/setting/kit/iconer.dart';
-import 'package:helsa/startup/setup/widget/setup_progress.dart'; // 👈 ایمپورت ویجت جدید
+import 'package:helsa/startup/setup/widget/setup_progress.dart';
 
 class SetupHeader extends StatelessWidget {
   final VoidCallback onBackPressed;
-  final int currentStep; // 👈 اضافه شد برای مدیریت مرحله
+  final int currentStep;
 
   const SetupHeader({
     super.key,
     required this.onBackPressed,
-    required this.currentStep, // 👈 دریافت مرحله جاری
+    required this.currentStep,
   });
 
   @override
@@ -23,15 +23,17 @@ class SetupHeader extends StatelessWidget {
       rightFlex: 1,
       leftChild: Align(
         alignment: Alignment.centerLeft,
-        child: CircleInkWell(
-          icon: Icons.arrow_back_ios_new_rounded,
-          iconTemplate: IconTemplate.medium,
-          onTap: onBackPressed,
-        ),
+        // استپ ۰ (انتخاب زبان): دکمه عقب مخفی، فقط جای خالی
+        child: currentStep == 0
+            ? const SizedBox(width: 48, height: 48)
+            : CircleInkWell(
+                icon: Icons.arrow_back_ios_new_rounded,
+                iconTemplate: IconTemplate.medium,
+                onTap: onBackPressed,
+              ),
       ),
       centerChild: Center(
         child: SetupProgress(
-          // 👈 استفاده از پروگرس بار جدید
           totalSteps: 8,
           currentStep: currentStep,
         ),
