@@ -133,13 +133,28 @@ class _ListViewButtonerState extends State<ListViewButtoner> {
     super.dispose();
   }
 
+  /// یک ضریب واحد برای کل محتوای کارت (آیکون + توضیح + عنوان)
+  /// تا در پنجره کوچک همه با هم کوچک شوند، نه فقط متن.
+  double _contentScale({
+    required BuildContext context,
+    required double cardW,
+    required double cardH,
+  }) {
+    // مرجع تقریبی کارت روی موبایل معمولی
+    final double refW = context.hX6l + context.hXl;
+    final double refH = context.vX4l;
+
+    final double sx = (cardW / refW).clamp(0.55, 1.0);
+    final double sy = (cardH / refH).clamp(0.55, 1.0);
+    return (sx < sy ? sx : sy);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final double width = widget.itemWidth ?? context.hX5l;
     final double wantedHeight = widget.itemHeight ?? context.vX5l;
 
-    // ارتفاع را با فضای والد محدود می‌کنیم تا در شناور overflow نشود
     return LayoutBuilder(
       builder: (context, constraints) {
         final double maxH = constraints.maxHeight.isFinite
@@ -147,6 +162,13 @@ class _ListViewButtonerState extends State<ListViewButtoner> {
             : wantedHeight;
         final double height =
             wantedHeight > maxH && maxH > 0 ? maxH : wantedHeight;
+
+        // یک scale برای همه کارت‌ها — هماهنگ
+        final double contentScale = _contentScale(
+          context: context,
+          cardW: width,
+          cardH: height,
+        );
 
         return SizedBox(
           height: height,
@@ -199,76 +221,19 @@ class _ListViewButtonerState extends State<ListViewButtoner> {
                     customHeight: height,
                     onTap: () => _onItemTap(index),
                     child: ClipRect(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SizedBox(height: context.vX3s),
-                          Iconer(
-                            icon: item['icon'],
-                            template: IconTemplate.large,
-                            customColor: isSelected
-                                ? theme.colorScheme.surface
-                                : theme.colorScheme.primary,
+                      child: Center(
+                        child: Transform.scale(
+                          scale: contentScale,
+                          alignment: Alignment.center,
+                          child: _CardBody(
+                            item: item,
+                            isSelected: isSelected,
+                            currentLang: widget.currentLang,
+                            width: width,
+                            height: height,
+                            theme: theme,
                           ),
-                          if (item['desc'] != null &&
-                              item['desc'].toString().isNotEmpty) ...[
-                            SizedBox(height: context.vX3s),
-                            Flexible(
-                              child: Container(
-                                width: width * 0.85,
-                                constraints: BoxConstraints(
-                                  maxHeight: height * 0.48,
-                                ),
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: context.hX2s,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.surface
-                                      .withValues(alpha: 0.7),
-                                  borderRadius:
-                                      BorderRadius.circular(context.x2s),
-                                ),
-                                child: Center(
-                                  child: TextFielder(
-                                    text: item['desc'],
-                                    template: TextTemplate.caption,
-                                    maxLines: 6,
-                                    languageCode: widget.currentLang,
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.center,
-                                    customStyle: TextStyle(
-                                      fontSize: isSelected
-                                          ? context.m * 0.85
-                                          : context.s,
-                                      color: isSelected
-                                          ? theme.colorScheme.onSurface
-                                          : theme.colorScheme.primary
-                                              .withValues(alpha: 0.8),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                          SizedBox(height: context.vX3s),
-                          TextFielder(
-                            text: item['title'],
-                            template: TextTemplate.body,
-                            languageCode: widget.currentLang,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            customStyle: TextStyle(
-                              color: isSelected
-                                  ? theme.colorScheme.onPrimary
-                                  : theme.colorScheme.primary,
-                              fontWeight: isSelected
-                                  ? FontWeight.w900
-                                  : FontWeight.w400,
-                            ),
-                          ),
-                          SizedBox(height: context.vX3s),
-                        ],
+                        ),
                       ),
                     ),
                   ),
@@ -278,6 +243,95 @@ class _ListViewButtonerState extends State<ListViewButtoner> {
           ),
         );
       },
+    );
+  }
+}
+
+class _CardBody extends StatelessWidget {
+  final Map<String, dynamic> item;
+  final bool isSelected;
+  final String currentLang;
+  final double width;
+  final double height;
+  final ThemeData theme;
+
+  const _CardBody({
+    required this.item,
+    required this.isSelected,
+    required this.currentLang,
+    required this.width,
+    required this.height,
+    required this.theme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasDesc =
+        item['desc'] != null && item['desc'].toString().isNotEmpty;
+
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: context.hX3s,
+        vertical: context.vX3s,
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Iconer(
+            icon: item['icon'],
+            template: IconTemplate.large,
+            customColor: isSelected
+                ? theme.colorScheme.surface
+                : theme.colorScheme.primary,
+          ),
+          if (hasDesc) ...[
+            SizedBox(height: context.vX3s),
+            Container(
+              width: width * 0.85,
+              constraints: BoxConstraints(maxHeight: height * 0.42),
+              padding: EdgeInsets.symmetric(
+                horizontal: context.hX2s,
+                vertical: context.vX4s,
+              ),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface.withValues(alpha: 0.7),
+                borderRadius: BorderRadius.circular(context.x2s),
+              ),
+              child: TextFielder(
+                text: item['desc'],
+                template: TextTemplate.caption,
+                maxLines: 4,
+                languageCode: currentLang,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                customStyle: TextStyle(
+                  fontSize: isSelected ? context.m * 0.85 : context.s,
+                  color: isSelected
+                      ? theme.colorScheme.onSurface
+                      : theme.colorScheme.primary.withValues(alpha: 0.8),
+                  height: 1.25,
+                ),
+              ),
+            ),
+          ],
+          SizedBox(height: context.vX3s),
+          TextFielder(
+            text: item['title'],
+            template: TextTemplate.body,
+            languageCode: currentLang,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            customStyle: TextStyle(
+              color: isSelected
+                  ? theme.colorScheme.onPrimary
+                  : theme.colorScheme.primary,
+              fontWeight: isSelected ? FontWeight.w900 : FontWeight.w400,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

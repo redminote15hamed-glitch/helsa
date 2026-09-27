@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:helsa/setting/kit/listviewer.dart';
+import 'package:helsa/setting/kit/textfielder.dart';
 import 'package:helsa/setting/motion/displayer.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
 import 'package:helsa/setting/utils/farsi_digit.dart';
@@ -78,6 +79,7 @@ class SleepWakeSetup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final sleepItems = _localize(context, rawSleepTimes);
     final wakeItems = _localize(context, rawWakeTimes);
 
@@ -87,6 +89,10 @@ class SleepWakeSetup extends StatelessWidget {
     final double labelSize = context.baseScale * 0.95;
     final double listHeight = context.vM;
 
+    // تم روشن و تاریک: همیشه روی پس‌زمینه خوانا
+    final Color labelColor =
+        theme.colorScheme.onSurface.withValues(alpha: 0.75);
+
     return Displayer(
       index: 0,
       template: MotionTemplate.leftSlide,
@@ -94,7 +100,6 @@ class SleepWakeSetup extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // ساعت خواب + ماه کوچک کنار لیبل
           Displayer(
             index: 1,
             template: MotionTemplate.zoomFade,
@@ -107,16 +112,21 @@ class SleepWakeSetup extends StatelessWidget {
                     Icon(
                       Icons.nightlight_round,
                       size: context.baseScale * 1.1,
-                      color: Theme.of(context).colorScheme.primary,
+                      color: theme.colorScheme.primary,
                     ),
                     SizedBox(width: context.hX2s),
-                    SetupText(
-                      'sleep_time_label',
-                      languageCode: currentLang,
-                      color: Colors.white70,
-                      fontSize: labelSize,
-                      fontWeight: FontWeight.w500,
+                    TextFielder(
+                      text: SetupText.getString(
+                        currentLang,
+                        'sleep_time_label',
+                      ),
+                      template: TextTemplate.body,
                       textAlign: TextAlign.center,
+                      customStyle: TextStyle(
+                        color: labelColor,
+                        fontSize: labelSize,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
@@ -141,9 +151,8 @@ class SleepWakeSetup extends StatelessWidget {
             ),
           ),
 
-          SizedBox(height: context.vM),
+          SizedBox(height: context.vS),
 
-          // ساعت بیداری + خورشید کوچک کنار لیبل
           Displayer(
             index: 2,
             template: MotionTemplate.zoomFade,
@@ -156,16 +165,21 @@ class SleepWakeSetup extends StatelessWidget {
                     Icon(
                       Icons.wb_sunny_rounded,
                       size: context.baseScale * 1.1,
-                      color: Theme.of(context).colorScheme.primary,
+                      color: theme.colorScheme.primary,
                     ),
                     SizedBox(width: context.hX2s),
-                    SetupText(
-                      'wake_time_label',
-                      languageCode: currentLang,
-                      color: Colors.white70,
-                      fontSize: labelSize,
-                      fontWeight: FontWeight.w500,
+                    TextFielder(
+                      text: SetupText.getString(
+                        currentLang,
+                        'wake_time_label',
+                      ),
+                      template: TextTemplate.body,
                       textAlign: TextAlign.center,
+                      customStyle: TextStyle(
+                        color: labelColor,
+                        fontSize: labelSize,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),

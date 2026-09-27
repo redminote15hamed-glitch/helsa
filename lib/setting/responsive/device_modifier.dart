@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:helsa/setting/responsive/device_config.dart';
+import 'package:helsa/setting/responsive/deviceconfig.dart';
 
 class DeviceModifier extends StatelessWidget {
   final Widget defaultVertical;

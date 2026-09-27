@@ -37,9 +37,7 @@ class _SetupScreenState extends State<SetupScreen> {
   double? _selectedWaist;
   int? _selectedActivityLevel;
   int? _selectedDiet;
-  final List<int> _selectedRestrictions = [];
 
-  // متغیرهای مربوط به ساعت خواب و بیداری
   String? _selectedSleepTime;
   String? _selectedWakeTime;
 
@@ -62,7 +60,14 @@ class _SetupScreenState extends State<SetupScreen> {
     }
   }
 
-  void _onContinuePressed() {
+  Future<void> _onContinuePressed() async {
+    FocusScope.of(context).unfocus();
+
+    if (_currentStep == 1) {
+      await Future.delayed(const Duration(milliseconds: 280));
+    }
+    if (!mounted) return;
+
     if (_currentStep < 7) {
       setState(() => _currentStep++);
     }
@@ -77,26 +82,28 @@ class _SetupScreenState extends State<SetupScreen> {
   }
 
   bool get _isStepValid {
-    return _currentStep == 0
-        ? _hasUserSelected
-        : _currentStep == 1
-            ? _isNameFilled
-            : _currentStep == 2
-                ? (_selectedGender != null)
-                : _currentStep == 3
-                    ? (_selectedAge != null)
-                    : _currentStep == 4
-                        ? (_selectedHeight != null &&
-                            _selectedWeight != null &&
-                            _selectedWaist != null)
-                        : _currentStep == 5
-                            ? (_selectedActivityLevel != null)
-                            : _currentStep == 6
-                                ? (_selectedDiet != null)
-                                : _currentStep == 7
-                                    ? (_selectedSleepTime != null &&
-                                        _selectedWakeTime != null)
-                                    : false;
+    switch (_currentStep) {
+      case 0:
+        return _hasUserSelected;
+      case 1:
+        return _isNameFilled;
+      case 2:
+        return _selectedGender != null;
+      case 3:
+        return _selectedAge != null;
+      case 4:
+        return _selectedHeight != null &&
+            _selectedWeight != null &&
+            _selectedWaist != null;
+      case 5:
+        return _selectedActivityLevel != null;
+      case 6:
+        return _selectedDiet != null;
+      case 7:
+        return _selectedSleepTime != null && _selectedWakeTime != null;
+      default:
+        return false;
+    }
   }
 
   Widget _buildStepContent(String lang) {
@@ -137,7 +144,7 @@ class _SetupScreenState extends State<SetupScreen> {
           key: const ValueKey(3),
           currentLang: lang,
           selectedAge: _selectedAge,
-          onAgeSelected: (a) => setState(() => _selectedAge = a),
+          onAgeSelected: (age) => setState(() => _selectedAge = age),
         );
 
       case 4:
@@ -147,9 +154,9 @@ class _SetupScreenState extends State<SetupScreen> {
           height: _selectedHeight,
           weight: _selectedWeight,
           waist: _selectedWaist,
-          onHeightChanged: (value) => setState(() => _selectedHeight = value),
-          onWeightChanged: (value) => setState(() => _selectedWeight = value),
-          onWaistChanged: (value) => setState(() => _selectedWaist = value),
+          onHeightChanged: (v) => setState(() => _selectedHeight = v),
+          onWeightChanged: (v) => setState(() => _selectedWeight = v),
+          onWaistChanged: (v) => setState(() => _selectedWaist = v),
         );
 
       case 5:
@@ -176,14 +183,10 @@ class _SetupScreenState extends State<SetupScreen> {
           selectedSleepTime: _selectedSleepTime,
           selectedWakeTime: _selectedWakeTime,
           onSleepTimeSelected: (time) {
-            setState(() {
-              _selectedSleepTime = time;
-            });
+            setState(() => _selectedSleepTime = time);
           },
           onWakeTimeSelected: (time) {
-            setState(() {
-              _selectedWakeTime = time;
-            });
+            setState(() => _selectedWakeTime = time);
           },
         );
 
@@ -205,6 +208,7 @@ class _SetupScreenState extends State<SetupScreen> {
       },
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
+        resizeToAvoidBottomInset: false,
         body: DeviceModifier(
           defaultVertical: SetupMobileVertical(
             currentStep: _currentStep,
