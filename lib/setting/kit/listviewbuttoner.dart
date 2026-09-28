@@ -133,20 +133,22 @@ class _ListViewButtonerState extends State<ListViewButtoner> {
     super.dispose();
   }
 
-  /// یک ضریب واحد برای کل محتوای کارت (آیکون + توضیح + عنوان)
-  /// تا در پنجره کوچک همه با هم کوچک شوند، نه فقط متن.
-  double _contentScale({
+  /// فقط وقتی کارت واقعاً کوچک است جمع می‌شود؛ روی موبایل عادی = 1.0
+  double _densityScale({
     required BuildContext context,
     required double cardW,
     required double cardH,
   }) {
-    // مرجع تقریبی کارت روی موبایل معمولی
     final double refW = context.hX6l + context.hXl;
     final double refH = context.vX4l;
 
-    final double sx = (cardW / refW).clamp(0.55, 1.0);
-    final double sy = (cardH / refH).clamp(0.55, 1.0);
-    return (sx < sy ? sx : sy);
+    final double sx = (cardW / refW).clamp(0.0, 1.0);
+    final double sy = (cardH / refH).clamp(0.0, 1.0);
+    final double raw = sx < sy ? sx : sy;
+
+    // تا حدود ۹۲٪ همان ظاهر قبلی؛ زیر آن نرم جمع می‌شود
+    if (raw >= 0.92) return 1.0;
+    return raw.clamp(0.72, 1.0);
   }
 
   @override
@@ -163,8 +165,7 @@ class _ListViewButtonerState extends State<ListViewButtoner> {
         final double height =
             wantedHeight > maxH && maxH > 0 ? maxH : wantedHeight;
 
-        // یک scale برای همه کارت‌ها — هماهنگ
-        final double contentScale = _contentScale(
+        final double density = _densityScale(
           context: context,
           cardW: width,
           cardH: height,
@@ -221,19 +222,14 @@ class _ListViewButtonerState extends State<ListViewButtoner> {
                     customHeight: height,
                     onTap: () => _onItemTap(index),
                     child: ClipRect(
-                      child: Center(
-                        child: Transform.scale(
-                          scale: contentScale,
-                          alignment: Alignment.center,
-                          child: _CardBody(
-                            item: item,
-                            isSelected: isSelected,
-                            currentLang: widget.currentLang,
-                            width: width,
-                            height: height,
-                            theme: theme,
-                          ),
-                        ),
+                      child: _CardBody(
+                        item: item,
+                        isSelected: isSelected,
+                        currentLang: widget.currentLang,
+                        width: width,
+                        height: height,
+                        theme: theme,
+                        density: density,
                       ),
                     ),
                   ),
@@ -247,6 +243,7 @@ class _ListViewButtonerState extends State<ListViewButtoner> {
   }
 }
 
+/// چیدمان پر کارت: آیکون بالا، توضیح وسط، عنوان پایین — بدون حفره خالی بزرگ
 class _CardBody extends StatelessWidget {
   final Map<String, dynamic> item;
   final bool isSelected;
@@ -254,6 +251,7 @@ class _CardBody extends StatelessWidget {
   final double width;
   final double height;
   final ThemeData theme;
+  final double density;
 
   const _CardBody({
     required this.item,
@@ -262,6 +260,7 @@ class _CardBody extends StatelessWidget {
     required this.width,
     required this.height,
     required this.theme,
+    required this.density,
   });
 
   @override
@@ -269,53 +268,70 @@ class _CardBody extends StatelessWidget {
     final hasDesc =
         item['desc'] != null && item['desc'].toString().isNotEmpty;
 
+    final double padH = context.hX3s * density;
+    final double padV = context.vX3s * density;
+    final double gap = context.vX3s * density;
+    final double descFont =
+        (isSelected ? context.m * 0.85 : context.s) * density;
+    final int maxLines = density < 0.85 ? 3 : 4;
+
     return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: context.hX3s,
-        vertical: context.vX3s,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Iconer(
-            icon: item['icon'],
-            template: IconTemplate.large,
-            customColor: isSelected
-                ? theme.colorScheme.surface
-                : theme.colorScheme.primary,
-          ),
-          if (hasDesc) ...[
-            SizedBox(height: context.vX3s),
-            Container(
-              width: width * 0.85,
-              constraints: BoxConstraints(maxHeight: height * 0.42),
-              padding: EdgeInsets.symmetric(
-                horizontal: context.hX2s,
-                vertical: context.vX4s,
-              ),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface.withValues(alpha: 0.7),
-                borderRadius: BorderRadius.circular(context.x2s),
-              ),
-              child: TextFielder(
-                text: item['desc'],
-                template: TextTemplate.caption,
-                maxLines: 4,
-                languageCode: currentLang,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                customStyle: TextStyle(
-                  fontSize: isSelected ? context.m * 0.85 : context.s,
-                  color: isSelected
-                      ? theme.colorScheme.onSurface
-                      : theme.colorScheme.primary.withValues(alpha: 0.8),
-                  height: 1.25,
+          // بخش بالایی: آیکون + توضیح (فضا را پر می‌کند)
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Iconer(
+                  icon: item['icon'],
+                  template: density < 0.85
+                      ? IconTemplate.medium
+                      : IconTemplate.large,
+                  customColor: isSelected
+                      ? theme.colorScheme.surface
+                      : theme.colorScheme.primary,
                 ),
-              ),
+                if (hasDesc) ...[
+                  SizedBox(height: gap),
+                  Flexible(
+                    child: Container(
+                      width: width * 0.88,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: context.hX2s * density,
+                        vertical: context.vX4s * density,
+                      ),
+                      decoration: BoxDecoration(
+                        color:
+                            theme.colorScheme.surface.withValues(alpha: 0.7),
+                        borderRadius: BorderRadius.circular(context.x2s),
+                      ),
+                      child: TextFielder(
+                        text: item['desc'],
+                        template: TextTemplate.caption,
+                        maxLines: maxLines,
+                        languageCode: currentLang,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        customStyle: TextStyle(
+                          fontSize: descFont,
+                          height: 1.25,
+                          color: isSelected
+                              ? theme.colorScheme.onSurface
+                              : theme.colorScheme.primary
+                                  .withValues(alpha: 0.8),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
-          ],
-          SizedBox(height: context.vX3s),
+          ),
+
+          // عنوان همیشه پایین کارت
+          SizedBox(height: gap * 0.6),
           TextFielder(
             text: item['title'],
             template: TextTemplate.body,
@@ -324,6 +340,7 @@ class _CardBody extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
             customStyle: TextStyle(
+              fontSize: context.m * density,
               color: isSelected
                   ? theme.colorScheme.onPrimary
                   : theme.colorScheme.primary,

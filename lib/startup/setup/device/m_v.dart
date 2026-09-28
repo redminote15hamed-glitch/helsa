@@ -32,8 +32,8 @@ class SetupMobileVertical extends StatelessWidget {
     final double gapTitleContent = context.vX3s;
     final double gapBottom = context.vX3s;
 
-    // کیبورد باز است؟ → دکمه ادامه مخفی/غیرقابل لمس
-    final bool keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final double keyboardBottom = MediaQuery.viewInsetsOf(context).bottom;
+    final bool keyboardOpen = keyboardBottom > 0;
 
     return Column(
       children: [
@@ -47,50 +47,61 @@ class SetupMobileVertical extends StatelessWidget {
                   currentStep: currentStep,
                 ),
                 Expanded(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      return SingleChildScrollView(
-                        physics: const BouncingScrollPhysics(
-                          parent: AlwaysScrollableScrollPhysics(),
-                        ),
-                        padding: EdgeInsets.symmetric(horizontal: context.hS),
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            minHeight: constraints.maxHeight,
+                  // فقط همین ناحیه با ارتفاع کیبورد کم می‌شود
+                  // → عنوان و فیلدها بالای کیبورد جمع می‌شوند
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: keyboardBottom),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(
+                            parent: AlwaysScrollableScrollPhysics(),
                           ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              SizedBox(height: gapTop),
-                              AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 500),
-                                child: TitleSetup(
-                                  key: ValueKey('title_$currentStep'),
-                                  currentLang: currentLang,
-                                  step: currentStep,
+                          padding:
+                              EdgeInsets.symmetric(horizontal: context.hS),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minHeight: constraints.maxHeight,
+                            ),
+                            child: Column(
+                              // کیبورد باز: از بالا؛ بسته: وسط
+                              mainAxisAlignment: keyboardOpen
+                                  ? MainAxisAlignment.start
+                                  : MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                SizedBox(height: gapTop),
+                                AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 500),
+                                  child: TitleSetup(
+                                    key: ValueKey('title_$currentStep'),
+                                    currentLang: currentLang,
+                                    step: currentStep,
+                                  ),
                                 ),
-                              ),
-                              SizedBox(height: gapTitleContent),
-                              AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 500),
-                                child: KeyedSubtree(
-                                  key: ValueKey('content_$currentStep'),
-                                  child: buildStepContent(currentLang),
+                                SizedBox(height: gapTitleContent),
+                                AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 500),
+                                  child: KeyedSubtree(
+                                    key: ValueKey('content_$currentStep'),
+                                    child: buildStepContent(currentLang),
+                                  ),
                                 ),
-                              ),
-                              SizedBox(height: gapBottom),
-                            ],
+                                SizedBox(height: gapBottom),
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
                 ),
               ],
             ),
           ),
         ),
+
+        // دکمه ادامه: با کیبورد بالا نمی‌آید (خارج از padding کیبورد)
         SafeArea(
           top: false,
           child: AnimatedOpacity(
