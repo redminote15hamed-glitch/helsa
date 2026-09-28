@@ -133,7 +133,7 @@ class _ListViewButtonerState extends State<ListViewButtoner> {
     super.dispose();
   }
 
-  /// فقط وقتی کارت واقعاً کوچک است جمع می‌شود؛ روی موبایل عادی = 1.0
+  /// فقط روی پنجره خیلی کوچک جمع می‌شود
   double _densityScale({
     required BuildContext context,
     required double cardW,
@@ -141,14 +141,11 @@ class _ListViewButtonerState extends State<ListViewButtoner> {
   }) {
     final double refW = context.hX6l + context.hXl;
     final double refH = context.vX4l;
-
     final double sx = (cardW / refW).clamp(0.0, 1.0);
     final double sy = (cardH / refH).clamp(0.0, 1.0);
     final double raw = sx < sy ? sx : sy;
-
-    // تا حدود ۹۲٪ همان ظاهر قبلی؛ زیر آن نرم جمع می‌شود
-    if (raw >= 0.92) return 1.0;
-    return raw.clamp(0.72, 1.0);
+    if (raw >= 0.90) return 1.0;
+    return raw.clamp(0.70, 1.0);
   }
 
   @override
@@ -207,10 +204,7 @@ class _ListViewButtonerState extends State<ListViewButtoner> {
                     scale = (index == _currentPage) ? 1.0 : 0.85;
                   }
 
-                  return Transform.scale(
-                    scale: scale,
-                    child: child,
-                  );
+                  return Transform.scale(scale: scale, child: child);
                 },
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: context.hX4s),
@@ -227,7 +221,6 @@ class _ListViewButtonerState extends State<ListViewButtoner> {
                         isSelected: isSelected,
                         currentLang: widget.currentLang,
                         width: width,
-                        height: height,
                         theme: theme,
                         density: density,
                       ),
@@ -243,13 +236,15 @@ class _ListViewButtonerState extends State<ListViewButtoner> {
   }
 }
 
-/// چیدمان پر کارت: آیکون بالا، توضیح وسط، عنوان پایین — بدون حفره خالی بزرگ
+/// ساختار مرجع:
+/// [آیکون]
+/// [باکس توضیح]
+/// [عنوان]
 class _CardBody extends StatelessWidget {
   final Map<String, dynamic> item;
   final bool isSelected;
   final String currentLang;
   final double width;
-  final double height;
   final ThemeData theme;
   final double density;
 
@@ -258,7 +253,6 @@ class _CardBody extends StatelessWidget {
     required this.isSelected,
     required this.currentLang,
     required this.width,
-    required this.height,
     required this.theme,
     required this.density,
   });
@@ -268,70 +262,78 @@ class _CardBody extends StatelessWidget {
     final hasDesc =
         item['desc'] != null && item['desc'].toString().isNotEmpty;
 
-    final double padH = context.hX3s * density;
-    final double padV = context.vX3s * density;
-    final double gap = context.vX3s * density;
-    final double descFont =
-        (isSelected ? context.m * 0.85 : context.s) * density;
+    final double pad = context.s * density;
+    final double gap = context.vX2s * density;
+    final double descSize = context.s * density;
+    final double titleSize = context.m * density;
     final int maxLines = density < 0.85 ? 3 : 4;
 
+    final Color onCard = isSelected
+        ? theme.colorScheme.onPrimary
+        : theme.colorScheme.primary;
+
+    final Color descBoxBg = isSelected
+        ? theme.colorScheme.onPrimary.withValues(alpha: 0.18)
+        : theme.colorScheme.surface.withValues(alpha: 0.85);
+
+    final Color descTextColor = isSelected
+        ? theme.colorScheme.onPrimary
+        : theme.colorScheme.onSurface.withValues(alpha: 0.85);
+
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
+      padding: EdgeInsets.all(pad),
       child: Column(
         children: [
-          // بخش بالایی: آیکون + توضیح (فضا را پر می‌کند)
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Iconer(
-                  icon: item['icon'],
-                  template: density < 0.85
-                      ? IconTemplate.medium
-                      : IconTemplate.large,
-                  customColor: isSelected
-                      ? theme.colorScheme.surface
-                      : theme.colorScheme.primary,
-                ),
-                if (hasDesc) ...[
-                  SizedBox(height: gap),
-                  Flexible(
-                    child: Container(
-                      width: width * 0.88,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: context.hX2s * density,
-                        vertical: context.vX4s * density,
-                      ),
-                      decoration: BoxDecoration(
-                        color:
-                            theme.colorScheme.surface.withValues(alpha: 0.7),
-                        borderRadius: BorderRadius.circular(context.x2s),
-                      ),
-                      child: TextFielder(
-                        text: item['desc'],
-                        template: TextTemplate.caption,
-                        maxLines: maxLines,
-                        languageCode: currentLang,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        customStyle: TextStyle(
-                          fontSize: descFont,
-                          height: 1.25,
-                          color: isSelected
-                              ? theme.colorScheme.onSurface
-                              : theme.colorScheme.primary
-                                  .withValues(alpha: 0.8),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
+          // ۱) آیکون — بالای کارت با فاصله متعادل
+          SizedBox(height: gap * 0.5),
+          Iconer(
+            icon: item['icon'],
+            template: density < 0.8 ? IconTemplate.medium : IconTemplate.large,
+            customColor: isSelected
+                ? theme.colorScheme.onPrimary
+                : theme.colorScheme.primary,
           ),
 
-          // عنوان همیشه پایین کارت
-          SizedBox(height: gap * 0.6),
+          SizedBox(height: gap),
+
+          // ۲) باکس توضیح — وسط، متن خوانا
+          if (hasDesc)
+            Expanded(
+              child: Align(
+                alignment: Alignment.center,
+                child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: context.hX2s * density,
+                    vertical: context.vX3s * density,
+                  ),
+                  decoration: BoxDecoration(
+                    color: descBoxBg,
+                    borderRadius: BorderRadius.circular(context.s),
+                  ),
+                  child: TextFielder(
+                    text: item['desc'],
+                    template: TextTemplate.caption,
+                    maxLines: maxLines,
+                    languageCode: currentLang,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    customStyle: TextStyle(
+                      fontSize: descSize,
+                      height: 1.35,
+                      color: descTextColor,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+            )
+          else
+            const Spacer(),
+
+          SizedBox(height: gap),
+
+          // ۳) عنوان — پایین کارت
           TextFielder(
             text: item['title'],
             template: TextTemplate.body,
@@ -340,11 +342,9 @@ class _CardBody extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
             customStyle: TextStyle(
-              fontSize: context.m * density,
-              color: isSelected
-                  ? theme.colorScheme.onPrimary
-                  : theme.colorScheme.primary,
-              fontWeight: isSelected ? FontWeight.w900 : FontWeight.w400,
+              fontSize: titleSize,
+              color: onCard,
+              fontWeight: FontWeight.w800,
             ),
           ),
         ],
