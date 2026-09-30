@@ -268,8 +268,11 @@ class _CardBody extends StatelessWidget {
         item['desc'] != null && item['desc'].toString().isNotEmpty;
 
     final double pad = context.s * density;
-    final double descSize = context.s * density;
-    final double titleSize = context.m * density;
+    // فونت کارت درشت‌تر روی همه دستگاه‌ها
+    final double fontBoost =
+        context.shortestSide >= 600 ? 2.6 : 1.85;
+    final double descSize = context.s * density * fontBoost;
+    final double titleSize = context.m * density * fontBoost;
     final int maxLines = density < 0.85 ? 3 : 4;
 
     final Color onCard = isSelected
