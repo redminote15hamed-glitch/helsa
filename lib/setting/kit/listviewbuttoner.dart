@@ -263,7 +263,6 @@ class _CardBody extends StatelessWidget {
         item['desc'] != null && item['desc'].toString().isNotEmpty;
 
     final double pad = context.s * density;
-    final double gap = context.vX2s * density;
     final double descSize = context.s * density;
     final double titleSize = context.m * density;
     final int maxLines = density < 0.85 ? 3 : 4;
@@ -280,12 +279,18 @@ class _CardBody extends StatelessWidget {
         ? theme.colorScheme.onPrimary
         : theme.colorScheme.onSurface.withValues(alpha: 0.85);
 
+    // فاصله خیلی کم بین آیکون ↔ باکس ↔ عنوان (بدون Expanded که حفره می‌ساخت)
+    final double tight = context.vX4s * density; // خیلی کوچک
+
     return Padding(
-      padding: EdgeInsets.all(pad),
+      padding: EdgeInsets.symmetric(
+        horizontal: pad,
+        vertical: pad * 0.6,
+      ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.max,
         children: [
-          // ۱) آیکون — بالای کارت با فاصله متعادل
-          SizedBox(height: gap * 0.5),
           Iconer(
             icon: item['icon'],
             template: density < 0.8 ? IconTemplate.medium : IconTemplate.large,
@@ -293,47 +298,35 @@ class _CardBody extends StatelessWidget {
                 ? theme.colorScheme.onPrimary
                 : theme.colorScheme.primary,
           ),
-
-          SizedBox(height: gap),
-
-          // ۲) باکس توضیح — وسط، متن خوانا
-          if (hasDesc)
-            Expanded(
-              child: Align(
-                alignment: Alignment.center,
-                child: Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: context.hX2s * density,
-                    vertical: context.vX3s * density,
-                  ),
-                  decoration: BoxDecoration(
-                    color: descBoxBg,
-                    borderRadius: BorderRadius.circular(context.s),
-                  ),
-                  child: TextFielder(
-                    text: item['desc'],
-                    template: TextTemplate.caption,
-                    maxLines: maxLines,
-                    languageCode: currentLang,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    customStyle: TextStyle(
-                      fontSize: descSize,
-                      height: 1.35,
-                      color: descTextColor,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+          SizedBox(height: tight),
+          if (hasDesc) ...[
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(
+                horizontal: context.hX2s * density,
+                vertical: context.vX4s * density,
+              ),
+              decoration: BoxDecoration(
+                color: descBoxBg,
+                borderRadius: BorderRadius.circular(context.s),
+              ),
+              child: TextFielder(
+                text: item['desc'],
+                template: TextTemplate.caption,
+                maxLines: maxLines,
+                languageCode: currentLang,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                customStyle: TextStyle(
+                  fontSize: descSize,
+                  height: 1.3,
+                  color: descTextColor,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-            )
-          else
-            const Spacer(),
-
-          SizedBox(height: gap),
-
-          // ۳) عنوان — پایین کارت
+            ),
+            SizedBox(height: tight),
+          ],
           TextFielder(
             text: item['title'],
             template: TextTemplate.body,
