@@ -152,15 +152,20 @@ class _ListViewButtonerState extends State<ListViewButtoner> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final double width = widget.itemWidth ?? context.hX5l;
-    final double wantedHeight = widget.itemHeight ?? context.vX5l;
+    // ارتفاع جمع‌وجور نسبت به عرض — نه vX5l که روی دسکتاپ غول می‌شود
+    final double wantedHeight =
+        widget.itemHeight ?? (width * 1.08).clamp(context.vX2l, context.vX3l);
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final double maxH = constraints.maxHeight.isFinite
             ? constraints.maxHeight
             : wantedHeight;
-        final double height =
-            wantedHeight > maxH && maxH > 0 ? maxH : wantedHeight;
+        double height = wantedHeight;
+        if (maxH > 0 && height > maxH) height = maxH;
+        // سقف: کمی از عرض بلندتر نشود تا «گوشت اضافه» نماند
+        final double cap = width * 1.15;
+        if (height > cap) height = cap;
 
         final double density = _densityScale(
           context: context,
@@ -280,26 +285,28 @@ class _CardBody extends StatelessWidget {
         : theme.colorScheme.onSurface.withValues(alpha: 0.85);
 
     // فاصله خیلی کم بین آیکون ↔ باکس ↔ عنوان (بدون Expanded که حفره می‌ساخت)
-    final double tight = context.vX4s * density; // خیلی کوچک
-
+    // حاشیه بالا و پایین باکس مساوی؛ آیکون و عنوان وسط هر حاشیه
     return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: pad,
-        vertical: pad * 0.6,
+        vertical: pad * 0.5,
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.max,
         children: [
-          Iconer(
-            icon: item['icon'],
-            template: density < 0.8 ? IconTemplate.medium : IconTemplate.large,
-            customColor: isSelected
-                ? theme.colorScheme.onPrimary
-                : theme.colorScheme.primary,
+          // حاشیه بالا — آیکون دقیقاً وسط این فضا
+          Expanded(
+            child: Center(
+              child: Iconer(
+                icon: item['icon'],
+                template:
+                    density < 0.8 ? IconTemplate.medium : IconTemplate.large,
+                customColor: isSelected
+                    ? theme.colorScheme.onPrimary
+                    : theme.colorScheme.primary,
+              ),
+            ),
           ),
-          SizedBox(height: tight),
-          if (hasDesc) ...[
+          if (hasDesc)
             Container(
               width: double.infinity,
               padding: EdgeInsets.symmetric(
@@ -325,19 +332,22 @@ class _CardBody extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(height: tight),
-          ],
-          TextFielder(
-            text: item['title'],
-            template: TextTemplate.body,
-            languageCode: currentLang,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            customStyle: TextStyle(
-              fontSize: titleSize,
-              color: onCard,
-              fontWeight: FontWeight.w800,
+          // حاشیه پایین — عنوان دقیقاً وسط این فضا (هم‌اندازه بالا)
+          Expanded(
+            child: Center(
+              child: TextFielder(
+                text: item['title'],
+                template: TextTemplate.body,
+                languageCode: currentLang,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                customStyle: TextStyle(
+                  fontSize: titleSize,
+                  color: onCard,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
             ),
           ),
         ],
