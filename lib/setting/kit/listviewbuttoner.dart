@@ -153,8 +153,9 @@ class _ListViewButtonerState extends State<ListViewButtoner> {
     final theme = Theme.of(context);
     final double width = widget.itemWidth ?? context.hX5l;
     // ارتفاع جمع‌وجور نسبت به عرض — نه vX5l که روی دسکتاپ غول می‌شود
+    // کارت کوتاه‌تر تا حاشیه خالی نماند
     final double wantedHeight =
-        widget.itemHeight ?? (width * 1.08).clamp(context.vX2l, context.vX3l);
+        widget.itemHeight ?? (width * 0.92).clamp(context.vXl, context.vX2l);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -163,8 +164,7 @@ class _ListViewButtonerState extends State<ListViewButtoner> {
             : wantedHeight;
         double height = wantedHeight;
         if (maxH > 0 && height > maxH) height = maxH;
-        // سقف: کمی از عرض بلندتر نشود تا «گوشت اضافه» نماند
-        final double cap = width * 1.15;
+        final double cap = width * 0.95;
         if (height > cap) height = cap;
 
         final double density = _densityScale(
@@ -284,34 +284,32 @@ class _CardBody extends StatelessWidget {
         ? theme.colorScheme.onPrimary
         : theme.colorScheme.onSurface.withValues(alpha: 0.85);
 
-    // فاصله خیلی کم بین آیکون ↔ باکس ↔ عنوان (بدون Expanded که حفره می‌ساخت)
-    // حاشیه بالا و پایین باکس مساوی؛ آیکون و عنوان وسط هر حاشیه
+    final double tight = context.vX5s * density; // خیلی کم
+
     return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: pad,
-        vertical: pad * 0.5,
+        vertical: pad * 0.45,
       ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // حاشیه بالا — آیکون دقیقاً وسط این فضا
-          Expanded(
-            child: Center(
-              child: Iconer(
-                icon: item['icon'],
-                template:
-                    density < 0.8 ? IconTemplate.medium : IconTemplate.large,
-                customColor: isSelected
-                    ? theme.colorScheme.onPrimary
-                    : theme.colorScheme.primary,
-              ),
-            ),
+          Iconer(
+            icon: item['icon'],
+            template:
+                density < 0.8 ? IconTemplate.medium : IconTemplate.large,
+            customColor: isSelected
+                ? theme.colorScheme.onPrimary
+                : theme.colorScheme.primary,
           ),
-          if (hasDesc)
+          SizedBox(height: tight),
+          if (hasDesc) ...[
             Container(
               width: double.infinity,
               padding: EdgeInsets.symmetric(
                 horizontal: context.hX2s * density,
-                vertical: context.vX4s * density,
+                vertical: context.vX5s * density,
               ),
               decoration: BoxDecoration(
                 color: descBoxBg,
@@ -326,28 +324,25 @@ class _CardBody extends StatelessWidget {
                 textAlign: TextAlign.center,
                 customStyle: TextStyle(
                   fontSize: descSize,
-                  height: 1.3,
+                  height: 1.25,
                   color: descTextColor,
                   fontWeight: FontWeight.w500,
                 ),
               ),
             ),
-          // حاشیه پایین — عنوان دقیقاً وسط این فضا (هم‌اندازه بالا)
-          Expanded(
-            child: Center(
-              child: TextFielder(
-                text: item['title'],
-                template: TextTemplate.body,
-                languageCode: currentLang,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                customStyle: TextStyle(
-                  fontSize: titleSize,
-                  color: onCard,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
+            SizedBox(height: tight),
+          ],
+          TextFielder(
+            text: item['title'],
+            template: TextTemplate.body,
+            languageCode: currentLang,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            customStyle: TextStyle(
+              fontSize: titleSize,
+              color: onCard,
+              fontWeight: FontWeight.w800,
             ),
           ),
         ],

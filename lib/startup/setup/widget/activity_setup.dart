@@ -49,13 +49,13 @@ class ActivitySetup extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // ارتفاع کارت جمع‌وجور (نسبت به عرض)، نه پر کردن کل صفحه
+        // کارت کوتاه — بدون حاشیه خالی زیاد
         final double cardW = context.hX6l + context.hXl;
-        final double listH = (cardW * 1.08).clamp(
-          context.vX2l,
+        final double listH = (cardW * 0.92).clamp(
+          context.vXl,
           constraints.maxHeight.isFinite && constraints.maxHeight > 0
-              ? constraints.maxHeight * 0.55
-              : context.vX3l,
+              ? constraints.maxHeight * 0.42
+              : context.vX2l,
         );
 
         return Column(
