@@ -154,8 +154,9 @@ class _ListViewButtonerState extends State<ListViewButtoner> {
     final double width = widget.itemWidth ?? context.hX5l;
     // ارتفاع جمع‌وجور نسبت به عرض — نه vX5l که روی دسکتاپ غول می‌شود
     // کارت کوتاه‌تر تا حاشیه خالی نماند
+    // کمی بلندتر تا حاشیه و متن جا شود، نه فشرده
     final double wantedHeight =
-        widget.itemHeight ?? (width * 0.92).clamp(context.vXl, context.vX2l);
+        widget.itemHeight ?? (width * 1.12).clamp(context.vX2l, context.vX3l);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -164,7 +165,7 @@ class _ListViewButtonerState extends State<ListViewButtoner> {
             : wantedHeight;
         double height = wantedHeight;
         if (maxH > 0 && height > maxH) height = maxH;
-        final double cap = width * 0.95;
+        final double cap = width * 1.18;
         if (height > cap) height = cap;
 
         final double density = _densityScale(
@@ -273,7 +274,7 @@ class _CardBody extends StatelessWidget {
         context.shortestSide >= 600 ? 1.45 : 1.85;
     final double descSize = context.s * density * fontBoost;
     final double titleSize = context.m * density * fontBoost;
-    final int maxLines = density < 0.85 ? 3 : 4;
+    final int maxLines = density < 0.85 ? 4 : 5;
 
     final Color onCard = isSelected
         ? theme.colorScheme.onPrimary
@@ -287,15 +288,15 @@ class _CardBody extends StatelessWidget {
         ? theme.colorScheme.onPrimary
         : theme.colorScheme.onSurface.withValues(alpha: 0.85);
 
+    final double sidePad = pad * 1.15;
+    final double gap = context.vX3s * density;
+
     return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: pad,
-        vertical: pad * 0.4,
-      ),
+      padding: EdgeInsets.fromLTRB(sidePad, pad * 0.7, sidePad, pad * 0.7),
       child: Column(
         children: [
-          // حاشیه بالا — آیکون وسط (نه چسبیده به باکس)
           Expanded(
+            flex: 3,
             child: Center(
               child: Transform.scale(
                 scale: 1.4,
@@ -311,12 +312,13 @@ class _CardBody extends StatelessWidget {
               ),
             ),
           ),
+          SizedBox(height: gap),
           if (hasDesc)
             Container(
               width: double.infinity,
               padding: EdgeInsets.symmetric(
-                horizontal: context.hX2s * density,
-                vertical: context.vX5s * density,
+                horizontal: context.hXs * density,
+                vertical: context.vX3s * density,
               ),
               decoration: BoxDecoration(
                 color: descBoxBg,
@@ -337,8 +339,9 @@ class _CardBody extends StatelessWidget {
                 ),
               ),
             ),
-          // حاشیه پایین — عنوان وسط (هم‌اندازه حاشیه بالا)
+          SizedBox(height: gap),
           Expanded(
+            flex: 3,
             child: Center(
               child: TextFielder(
                 text: item['title'],

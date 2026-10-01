@@ -51,11 +51,11 @@ class DietSetup extends StatelessWidget {
       builder: (context, constraints) {
         // کارت کوتاه — بدون حاشیه خالی زیاد
         final double cardW = context.hX6l + context.hXl;
-        final double listH = (cardW * 0.92).clamp(
-          context.vXl,
+        final double listH = (cardW * 1.12).clamp(
+          context.vX2l,
           constraints.maxHeight.isFinite && constraints.maxHeight > 0
-              ? constraints.maxHeight * 0.42
-              : context.vX2l,
+              ? constraints.maxHeight * 0.50
+              : context.vX3l,
         );
 
         return Column(
