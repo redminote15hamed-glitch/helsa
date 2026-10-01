@@ -287,27 +287,31 @@ class _CardBody extends StatelessWidget {
         ? theme.colorScheme.onPrimary
         : theme.colorScheme.onSurface.withValues(alpha: 0.85);
 
-    final double tight = context.vX5s * density; // خیلی کم
-
     return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: pad,
-        vertical: pad * 0.45,
+        vertical: pad * 0.4,
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Iconer(
-            icon: item['icon'],
-            template:
-                density < 0.8 ? IconTemplate.medium : IconTemplate.large,
-            customColor: isSelected
-                ? theme.colorScheme.onPrimary
-                : theme.colorScheme.primary,
+          // حاشیه بالا — آیکون وسط (نه چسبیده به باکس)
+          Expanded(
+            child: Center(
+              child: Transform.scale(
+                scale: 1.4,
+                child: Iconer(
+                  icon: item['icon'],
+                  template: density < 0.8
+                      ? IconTemplate.medium
+                      : IconTemplate.large,
+                  customColor: isSelected
+                      ? theme.colorScheme.onPrimary
+                      : theme.colorScheme.primary,
+                ),
+              ),
+            ),
           ),
-          SizedBox(height: tight),
-          if (hasDesc) ...[
+          if (hasDesc)
             Container(
               width: double.infinity,
               padding: EdgeInsets.symmetric(
@@ -333,19 +337,22 @@ class _CardBody extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(height: tight),
-          ],
-          TextFielder(
-            text: item['title'],
-            template: TextTemplate.body,
-            languageCode: currentLang,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            customStyle: TextStyle(
-              fontSize: titleSize,
-              color: onCard,
-              fontWeight: FontWeight.w800,
+          // حاشیه پایین — عنوان وسط (هم‌اندازه حاشیه بالا)
+          Expanded(
+            child: Center(
+              child: TextFielder(
+                text: item['title'],
+                template: TextTemplate.body,
+                languageCode: currentLang,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                customStyle: TextStyle(
+                  fontSize: titleSize,
+                  color: onCard,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
             ),
           ),
         ],
