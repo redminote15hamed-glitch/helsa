@@ -7,6 +7,7 @@ import 'package:helsa/startup/setup/widget/age_setup.dart';
 import 'package:helsa/startup/setup/widget/physical_setup.dart';
 import 'package:helsa/startup/setup/widget/activity_setup.dart';
 import 'package:helsa/startup/setup/widget/diet_setup.dart';
+import 'package:helsa/startup/setup/widget/restriction_setup.dart';
 import 'package:helsa/startup/setup/widget/sleep_setup.dart';
 import 'device/m_v.dart';
 
@@ -18,6 +19,9 @@ class SetupScreen extends StatefulWidget {
 }
 
 class _SetupScreenState extends State<SetupScreen> {
+  /// فقط این عدد را عوض کن وقتی استپ جدید (مثل حساسیت غذایی) اضافه شد
+  static const int kTotalSetupSteps = 9; // + restriction
+
   String _selectedLang = 'fa';
   bool _hasUserSelected = false;
   int _currentStep = 0;
@@ -37,6 +41,7 @@ class _SetupScreenState extends State<SetupScreen> {
   double? _selectedWaist;
   int? _selectedActivityLevel;
   int? _selectedDiet;
+  final List<int> _selectedRestrictions = [];
 
   String? _selectedSleepTime;
   String? _selectedWakeTime;
@@ -68,7 +73,7 @@ class _SetupScreenState extends State<SetupScreen> {
     }
     if (!mounted) return;
 
-    if (_currentStep < 7) {
+    if (_currentStep < kTotalSetupSteps - 1) {
       setState(() => _currentStep++);
     }
   }
@@ -100,6 +105,8 @@ class _SetupScreenState extends State<SetupScreen> {
       case 6:
         return _selectedDiet != null;
       case 7:
+        return _selectedRestrictions.isNotEmpty;
+      case 8:
         return _selectedSleepTime != null && _selectedWakeTime != null;
       default:
         return false;
@@ -177,8 +184,20 @@ class _SetupScreenState extends State<SetupScreen> {
         );
 
       case 7:
-        return SleepWakeSetup(
+        return RestrictionSetup(
           key: const ValueKey(7),
+          currentLang: lang,
+          selectedRestrictions: List<int>.from(_selectedRestrictions),
+          onChanged: (list) => setState(() {
+            _selectedRestrictions
+              ..clear()
+              ..addAll(list);
+          }),
+        );
+
+      case 8:
+        return SleepWakeSetup(
+          key: const ValueKey(8),
           currentLang: lang,
           selectedSleepTime: _selectedSleepTime,
           selectedWakeTime: _selectedWakeTime,
@@ -212,6 +231,7 @@ class _SetupScreenState extends State<SetupScreen> {
         body: DeviceModifier(
           defaultVertical: SetupMobileVertical(
             currentStep: _currentStep,
+            totalSteps: kTotalSetupSteps,
             currentLang: currentLang,
             isStepValid: _isStepValid,
             onBackPressed: _handleBack,
@@ -220,6 +240,7 @@ class _SetupScreenState extends State<SetupScreen> {
           ),
           mobileVertical: SetupMobileVertical(
             currentStep: _currentStep,
+            totalSteps: kTotalSetupSteps,
             currentLang: currentLang,
             isStepValid: _isStepValid,
             onBackPressed: _handleBack,
@@ -228,6 +249,7 @@ class _SetupScreenState extends State<SetupScreen> {
           ),
           defaultHorizontal: SetupMobileVertical(
             currentStep: _currentStep,
+            totalSteps: kTotalSetupSteps,
             currentLang: currentLang,
             isStepValid: _isStepValid,
             onBackPressed: _handleBack,

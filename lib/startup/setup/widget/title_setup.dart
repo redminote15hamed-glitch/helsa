@@ -51,6 +51,10 @@ class TitleSetup extends StatelessWidget {
         textKey = 'diet_title';
         break;
       case 7:
+        icon = Icons.health_and_safety_rounded;
+        textKey = 'restriction_title';
+        break;
+      case 8:
         icon = Icons.nightlight_round;
         textKey = 'sleep_title';
         break;
@@ -59,7 +63,7 @@ class TitleSetup extends StatelessWidget {
         textKey = 'title';
     }
 
-    final Widget iconWidget = step == 7
+    final Widget iconWidget = step == 8
         ? _SleepTitleIcon(color: Theme.of(context).colorScheme.primary)
         : Iconer(icon: icon, template: IconTemplate.giant);
 

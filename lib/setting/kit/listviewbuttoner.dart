@@ -269,9 +269,9 @@ class _CardBody extends StatelessWidget {
         item['desc'] != null && item['desc'].toString().isNotEmpty;
 
     final double pad = context.s * density;
-    // موبایل کمی درشت‌تر؛ دسکتاپ/Chrome متعادل (نه ۳ برابر)
+    // کمی کوچک‌تر از قبل، هنوز خوانا
     final double fontBoost =
-        context.shortestSide >= 600 ? 1.45 : 1.85;
+        context.shortestSide >= 600 ? 1.25 : 1.55;
     final double descSize = context.s * density * fontBoost;
     final double titleSize = context.m * density * fontBoost;
     final int maxLines = density < 0.85 ? 4 : 5;

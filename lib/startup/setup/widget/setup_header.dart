@@ -1,4 +1,4 @@
-// فایل: lib/startup/setup/widget/setup_header.dart
+// lib/startup/setup/widget/setup_header.dart
 import 'package:flutter/material.dart';
 import 'package:helsa/setting/kit/header.dart';
 import 'package:helsa/setting/kit/circle_inkwell.dart';
@@ -9,10 +9,14 @@ class SetupHeader extends StatelessWidget {
   final VoidCallback onBackPressed;
   final int currentStep;
 
+  /// تعداد کل استپ‌ها — از setup پاس بده تا نوار هوشمند بماند
+  final int totalSteps;
+
   const SetupHeader({
     super.key,
     required this.onBackPressed,
     required this.currentStep,
+    required this.totalSteps,
   });
 
   @override
@@ -23,7 +27,6 @@ class SetupHeader extends StatelessWidget {
       rightFlex: 1,
       leftChild: Align(
         alignment: Alignment.centerLeft,
-        // استپ ۰ (انتخاب زبان): دکمه عقب مخفی، فقط جای خالی
         child: currentStep == 0
             ? const SizedBox(width: 48, height: 48)
             : CircleInkWell(
@@ -34,7 +37,7 @@ class SetupHeader extends StatelessWidget {
       ),
       centerChild: Center(
         child: SetupProgress(
-          totalSteps: 8,
+          totalSteps: totalSteps,
           currentStep: currentStep,
         ),
       ),

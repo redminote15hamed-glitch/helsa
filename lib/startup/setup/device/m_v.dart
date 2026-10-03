@@ -10,6 +10,7 @@ import 'package:helsa/startup/setup/widget/continue_button.dart';
 
 class SetupMobileVertical extends StatelessWidget {
   final int currentStep;
+  final int totalSteps;
   final String currentLang;
   final bool isStepValid;
   final VoidCallback onBackPressed;
@@ -19,6 +20,7 @@ class SetupMobileVertical extends StatelessWidget {
   const SetupMobileVertical({
     super.key,
     required this.currentStep,
+    required this.totalSteps,
     required this.currentLang,
     required this.isStepValid,
     required this.onBackPressed,
@@ -45,6 +47,7 @@ class SetupMobileVertical extends StatelessWidget {
                 SetupHeader(
                   onBackPressed: onBackPressed,
                   currentStep: currentStep,
+                  totalSteps: totalSteps,
                 ),
                 Expanded(
                   // فقط همین ناحیه با ارتفاع کیبورد کم می‌شود
