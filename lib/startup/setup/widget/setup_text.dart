@@ -82,7 +82,7 @@ class SetupText extends StatelessWidget {
       'restriction_title': 'حساسیت‌های غذایی',
       'restriction_subtitle':
           'حساسیت‌ها یا محدودیت‌های غذایی خود را مشخص کنید.',
-      'err_restriction_level': 'لطفاً حساسیت‌های غذایی خود را اعلام نمایید.',
+      'err_restriction_level': 'لطفاً حساسیت‌های غذایی خود را انتخاب کنید.',
       'restrict_none': 'هیچ‌کدام',
       'restrict_dairy': 'لبنیات',
       'restrict_eggs': 'تخم‌مرغ',
@@ -170,7 +170,7 @@ class SetupText extends StatelessWidget {
       'err_diet_level': 'Please select your diet type.',
       'restriction_title': 'Food Allergies',
       'restriction_subtitle': 'Specify your food allergies or restrictions.',
-      'err_restriction_level': 'Please specify your dietary restrictions.',
+      'err_restriction_level': 'Please select your food allergies.',
       'restrict_none': 'None',
       'restrict_dairy': 'Dairy',
       'restrict_eggs': 'Eggs',
@@ -257,7 +257,7 @@ class SetupText extends StatelessWidget {
       'restriction_subtitle':
           'Veuillez indiquer vos allergies ou restrictions alimentaires.',
       'err_restriction_level':
-          'Veuillez spécifier vos restrictions alimentaires.',
+          'Veuillez sélectionner vos allergies alimentaires.',
       'restrict_none': 'Aucun',
       'restrict_dairy': 'Produits laitiers',
       'restrict_eggs': 'Œufs',

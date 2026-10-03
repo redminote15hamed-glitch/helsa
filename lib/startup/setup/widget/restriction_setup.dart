@@ -68,7 +68,7 @@ class RestrictionSetup extends StatelessWidget {
     final double chipGapH = context.hX3s;
     final double chipGapV = context.vX3s;
     final double radiusFrame = context.m;
-    final double radiusChip = context.l;
+    final double radiusChip = context.s;
 
     return Column(
       mainAxisSize: MainAxisSize.min,

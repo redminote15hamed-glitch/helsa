@@ -39,9 +39,11 @@ class ContinueButton extends StatelessWidget {
       } else if (stepIndex == 6) {
         errorMessage = SetupText.getString(currentLang, 'err_diet_level');
       } else if (stepIndex == 7) {
+        errorMessage = SetupText.getString(currentLang, 'err_restriction_level');
+      } else if (stepIndex == 8) {
         errorMessage = SetupText.getString(currentLang, 'err_sleep');
       } else {
-        errorMessage = SetupText.getString(currentLang, 'err_diet_level');
+        errorMessage = SetupText.getString(currentLang, 'err_restriction_level');
       }
 
       SnackBarer.show(
