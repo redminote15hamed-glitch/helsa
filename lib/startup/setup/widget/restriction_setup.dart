@@ -7,7 +7,7 @@ import 'package:helsa/setting/motion/displayer.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
 import 'package:helsa/startup/setup/widget/setup_text.dart';
 
-/// حساسیت غذایی — فقط یک وجه داخل مربع؛ هیچ چیزی پشتش دیده نمی‌شود
+/// حساسیت غذایی — مربع سبز با حاشیه؛ هر صفحه تا پر شدن پر می‌شود
 class RestrictionSetup extends StatefulWidget {
   final String currentLang;
   final List<int> selectedRestrictions;
@@ -116,25 +116,39 @@ class _RestrictionSetupState extends State<RestrictionSetup>
     with SingleTickerProviderStateMixin {
   static const int kNone = RestrictionSetup.kNone;
 
-  late final PageController _pageController;
-  late final AnimationController _flipCtrl;
-  int _currentPage = 0;
-  int _flipDir = 1; // 1 = next, -1 = prev
+  late final AnimationController _cube;
+  int _face = 0;
+  int _pendingFace = 0;
+  int _dir = 1;
+  bool _showIncoming = false;
+  double _dragDx = 0;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(); // viewportFraction پیش‌فرض ۱ — چیزی از کنار دیده نمی‌شود
-    _flipCtrl = AnimationController(
+    _cube = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 380),
-    );
+      duration: const Duration(milliseconds: 520),
+    )..addStatusListener((status) {
+        if (status == AnimationStatus.completed) {
+          setState(() {
+            _face = _pendingFace;
+            _showIncoming = false;
+          });
+          _cube.reset();
+        }
+      });
+    _cube.addListener(() {
+      final bool shouldShow = _cube.value >= 0.5;
+      if (shouldShow != _showIncoming) {
+        setState(() => _showIncoming = shouldShow);
+      }
+    });
   }
 
   @override
   void dispose() {
-    _pageController.dispose();
-    _flipCtrl.dispose();
+    _cube.dispose();
     super.dispose();
   }
 
@@ -153,6 +167,20 @@ class _RestrictionSetupState extends State<RestrictionSetup>
     widget.onChanged(next);
   }
 
+  /// چند آیتم در این مساحت جا می‌شود؟ (باکس را پر کن)
+  int _capacityFor(BuildContext context, double innerSide) {
+    // تخمین اندازه یک برچسب متوسط
+    final double chipH = context.m * 1.15 + context.vX2s * 2 + context.vX3s;
+    final double chipW = context.baseScale * 7.5; // عرض تقریبی برچسب متوسط
+    final double gapH = context.hX3s;
+    final double gapV = context.vX3s;
+
+    final int cols = math.max(1, ((innerSide + gapH) / (chipW + gapH)).floor());
+    final int rows = math.max(1, ((innerSide + gapV) / (chipH + gapV)).floor());
+    // حداقل ۶ تا روی خیلی کوچک؛ حداکثر ۲۴ تا که شلوغ افراطی نشود
+    return (cols * rows).clamp(6, 24);
+  }
+
   List<List<Map<String, dynamic>>> _pages(int perPage) {
     final source = RestrictionSetup.items;
     final out = <List<Map<String, dynamic>>>[];
@@ -163,19 +191,31 @@ class _RestrictionSetupState extends State<RestrictionSetup>
     return out;
   }
 
-  void _onPageChanged(int index) {
+  void _goTo(int target, int pageCount) {
+    if (pageCount <= 0) return;
+    target = target % pageCount;
+    if (target < 0) target += pageCount;
+    if (target == _face || _cube.isAnimating) return;
+
+    final int forward = (target - _face) % pageCount;
+    final int backward = (_face - target) % pageCount;
+    final int dir = forward <= backward ? 1 : -1;
+
     setState(() {
-      _flipDir = index >= _currentPage ? 1 : -1;
-      _currentPage = index;
+      _dir = dir;
+      _pendingFace = target;
+      _showIncoming = false;
+      _dragDx = 0;
     });
-    _flipCtrl.forward(from: 0);
+    _cube.forward(from: 0);
   }
+
+  void _goNext(int n) => _goTo(_face + 1, n);
+  void _goPrev(int n) => _goTo(_face - 1, n);
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final int perPage = context.shortestSide < 400 ? 9 : 12;
-    final pages = _pages(perPage);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -203,66 +243,118 @@ class _RestrictionSetupState extends State<RestrictionSetup>
           template: MotionTemplate.flipX,
           child: LayoutBuilder(
             builder: (context, constraints) {
-              double side = constraints.maxWidth;
+              double side = constraints.maxWidth * 0.92;
               if (constraints.maxHeight.isFinite &&
                   constraints.maxHeight > 0 &&
-                  side > constraints.maxHeight) {
-                side = constraints.maxHeight;
+                  side > constraints.maxHeight * 0.9) {
+                side = constraints.maxHeight * 0.9;
               }
               final double cap = context.vX5l + context.vX2l;
               if (side > cap) side = cap;
 
+              // حاشیه سبز دور باکس
+              final double greenPad = context.s;
+              final double innerSide = (side - greenPad * 2).clamp(40.0, side);
+
+              final int perPage = _capacityFor(context, innerSide);
+              final pages = _pages(perPage);
+
+              // اگر بعد از تغییر ظرفیت، face از بازه خارج شد
+              if (_face >= pages.length) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) setState(() => _face = pages.length - 1);
+                });
+              }
+
+              final int displayIndex = (_showIncoming ? _pendingFace : _face)
+                  .clamp(0, pages.length - 1);
+
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // ——— مربع برش‌خورده: هیچ صفحهٔ کناری بیرون/پشت دیده نمی‌شود ———
                   Center(
                     child: SizedBox(
                       width: side,
                       height: side,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerHighest
-                              .withValues(alpha: 0.35),
-                          borderRadius: BorderRadius.circular(context.m),
-                          border: Border.all(
-                            color: theme.colorScheme.outline
-                                .withValues(alpha: 0.2),
-                            width: context.baseScale * 0.06,
-                          ),
-                        ),
-                        clipBehavior: Clip.hardEdge,
-                        child: PageView.builder(
-                          controller: _pageController,
-                          itemCount: pages.length,
-                          onPageChanged: _onPageChanged,
-                          // فقط یک صفحه؛ بدون peek صفحهٔ کناری
-                          allowImplicitScrolling: false,
-                          itemBuilder: (context, index) {
-                            return AnimatedBuilder(
-                              animation: _flipCtrl,
-                              builder: (context, child) {
-                                // فقط صفحهٔ فعلی انیمیشن چرخش ملایم دارد
-                                if (index != _currentPage) {
-                                  return child!;
-                                }
-                                final t = Curves.easeOutCubic
-                                    .transform(_flipCtrl.value);
-                                // از کمی زاویه به صفر = حس ورق‌خوردن داخل مربع
-                                final angle = (1 - t) * _flipDir * 0.35;
-                                return Transform(
-                                  alignment: Alignment.center,
-                                  transform: Matrix4.identity()
-                                    ..setEntry(3, 2, 0.001)
-                                    ..rotateY(angle),
-                                  child: child,
-                                );
-                              },
-                              child: _FaceContent(
-                                items: pages[index],
-                                currentLang: widget.currentLang,
-                                selected: widget.selectedRestrictions,
-                                onToggle: _toggle,
+                      child: GestureDetector(
+                        onHorizontalDragUpdate: (d) {
+                          if (_cube.isAnimating) return;
+                          setState(() => _dragDx += d.delta.dx);
+                        },
+                        onHorizontalDragEnd: (d) {
+                          if (_cube.isAnimating) return;
+                          final v = d.primaryVelocity ?? 0;
+                          if (v < -180 || _dragDx < -48) {
+                            _goNext(pages.length);
+                          } else if (v > 180 || _dragDx > 48) {
+                            _goPrev(pages.length);
+                          } else {
+                            setState(() => _dragDx = 0);
+                          }
+                        },
+                        child: AnimatedBuilder(
+                          animation: _cube,
+                          builder: (context, _) {
+                            final double t = Curves.easeInOutCubic
+                                .transform(_cube.value);
+                            final double rot = _cube.isAnimating
+                                ? _dir * t * (math.pi / 2)
+                                : (_dragDx / side) * 0.45;
+                            final double zoom = _cube.isAnimating
+                                ? 1.0 - 0.12 * math.sin(t * math.pi)
+                                : 1.0;
+
+                            final Matrix4 m = Matrix4.identity()
+                              ..setEntry(3, 2, 0.00115)
+                              ..rotateY(rot);
+                            m.multiply(
+                              Matrix4.diagonal3Values(zoom, zoom, 1.0),
+                            );
+
+                            return Transform(
+                              alignment: Alignment.center,
+                              transform: m,
+                              filterQuality: FilterQuality.low,
+                              child: RepaintBoundary(
+                                child: Container(
+                                  width: side,
+                                  height: side,
+                                  // حاشیه / بدنه سبز (مثل کارت رژیم)
+                                  padding: EdgeInsets.all(greenPad),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primary,
+                                    borderRadius:
+                                        BorderRadius.circular(context.m),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: theme.colorScheme.primary
+                                            .withValues(alpha: 0.25),
+                                        blurRadius: context.s,
+                                        offset: Offset(0, context.vX4s),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Container(
+                                    // ناحیه داخلی کمی روشن‌تر روی سبز
+                                    width: double.infinity,
+                                    height: double.infinity,
+                                    padding: EdgeInsets.all(context.x2s),
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.onPrimary
+                                          .withValues(alpha: 0.14),
+                                      borderRadius: BorderRadius.circular(
+                                        context.s,
+                                      ),
+                                    ),
+                                    child: _TagsOnly(
+                                      items: pages[displayIndex],
+                                      currentLang: widget.currentLang,
+                                      selected:
+                                          widget.selectedRestrictions,
+                                      onToggle: _toggle,
+                                    ),
+                                  ),
+                                ),
                               ),
                             );
                           },
@@ -271,22 +363,32 @@ class _RestrictionSetupState extends State<RestrictionSetup>
                     ),
                   ),
                   SizedBox(height: context.vX3s),
-                  // نقاط
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(pages.length, (i) {
-                      final on = i == _currentPage;
-                      return Container(
-                        width: on ? context.s : context.x2s,
-                        height: context.x2s,
-                        margin:
-                            EdgeInsets.symmetric(horizontal: context.hX4s),
-                        decoration: BoxDecoration(
-                          color: on
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.onSurface
-                                  .withValues(alpha: 0.25),
-                          borderRadius: BorderRadius.circular(context.x2s),
+                      final on = (!_cube.isAnimating && i == _face) ||
+                          (_cube.isAnimating && i == _pendingFace);
+                      return Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: context.hX4s,
+                        ),
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () => _goTo(i, pages.length),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 220),
+                            curve: Curves.easeOutCubic,
+                            width: on ? context.s : context.x2s,
+                            height: context.x2s,
+                            decoration: BoxDecoration(
+                              color: on
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.onSurface
+                                      .withValues(alpha: 0.25),
+                              borderRadius:
+                                  BorderRadius.circular(context.x2s),
+                            ),
+                          ),
                         ),
                       );
                     }),
@@ -301,13 +403,13 @@ class _RestrictionSetupState extends State<RestrictionSetup>
   }
 }
 
-class _FaceContent extends StatelessWidget {
+class _TagsOnly extends StatelessWidget {
   final List<Map<String, dynamic>> items;
   final String currentLang;
   final List<int> selected;
   final ValueChanged<int> onToggle;
 
-  const _FaceContent({
+  const _TagsOnly({
     required this.items,
     required this.currentLang,
     required this.selected,
@@ -316,30 +418,36 @@ class _FaceContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
-      // پس‌زمینه پر تا چیزی از «پشت» دیده نشود
-      color: Colors.transparent,
-      child: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: EdgeInsets.all(context.s),
-        child: Wrap(
-          spacing: context.hX3s,
-          runSpacing: context.vX3s,
-          alignment: WrapAlignment.center,
-          children: [
-            for (final item in items)
-              _TagChip(
-                icon: item['icon'] as IconData,
-                label: SetupText.getString(
-                  currentLang,
-                  item['title'] as String,
-                ),
-                selected: selected.contains(item['id'] as int),
-                onTap: () => onToggle(item['id'] as int),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Align(
+              alignment: Alignment.center,
+              child: Wrap(
+                spacing: context.hX3s,
+                runSpacing: context.vX3s,
+                alignment: WrapAlignment.center,
+                runAlignment: WrapAlignment.center,
+                children: [
+                  for (final item in items)
+                    _TagChip(
+                      icon: item['icon'] as IconData,
+                      label: SetupText.getString(
+                        currentLang,
+                        item['title'] as String,
+                      ),
+                      selected: selected.contains(item['id'] as int),
+                      onTap: () => onToggle(item['id'] as int),
+                    ),
+                ],
               ),
-          ],
-        ),
-      ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -363,14 +471,14 @@ class _TagChip extends StatelessWidget {
     final double radius = context.x2s;
 
     final Color bg = selected
-        ? theme.colorScheme.primary
-        : theme.colorScheme.surface.withValues(alpha: 0.65);
+        ? theme.colorScheme.onPrimary.withValues(alpha: 0.95)
+        : theme.colorScheme.onPrimary.withValues(alpha: 0.20);
     final Color fg = selected
-        ? theme.colorScheme.onPrimary
-        : theme.colorScheme.onSurface.withValues(alpha: 0.85);
-    final Color borderColor = selected
         ? theme.colorScheme.primary
-        : theme.colorScheme.outline.withValues(alpha: 0.25);
+        : theme.colorScheme.onPrimary;
+    final Color borderColor = selected
+        ? theme.colorScheme.onPrimary
+        : theme.colorScheme.onPrimary.withValues(alpha: 0.40);
 
     return Material(
       color: Colors.transparent,
