@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:helsa/setting/kit/buttoner.dart';
 import 'package:helsa/setting/kit/snackbarer.dart';
 import 'package:helsa/setting/motion/displayer.dart';
+import 'package:helsa/setting/responsive/responsive_utils.dart';
 import 'package:helsa/startup/setup/widget/setup_text.dart';
 
 class ContinueButton extends StatelessWidget {
@@ -10,19 +11,24 @@ class ContinueButton extends StatelessWidget {
   final bool isStepValid;
   final VoidCallback onContinue;
 
+  /// استپ حساسیت: Skip کنار ادامه
+  final bool showSkip;
+  final VoidCallback? onSkip;
+
   const ContinueButton({
     super.key,
     required this.currentLang,
     required this.stepIndex,
     required this.isStepValid,
     required this.onContinue,
+    this.showSkip = false,
+    this.onSkip,
   });
 
   void _handleTap(BuildContext context) {
     if (isStepValid) {
       onContinue();
     } else {
-      // انتخاب پیام خطا بر اساس گام فعلی
       String errorMessage;
       if (stepIndex == 0) {
         errorMessage = SetupText.getString(currentLang, 'err_lang');
@@ -56,16 +62,47 @@ class ContinueButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final continueBtn = Opacity(
+      opacity: isStepValid ? 1.0 : 0.5,
+      child: Buttoner(
+        text: SetupText.getString(currentLang, 'continue'),
+        template: ButtonTemplate.flatOnSurface,
+        isSelected: isStepValid,
+        onTap: () => _handleTap(context),
+      ),
+    );
+
+    if (!showSkip || onSkip == null) {
+      return Displayer(
+        index: 6,
+        template: MotionTemplate.bottomSlide,
+        child: continueBtn,
+      );
+    }
+
+    // Skip + ادامه کوچک‌تر کنار هم
     return Displayer(
       index: 6,
       template: MotionTemplate.bottomSlide,
-      child: Opacity(
-        opacity: isStepValid ? 1.0 : 0.5,
-        child: Buttoner(
-          text: SetupText.getString(currentLang, 'continue'),
-          template: ButtonTemplate.flatOnSurface,
-          isSelected: isStepValid,
-          onTap: () => _handleTap(context),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: context.hS),
+        child: Row(
+          children: [
+            Expanded(
+              flex: 2,
+              child: Buttoner(
+                text: SetupText.getString(currentLang, 'skip'),
+                template: ButtonTemplate.flatOnSurface,
+                isSelected: false,
+                onTap: onSkip!,
+              ),
+            ),
+            SizedBox(width: context.hS),
+            Expanded(
+              flex: 3,
+              child: continueBtn,
+            ),
+          ],
         ),
       ),
     );

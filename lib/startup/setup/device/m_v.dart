@@ -13,6 +13,8 @@ class SetupMobileVertical extends StatelessWidget {
   final int totalSteps;
   final String currentLang;
   final bool isStepValid;
+  final bool showSkip;
+  final VoidCallback? onSkip;
   final VoidCallback onBackPressed;
   final VoidCallback onContinuePressed;
   final Widget Function(String lang) buildStepContent;
@@ -23,6 +25,8 @@ class SetupMobileVertical extends StatelessWidget {
     required this.totalSteps,
     required this.currentLang,
     required this.isStepValid,
+    this.showSkip = false,
+    this.onSkip,
     required this.onBackPressed,
     required this.onContinuePressed,
     required this.buildStepContent,
@@ -120,6 +124,8 @@ class SetupMobileVertical extends StatelessWidget {
                     stepIndex: currentStep,
                     isStepValid: isStepValid,
                     onContinue: onContinuePressed,
+                    showSkip: showSkip,
+                    onSkip: onSkip,
                   ),
                   SizedBox(height: context.vX3s),
                 ],

@@ -65,6 +65,16 @@ class _SetupScreenState extends State<SetupScreen> {
     }
   }
 
+  void _onSkipRestrictions() {
+    // نادیده گرفتن انتخاب‌ها و رفتن به استپ بعد
+    setState(() {
+      _selectedRestrictions.clear();
+      if (_currentStep < kTotalSetupSteps - 1) {
+        _currentStep++;
+      }
+    });
+  }
+
   Future<void> _onContinuePressed() async {
     FocusScope.of(context).unfocus();
 
@@ -236,6 +246,8 @@ class _SetupScreenState extends State<SetupScreen> {
             isStepValid: _isStepValid,
             onBackPressed: _handleBack,
             onContinuePressed: _onContinuePressed,
+            showSkip: _currentStep == 7,
+            onSkip: _currentStep == 7 ? _onSkipRestrictions : null,
             buildStepContent: _buildStepContent,
           ),
           mobileVertical: SetupMobileVertical(
@@ -245,6 +257,8 @@ class _SetupScreenState extends State<SetupScreen> {
             isStepValid: _isStepValid,
             onBackPressed: _handleBack,
             onContinuePressed: _onContinuePressed,
+            showSkip: _currentStep == 7,
+            onSkip: _currentStep == 7 ? _onSkipRestrictions : null,
             buildStepContent: _buildStepContent,
           ),
           defaultHorizontal: SetupMobileVertical(
@@ -254,6 +268,8 @@ class _SetupScreenState extends State<SetupScreen> {
             isStepValid: _isStepValid,
             onBackPressed: _handleBack,
             onContinuePressed: _onContinuePressed,
+            showSkip: _currentStep == 7,
+            onSkip: _currentStep == 7 ? _onSkipRestrictions : null,
             buildStepContent: _buildStepContent,
           ),
         ),

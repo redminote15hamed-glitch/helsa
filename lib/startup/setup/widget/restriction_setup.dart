@@ -20,10 +20,7 @@ class RestrictionSetup extends StatefulWidget {
     required this.onChanged,
   });
 
-  static const int kNone = 0;
-
   static const List<Map<String, dynamic>> items = [
-    {'id': 0, 'icon': Icons.block_rounded, 'title': 'restrict_none'},
     {'id': 1, 'icon': Icons.local_drink_rounded, 'title': 'restrict_dairy'},
     {'id': 2, 'icon': Icons.egg_outlined, 'title': 'restrict_eggs'},
     {'id': 3, 'icon': Icons.spa_rounded, 'title': 'restrict_nuts'},
@@ -114,8 +111,6 @@ class RestrictionSetup extends StatefulWidget {
 
 class _RestrictionSetupState extends State<RestrictionSetup>
     with SingleTickerProviderStateMixin {
-  static const int kNone = RestrictionSetup.kNone;
-
   late final AnimationController _cube;
   int _face = 0;
   int _pendingFace = 0;
@@ -154,11 +149,6 @@ class _RestrictionSetupState extends State<RestrictionSetup>
 
   void _toggle(int id) {
     final List<int> next = List<int>.from(widget.selectedRestrictions);
-    if (id == kNone) {
-      widget.onChanged([kNone]);
-      return;
-    }
-    next.remove(kNone);
     if (next.contains(id)) {
       next.remove(id);
     } else {
@@ -182,7 +172,7 @@ class _RestrictionSetupState extends State<RestrictionSetup>
   }
 
   List<List<Map<String, dynamic>>> _pages(int perPage) {
-    final source = RestrictionSetup.items;
+    const source = RestrictionSetup.items;
     final out = <List<Map<String, dynamic>>>[];
     for (int i = 0; i < source.length; i += perPage) {
       out.add(source.sublist(i, math.min(i + perPage, source.length)));
@@ -295,6 +285,50 @@ class _RestrictionSetupState extends State<RestrictionSetup>
                         child: AnimatedBuilder(
                           animation: _cube,
                           builder: (context, _) {
+                            final face = Container(
+                              width: side,
+                              height: side,
+                              padding: EdgeInsets.all(greenPad),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.primary,
+                                borderRadius:
+                                    BorderRadius.circular(context.m),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: theme.colorScheme.primary
+                                        .withValues(alpha: 0.25),
+                                    blurRadius: context.s,
+                                    offset: Offset(0, context.vX4s),
+                                  ),
+                                ],
+                              ),
+                              child: Container(
+                                width: double.infinity,
+                                height: double.infinity,
+                                padding: EdgeInsets.all(context.x2s),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.onPrimary
+                                      .withValues(alpha: 0.14),
+                                  borderRadius:
+                                      BorderRadius.circular(context.s),
+                                ),
+                                child: _TagsOnly(
+                                  items: pages[displayIndex],
+                                  currentLang: widget.currentLang,
+                                  selected: widget.selectedRestrictions,
+                                  onToggle: _toggle,
+                                ),
+                              ),
+                            );
+
+                            // فقط هنگام درگ یا انیمیشن — حالت ساکن بدون ماتریس ۳D
+                            // (همان باگ کج بودن اول ورود)
+                            final bool active =
+                                _cube.isAnimating || _dragDx.abs() > 1.5;
+                            if (!active) {
+                              return RepaintBoundary(child: face);
+                            }
+
                             final double t = Curves.easeInOutCubic
                                 .transform(_cube.value);
                             final double rot = _cube.isAnimating
@@ -315,47 +349,7 @@ class _RestrictionSetupState extends State<RestrictionSetup>
                               alignment: Alignment.center,
                               transform: m,
                               filterQuality: FilterQuality.low,
-                              child: RepaintBoundary(
-                                child: Container(
-                                  width: side,
-                                  height: side,
-                                  // حاشیه / بدنه سبز (مثل کارت رژیم)
-                                  padding: EdgeInsets.all(greenPad),
-                                  decoration: BoxDecoration(
-                                    color: theme.colorScheme.primary,
-                                    borderRadius:
-                                        BorderRadius.circular(context.m),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: theme.colorScheme.primary
-                                            .withValues(alpha: 0.25),
-                                        blurRadius: context.s,
-                                        offset: Offset(0, context.vX4s),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Container(
-                                    // ناحیه داخلی کمی روشن‌تر روی سبز
-                                    width: double.infinity,
-                                    height: double.infinity,
-                                    padding: EdgeInsets.all(context.x2s),
-                                    decoration: BoxDecoration(
-                                      color: theme.colorScheme.onPrimary
-                                          .withValues(alpha: 0.14),
-                                      borderRadius: BorderRadius.circular(
-                                        context.s,
-                                      ),
-                                    ),
-                                    child: _TagsOnly(
-                                      items: pages[displayIndex],
-                                      currentLang: widget.currentLang,
-                                      selected:
-                                          widget.selectedRestrictions,
-                                      onToggle: _toggle,
-                                    ),
-                                  ),
-                                ),
-                              ),
+                              child: RepaintBoundary(child: face),
                             );
                           },
                         ),

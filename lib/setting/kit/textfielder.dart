@@ -54,22 +54,31 @@ class TextFielder extends StatelessWidget {
     this.textDirection,
   });
 
+  /// حروف فارسی / عربی در خود متن
+  static final RegExp _rtlScript = RegExp(r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]');
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    // ۱. شناسایی زبان و تعیین جهت متن به صورت خودکار
+    // ۱. زبان
     final String lang =
         (languageCode ?? Localizations.localeOf(context).languageCode)
             .toLowerCase();
-    final bool isRtl = (lang == 'fa' || lang == 'ar');
+
+    // ۲. RTL: زبان fa/ar یا وجود حروف فارسی/عربی در متن
+    final bool langRtl = (lang == 'fa' || lang == 'ar');
+    final bool contentRtl = _rtlScript.hasMatch(text);
+    final bool isRtl = langRtl || contentRtl;
+
     final TextDirection direction =
         textDirection ?? (isRtl ? TextDirection.rtl : TextDirection.ltr);
 
-    // ۲. استخراج کانفیگ از ماتریس
-    final FontConfig config = _getFontMatrix(context, lang, template);
+    // ۳. کانفیگ فونت — اگر فقط از محتوا RTL شد ولی lang انگلیسی است، ماتریس fa
+    final String matrixLang = langRtl ? lang : (contentRtl ? 'fa' : lang);
+    final FontConfig config = _getFontMatrix(context, matrixLang, template);
 
-    // ۳. ساخت استایل پایه
+    // ۴. استایل پایه
     final TextStyle baseStyle = TextStyle(
       fontFamily: config.fontFamily,
       fontWeight: config.fontWeight,
@@ -79,7 +88,7 @@ class TextFielder extends StatelessWidget {
       letterSpacing: config.letterSpacing,
     );
 
-    // ۴. تعیین تراز هوشمند
+    // ۵. تراز
     TextAlign defaultTextAlign = isRtl ? TextAlign.right : TextAlign.left;
     if (template == TextTemplate.body && isRtl) {
       defaultTextAlign = TextAlign.justify;
@@ -87,15 +96,22 @@ class TextFielder extends StatelessWidget {
       defaultTextAlign = TextAlign.center;
     }
 
+    final String displayText =
+        text.toLocalizedDigits(context, languageCode: matrixLang);
+
+    // Directionality دور Text → نقطه و علائم آخر جمله سمت درست (چپ در RTL)
     return Padding(
       padding: EdgeInsets.only(bottom: config.bottomSpacing(context)),
-      child: Text(
-        text.toLocalizedDigits(context, languageCode: lang),
-        textAlign: textAlign ?? defaultTextAlign,
-        style: baseStyle.merge(customStyle),
+      child: Directionality(
         textDirection: direction,
-        overflow: overflow,
-        maxLines: maxLines,
+        child: Text(
+          displayText,
+          textAlign: textAlign ?? defaultTextAlign,
+          style: baseStyle.merge(customStyle),
+          textDirection: direction,
+          overflow: overflow,
+          maxLines: maxLines,
+        ),
       ),
     );
   }
