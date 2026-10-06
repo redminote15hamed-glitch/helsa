@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:helsa/setting/responsive/responsive_utils.dart'; // وارد کردن ریسپانسیو
+import 'package:helsa/setting/responsive/responsive_utils.dart';
 import 'package:helsa/setting/kit/textfielder.dart';
 
 class ListViewer extends StatefulWidget {
@@ -29,6 +29,7 @@ class _ListViewerState extends State<ListViewer> {
   late FixedExtentScrollController _scrollController;
 
   int get _normalizedInitialIndex {
+    if (widget.items.isEmpty) return 0;
     return widget.initialIndex.clamp(0, widget.items.length - 1);
   }
 
@@ -46,7 +47,9 @@ class _ListViewerState extends State<ListViewer> {
     final newIndex = _normalizedInitialIndex;
     if (newIndex != _selectedIndex) {
       _selectedIndex = newIndex;
-      _scrollController.jumpToItem(newIndex);
+      if (_scrollController.hasClients) {
+        _scrollController.jumpToItem(newIndex);
+      }
     }
   }
 
@@ -56,22 +59,48 @@ class _ListViewerState extends State<ListViewer> {
     super.dispose();
   }
 
+  Text? _findTextWidget(Widget? w, {int depth = 0}) {
+    if (w == null || depth > 6) return null;
+    if (w is Text) return w;
+    if (w is Padding) return _findTextWidget(w.child, depth: depth + 1);
+    if (w is Directionality) {
+      return _findTextWidget(w.child, depth: depth + 1);
+    }
+    if (w is Align) return _findTextWidget(w.child, depth: depth + 1);
+    if (w is Center) return _findTextWidget(w.child, depth: depth + 1);
+    if (w is SizedBox) return _findTextWidget(w.child, depth: depth + 1);
+    return null;
+  }
+
   FontConfig _extractFontSettings(BuildContext context) {
     final dummyTextFielder = TextFielder(
-      text: '',
+      text: ' ',
       template: TextTemplate.body,
       languageCode: widget.languageCode,
     );
-    final textWidget = dummyTextFielder.build(context) as Padding;
-    final textChild = textWidget.child as Text;
+    final built = dummyTextFielder.build(context);
+    final textChild = _findTextWidget(built);
+
+    if (textChild?.style != null) {
+      final s = textChild!.style!;
+      return FontConfig(
+        fontFamily: s.fontFamily ?? 'YekanBakh',
+        fontWeight: s.fontWeight ?? FontWeight.w400,
+        fontSize: (c) => s.fontSize ?? c.baseScale,
+        color: (t) => s.color ?? t.colorScheme.onSurface,
+        bottomSpacing: (c) => 0.0,
+        height: s.height,
+        letterSpacing: s.letterSpacing,
+      );
+    }
+
     return FontConfig(
-      fontFamily: textChild.style?.fontFamily ?? 'YekanBakh',
-      fontWeight: textChild.style?.fontWeight ?? FontWeight.w400,
-      fontSize: (c) => textChild.style?.fontSize ?? c.baseScale,
-      color: (t) => textChild.style?.color ?? t.colorScheme.onSurface,
+      fontFamily: 'YekanBakh',
+      fontWeight: FontWeight.w400,
+      fontSize: (c) => c.m,
+      color: (t) => t.colorScheme.onSurface,
       bottomSpacing: (c) => 0.0,
-      height: textChild.style?.height,
-      letterSpacing: textChild.style?.letterSpacing,
+      height: 1.35,
     );
   }
 
@@ -79,9 +108,9 @@ class _ListViewerState extends State<ListViewer> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final itemFontSettings = _extractFontSettings(context);
-    // استفاده از مقادیر ریسپانسیو
     final double itemExtent = widget.isVertical ? context.vM : context.vL;
     final double wheelSize = widget.isVertical ? itemExtent * 5 : itemExtent;
+
     Widget wheel = ListWheelScrollView.useDelegate(
       controller: _scrollController,
       itemExtent: itemExtent,
