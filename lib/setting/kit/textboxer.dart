@@ -28,8 +28,6 @@ class TextBoxer extends StatefulWidget {
   final TextEditingController? controller;
   final ValueChanged<String>? onChanged;
   final TextInputAction? textInputAction;
-
-  // اضافه شده
   final FocusNode? focusNode;
   final ValueChanged<String>? onSubmitted;
 
@@ -50,10 +48,8 @@ class TextBoxer extends StatefulWidget {
 
 class _TextBoxerState extends State<TextBoxer> {
   late bool _obscureText;
-
   late FocusNode _focusNode;
   bool _isExternalFocusNode = false;
-
   late TextEditingController _internalController;
 
   @override
@@ -61,7 +57,6 @@ class _TextBoxerState extends State<TextBoxer> {
     super.initState();
 
     _obscureText = widget.template == TextBoxTemplate.obscure;
-
     _internalController = widget.controller ?? TextEditingController();
 
     if (widget.focusNode != null) {
@@ -79,11 +74,9 @@ class _TextBoxerState extends State<TextBoxer> {
     if (!_isExternalFocusNode) {
       _focusNode.dispose();
     }
-
     if (widget.controller == null) {
       _internalController.dispose();
     }
-
     super.dispose();
   }
 
@@ -95,50 +88,66 @@ class _TextBoxerState extends State<TextBoxer> {
   TextAlign _getAlignment(String text) =>
       _isRTL(text) ? TextAlign.right : TextAlign.left;
 
+  /// از درخت ویجت TextFielder، ویجت Text را پیدا می‌کند
+  /// (Padding → Directionality → Text یا ساختارهای مشابه)
+  Text? _findTextWidget(Widget? w, {int depth = 0}) {
+    if (w == null || depth > 6) return null;
+    if (w is Text) return w;
+    if (w is Padding) return _findTextWidget(w.child, depth: depth + 1);
+    if (w is Directionality) {
+      return _findTextWidget(w.child, depth: depth + 1);
+    }
+    if (w is Align) return _findTextWidget(w.child, depth: depth + 1);
+    if (w is Center) return _findTextWidget(w.child, depth: depth + 1);
+    if (w is SizedBox) return _findTextWidget(w.child, depth: depth + 1);
+    return null;
+  }
+
   FontConfig _extractFontSettings(
     BuildContext context,
     TextTemplate textTemplate,
   ) {
-    final dummyTextFielder = TextFielder(text: '', template: textTemplate);
+    final dummyTextFielder = TextFielder(text: ' ', template: textTemplate);
+    final built = dummyTextFielder.build(context);
+    final textChild = _findTextWidget(built);
 
-    final textWidget = dummyTextFielder.build(context) as Padding;
+    if (textChild?.style != null) {
+      final s = textChild!.style!;
+      return FontConfig(
+        fontFamily: s.fontFamily ?? 'YekanBakh',
+        fontWeight: s.fontWeight ?? FontWeight.w400,
+        fontSize: (c) => s.fontSize ?? c.baseScale,
+        color: (t) => s.color ?? t.colorScheme.onSurface,
+        bottomSpacing: (c) => 0.0,
+        height: s.height,
+        letterSpacing: s.letterSpacing,
+      );
+    }
 
-    final textChild = textWidget.child as Text;
-
+    // fallback امن — دیگر crash / باکس خاکستری نمی‌دهد
     return FontConfig(
-      fontFamily: textChild.style?.fontFamily ?? 'YekanBakh',
-      fontWeight: textChild.style?.fontWeight ?? FontWeight.w400,
-      fontSize: (c) => textChild.style?.fontSize ?? c.baseScale,
-      color: (t) => textChild.style?.color ?? t.colorScheme.onSurface,
+      fontFamily: 'YekanBakh',
+      fontWeight: FontWeight.w400,
+      fontSize: (c) => c.m,
+      color: (t) => t.colorScheme.onSurface,
       bottomSpacing: (c) => 0.0,
-      height: textChild.style?.height,
-      letterSpacing: textChild.style?.letterSpacing,
+      height: 1.35,
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     final config = _getTextBoxMatrix(widget.template);
 
-    final bodyFontSettings = _extractFontSettings(
-      context,
-      TextTemplate.body,
-    );
-
-    final captionFontSettings = _extractFontSettings(
-      context,
-      TextTemplate.caption,
-    );
+    final bodyFontSettings = _extractFontSettings(context, TextTemplate.body);
+    final captionFontSettings =
+        _extractFontSettings(context, TextTemplate.caption);
 
     final currentText = _internalController.text;
-
     final referenceText =
         currentText.isNotEmpty ? currentText : widget.hintText;
-
     final textDirection = _getDirection(referenceText);
-
     final textAlign = _getAlignment(referenceText);
 
     return AnimatedContainer(
@@ -148,9 +157,7 @@ class _TextBoxerState extends State<TextBoxer> {
       width: config.width(context),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(
-          config.borderRadius(context),
-        ),
+        borderRadius: BorderRadius.circular(config.borderRadius(context)),
       ),
       child: Directionality(
         textDirection: textDirection,
@@ -177,17 +184,13 @@ class _TextBoxerState extends State<TextBoxer> {
           ),
           onChanged: (value) {
             setState(() {});
-
-            if (widget.onChanged != null) {
-              widget.onChanged!(value);
-            }
+            widget.onChanged?.call(value);
           },
           onSubmitted: (value) {
             if (widget.onSubmitted != null) {
               widget.onSubmitted!(value);
               return;
             }
-
             if (widget.textInputAction == TextInputAction.done) {
               _focusNode.unfocus();
             }
@@ -198,16 +201,10 @@ class _TextBoxerState extends State<TextBoxer> {
             labelStyle: TextStyle(
               fontFamily: captionFontSettings.fontFamily,
               fontWeight: captionFontSettings.fontWeight,
-              fontSize: captionFontSettings.fontSize(
-                context,
-              ),
+              fontSize: captionFontSettings.fontSize(context),
               color: _focusNode.hasFocus
-                  ? config.focusedBorderColor(
-                      theme,
-                    )
-                  : captionFontSettings.color(
-                      theme,
-                    ),
+                  ? config.focusedBorderColor(theme)
+                  : captionFontSettings.color(theme),
             ),
             floatingLabelBehavior: FloatingLabelBehavior.auto,
             filled: true,
@@ -219,36 +216,24 @@ class _TextBoxerState extends State<TextBoxer> {
                   : context.vXs,
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(
-                config.borderRadius(
-                  context,
-                ),
-              ),
+              borderRadius:
+                  BorderRadius.circular(config.borderRadius(context)),
               borderSide: BorderSide(
-                color: config.enabledBorderColor(
-                  theme,
-                ),
+                color: config.enabledBorderColor(theme),
                 width: 0.8,
               ),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(
-                config.borderRadius(
-                  context,
-                ),
-              ),
+              borderRadius:
+                  BorderRadius.circular(config.borderRadius(context)),
               borderSide: BorderSide(
-                color: config.focusedBorderColor(
-                  theme,
-                ),
+                color: config.focusedBorderColor(theme),
                 width: 1.5,
               ),
             ),
             suffixIcon: widget.template == TextBoxTemplate.obscure
                 ? Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: context.x4s,
-                    ),
+                    padding: EdgeInsets.symmetric(horizontal: context.x4s),
                     child: IconButton(
                       icon: Icon(
                         _obscureText
@@ -256,18 +241,12 @@ class _TextBoxerState extends State<TextBoxer> {
                             : Icons.visibility_rounded,
                         color: _focusNode.hasFocus
                             ? theme.colorScheme.primary
-                            : theme.colorScheme.onSurface.withValues(
-                                alpha: 0.4,
-                              ),
-                        size: bodyFontSettings.fontSize(
-                              context,
-                            ) *
-                            1.3,
+                            : theme.colorScheme.onSurface
+                                .withValues(alpha: 0.4),
+                        size: bodyFontSettings.fontSize(context) * 1.3,
                       ),
                       onPressed: () {
-                        setState(() {
-                          _obscureText = !_obscureText;
-                        });
+                        setState(() => _obscureText = !_obscureText);
                       },
                     ),
                   )
@@ -283,24 +262,25 @@ class _TextBoxerState extends State<TextBoxer> {
       case TextBoxTemplate.singleLine:
         return TextBoxConfig(
           focusedBorderColor: (t) => t.colorScheme.primary,
-          enabledBorderColor: (t) => t.colorScheme.onSurface.withValues(alpha: 0.5),
+          enabledBorderColor: (t) =>
+              t.colorScheme.onSurface.withValues(alpha: 0.5),
           width: (c) => c.screenWidth * 0.75,
           borderRadius: (c) => c.m,
         );
-
       case TextBoxTemplate.multiLine:
         return TextBoxConfig(
           focusedBorderColor: (t) => t.colorScheme.primary,
-          enabledBorderColor: (t) => t.colorScheme.primary.withValues(alpha: 0.5),
+          enabledBorderColor: (t) =>
+              t.colorScheme.primary.withValues(alpha: 0.5),
           width: (c) => c.screenWidth * 0.75,
           borderRadius: (c) => c.m,
           maxLines: null,
         );
-
       case TextBoxTemplate.obscure:
         return TextBoxConfig(
           focusedBorderColor: (t) => t.colorScheme.primary,
-          enabledBorderColor: (t) => t.colorScheme.primary.withValues(alpha: 0.2),
+          enabledBorderColor: (t) =>
+              t.colorScheme.primary.withValues(alpha: 0.2),
           width: (c) => c.screenWidth * 0.75,
           borderRadius: (c) => c.m,
           keyboardType: TextInputType.visiblePassword,
