@@ -12,10 +12,8 @@ enum IconTemplate {
 
 /// شناسنامه مشخصات اندازه و رنگ آیکون
 class IconConfig {
-  final double Function(BuildContext)
-      size; // محاسبه پویا و ریسپانسیو ابعاد آیکون
-  final Color Function(ThemeData)
-      color; // مدیریت هوشمند رنگ بر اساس تم فعال (تاریک/روشن)
+  final double Function(BuildContext) size;
+  final Color Function(ThemeData) color;
 
   const IconConfig({
     required this.size,
@@ -29,31 +27,61 @@ class Iconer extends StatelessWidget {
   final Color? customColor;
   final double? customSize;
 
+  /// گرادیان از رنگ اصلی → نسخه روشن‌تر (alpha کمتر)
+  /// پیش‌فرض: true وقتی رنگ از تم primary می‌آید
+  final bool? useGradient;
+
+  /// شفافیت رنگ دوم گرادیان (۰–۱)
+  final double gradientAlpha;
+
   const Iconer({
     super.key,
     required this.icon,
     this.template = IconTemplate.medium,
     this.customColor,
     this.customSize,
+    this.useGradient,
+    this.gradientAlpha = 0.55,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    // ۱. استخراج کانفیگ اختصاصی آیکون از ماتریس تنظیمات
     final IconConfig config = _getIconMatrix(template);
+    final double size = customSize ?? config.size(context);
+    final Color base = customColor ?? config.color(theme);
 
-    return Icon(
+    // گرادیان: پیش‌فرض برای primaryهای تم؛ برای onSurface اختیاری
+    final bool gradient = useGradient ??
+        (customColor == null &&
+            (template == IconTemplate.giant ||
+                template == IconTemplate.large ||
+                base == theme.colorScheme.primary));
+
+    final iconWidget = Icon(
       icon,
-      // اولویت اول با سایز هاردکد شده دستی، اولویت دوم با مقدار ماتریس ریسپانسیو
-      size: customSize ?? config.size(context),
-      // اولویت اول با رنگ پاس داده شده دستی، اولویت دوم با پالت رنگی ماتریس
-      color: customColor ?? config.color(theme),
+      size: size,
+      // ShaderMask با srcIn به رنگ سفید نیاز دارد
+      color: gradient ? Colors.white : base,
+    );
+
+    if (!gradient) return iconWidget;
+
+    final Color end = base.withValues(alpha: gradientAlpha);
+
+    return ShaderMask(
+      blendMode: BlendMode.srcIn,
+      shaderCallback: (bounds) {
+        return LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [base, end],
+        ).createShader(bounds);
+      },
+      child: iconWidget,
     );
   }
 
-  /// 📐 ماتریس مرکزی پیکربندی ابعاد و رنگ‌های آیکون در اپلیکیشن هلسا
   IconConfig _getIconMatrix(IconTemplate template) {
     final Map<IconTemplate, IconConfig> matrix = {
       IconTemplate.giant: IconConfig(

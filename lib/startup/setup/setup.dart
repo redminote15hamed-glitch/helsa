@@ -1,3 +1,4 @@
+import 'dart:ui' show PlatformDispatcher;
 import 'package:flutter/material.dart';
 import 'package:helsa/setting/responsive/device_modifier.dart';
 import 'package:helsa/startup/setup/widget/language_select.dart';
@@ -22,8 +23,10 @@ class _SetupScreenState extends State<SetupScreen> {
   /// فقط این عدد را عوض کن وقتی استپ جدید (مثل حساسیت غذایی) اضافه شد
   static const int kTotalSetupSteps = 9; // + restriction
 
-  String _selectedLang = 'fa';
+  /// تا وقتی کاربر انتخاب نکرده: زبان دستگاه (fa/en/fr) وگرنه en
+  String _selectedLang = 'en';
   bool _hasUserSelected = false;
+
   int _currentStep = 0;
 
   final TextEditingController _firstNameController = TextEditingController();
@@ -45,6 +48,20 @@ class _SetupScreenState extends State<SetupScreen> {
 
   String? _selectedSleepTime;
   String? _selectedWakeTime;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedLang = _langFromDevice();
+  }
+
+  /// زبان سیستم → فقط fa / en / fr ؛ غیر از این‌ها → en
+  static String _langFromDevice() {
+    final String code =
+        PlatformDispatcher.instance.locale.languageCode.toLowerCase();
+    if (code == 'fa' || code == 'en' || code == 'fr') return code;
+    return 'en';
+  }
 
   @override
   void dispose() {
