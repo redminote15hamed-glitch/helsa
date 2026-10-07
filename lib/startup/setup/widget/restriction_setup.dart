@@ -4,10 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:helsa/setting/kit/iconer.dart';
 import 'package:helsa/setting/kit/textfielder.dart';
 import 'package:helsa/setting/motion/displayer.dart';
+// animator خود پروژه — مسیر را اگر فرق دارد عوض کن
+import 'package:helsa/setting/motion/animator/animator.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
 import 'package:helsa/startup/setup/widget/setup_text.dart';
 
-/// حساسیت غذایی — مربع سبز با حاشیه؛ هر صفحه تا پر شدن پر می‌شود
+/// حساسیت غذایی
+/// high/medium → مکعب از بیرون با چند وجه
+/// low / reduce-motion → اسلاید ساده (بدون ۳D)
 class RestrictionSetup extends StatefulWidget {
   final String currentLang;
   final List<int> selectedRestrictions;
@@ -34,7 +38,11 @@ class RestrictionSetup extends StatefulWidget {
     {'id': 11, 'icon': Icons.brightness_1_rounded, 'title': 'restrict_sesame'},
     {'id': 12, 'icon': Icons.science_rounded, 'title': 'restrict_mustard'},
     {'id': 13, 'icon': Icons.eco_rounded, 'title': 'restrict_celery'},
-    {'id': 14, 'icon': Icons.bubble_chart_rounded, 'title': 'restrict_sulfites'},
+    {
+      'id': 14,
+      'icon': Icons.bubble_chart_rounded,
+      'title': 'restrict_sulfites'
+    },
     {'id': 15, 'icon': Icons.local_florist_rounded, 'title': 'restrict_lupin'},
     {'id': 16, 'icon': Icons.agriculture_rounded, 'title': 'restrict_corn'},
     {'id': 17, 'icon': Icons.hive_rounded, 'title': 'restrict_honey'},
@@ -59,7 +67,11 @@ class RestrictionSetup extends StatefulWidget {
     {'id': 36, 'icon': Icons.favorite_rounded, 'title': 'restrict_strawberry'},
     {'id': 37, 'icon': Icons.brightness_5_rounded, 'title': 'restrict_citrus'},
     {'id': 38, 'icon': Icons.emoji_nature_rounded, 'title': 'restrict_kiwi'},
-    {'id': 39, 'icon': Icons.sentiment_satisfied_rounded, 'title': 'restrict_banana'},
+    {
+      'id': 39,
+      'icon': Icons.sentiment_satisfied_rounded,
+      'title': 'restrict_banana'
+    },
     {'id': 40, 'icon': Icons.spa, 'title': 'restrict_avocado'},
     {'id': 41, 'icon': Icons.filter_vintage_rounded, 'title': 'restrict_peach'},
     {'id': 42, 'icon': Icons.apple, 'title': 'restrict_apple'},
@@ -71,10 +83,18 @@ class RestrictionSetup extends StatefulWidget {
     {'id': 48, 'icon': Icons.bloodtype_rounded, 'title': 'restrict_histamine'},
     {'id': 49, 'icon': Icons.restaurant_rounded, 'title': 'restrict_fodmap'},
     {'id': 50, 'icon': Icons.water_drop_outlined, 'title': 'restrict_fructose'},
-    {'id': 51, 'icon': Icons.warning_amber_rounded, 'title': 'restrict_histamine_rich'},
+    {
+      'id': 51,
+      'icon': Icons.warning_amber_rounded,
+      'title': 'restrict_histamine_rich'
+    },
     {'id': 52, 'icon': Icons.spa_rounded, 'title': 'restrict_garlic'},
     {'id': 53, 'icon': Icons.radio_button_checked, 'title': 'restrict_onion'},
-    {'id': 54, 'icon': Icons.local_fire_department_rounded, 'title': 'restrict_pepper'},
+    {
+      'id': 54,
+      'icon': Icons.local_fire_department_rounded,
+      'title': 'restrict_pepper'
+    },
     {'id': 55, 'icon': Icons.whatshot_rounded, 'title': 'restrict_chili'},
     {'id': 56, 'icon': Icons.cloud_rounded, 'title': 'restrict_mushroom'},
     {'id': 57, 'icon': Icons.grain_outlined, 'title': 'restrict_legumes'},
@@ -84,12 +104,28 @@ class RestrictionSetup extends StatefulWidget {
     {'id': 61, 'icon': Icons.eco_outlined, 'title': 'restrict_pea'},
     {'id': 62, 'icon': Icons.ramen_dining_rounded, 'title': 'restrict_rice'},
     {'id': 63, 'icon': Icons.grass_outlined, 'title': 'restrict_oat'},
-    {'id': 64, 'icon': Icons.horizontal_split_rounded, 'title': 'restrict_barley'},
+    {
+      'id': 64,
+      'icon': Icons.horizontal_split_rounded,
+      'title': 'restrict_barley'
+    },
     {'id': 65, 'icon': Icons.view_week_rounded, 'title': 'restrict_rye'},
-    {'id': 66, 'icon': Icons.change_history_rounded, 'title': 'restrict_buckwheat'},
+    {
+      'id': 66,
+      'icon': Icons.change_history_rounded,
+      'title': 'restrict_buckwheat'
+    },
     {'id': 67, 'icon': Icons.square_rounded, 'title': 'restrict_potato'},
-    {'id': 68, 'icon': Icons.kebab_dining_rounded, 'title': 'restrict_red_meat'},
-    {'id': 69, 'icon': Icons.breakfast_dining_rounded, 'title': 'restrict_pork'},
+    {
+      'id': 68,
+      'icon': Icons.kebab_dining_rounded,
+      'title': 'restrict_red_meat'
+    },
+    {
+      'id': 69,
+      'icon': Icons.breakfast_dining_rounded,
+      'title': 'restrict_pork'
+    },
     {'id': 70, 'icon': Icons.lunch_dining_rounded, 'title': 'restrict_beef'},
     {'id': 71, 'icon': Icons.fastfood_rounded, 'title': 'restrict_chicken'},
     {'id': 72, 'icon': Icons.egg_outlined, 'title': 'restrict_egg_white'},
@@ -97,12 +133,24 @@ class RestrictionSetup extends StatefulWidget {
     {'id': 74, 'icon': Icons.cookie_rounded, 'title': 'restrict_gelatin'},
     {'id': 75, 'icon': Icons.science, 'title': 'restrict_msg'},
     {'id': 76, 'icon': Icons.medication_rounded, 'title': 'restrict_aspartame'},
-    {'id': 77, 'icon': Icons.inventory_2_rounded, 'title': 'restrict_preservatives'},
-    {'id': 78, 'icon': Icons.palette_rounded, 'title': 'restrict_food_coloring'},
+    {
+      'id': 77,
+      'icon': Icons.inventory_2_rounded,
+      'title': 'restrict_preservatives'
+    },
+    {
+      'id': 78,
+      'icon': Icons.palette_rounded,
+      'title': 'restrict_food_coloring'
+    },
     {'id': 79, 'icon': Icons.cloud_queue_rounded, 'title': 'restrict_sulfur'},
     {'id': 80, 'icon': Icons.local_bar_rounded, 'title': 'restrict_alcohol'},
     {'id': 81, 'icon': Icons.opacity, 'title': 'restrict_vinegar'},
-    {'id': 82, 'icon': Icons.scatter_plot_rounded, 'title': 'restrict_spice_mix'},
+    {
+      'id': 82,
+      'icon': Icons.scatter_plot_rounded,
+      'title': 'restrict_spice_mix'
+    },
   ];
 
   @override
@@ -111,39 +159,87 @@ class RestrictionSetup extends StatefulWidget {
 
 class _RestrictionSetupState extends State<RestrictionSetup>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _cube;
+  late final AnimationController _anim;
+  late Animation<double> _turn;
+  PageController? _pageCtrl; // فقط حالت ساده
+
   int _face = 0;
-  int _pendingFace = 0;
+  int _fromFace = 0;
+  int _toFace = 0;
   int _dir = 1;
-  bool _showIncoming = false;
-  double _dragDx = 0;
+  double _drag = 0;
+  bool _dragging = false;
+  bool _useCube = true;
+
+  /// high → ۶ وجه | medium → ۳ وجه | low / no-3D → PageView
+  int _cubeFaceCount = 6;
 
   @override
   void initState() {
     super.initState();
-    _cube = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 520),
-    )..addStatusListener((status) {
-        if (status == AnimationStatus.completed) {
-          setState(() {
-            _face = _pendingFace;
-            _showIncoming = false;
-          });
-          _cube.reset();
-        }
-      });
-    _cube.addListener(() {
-      final bool shouldShow = _cube.value >= 0.5;
-      if (shouldShow != _showIncoming) {
-        setState(() => _showIncoming = shouldShow);
+    _resolveMode();
+    final Duration dur = HardwareProfiler.getOptimizedSpeed(
+      AS.relaxed,
+      ignoreHW: false,
+    );
+    _anim = AnimationController(vsync: this, duration: dur);
+    _turn = CurvedAnimation(parent: _anim, curve: AC.easeInOutSine);
+    _anim.addStatusListener((s) {
+      if (s == AnimationStatus.completed) {
+        setState(() {
+          _face = _toFace;
+          _fromFace = _toFace;
+          _drag = 0;
+          _dragging = false;
+        });
+        _anim.reset();
       }
     });
+    if (!_useCube) {
+      _pageCtrl = PageController(initialPage: _face);
+    }
+  }
+
+  void _resolveMode() {
+    final themeCfg = AnimatorThemeConfig.of(HardwareProfiler.currentTheme);
+    if (!themeCfg.enable3D || HardwareProfiler.isLowEndDevice()) {
+      _useCube = false;
+      _cubeFaceCount = 0;
+      return;
+    }
+    _useCube = true;
+    switch (HardwareProfiler.getDeviceTier()) {
+      case DeviceTier.high:
+        _cubeFaceCount = 6;
+        break;
+      case DeviceTier.medium:
+        _cubeFaceCount = 3;
+        break;
+      case DeviceTier.low:
+        _useCube = false;
+        _cubeFaceCount = 0;
+        break;
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      if (_useCube) {
+        setState(() {
+          _useCube = false;
+          _cubeFaceCount = 0;
+          _pageCtrl ??= PageController(initialPage: _face);
+        });
+      }
+    }
   }
 
   @override
   void dispose() {
-    _cube.dispose();
+    _anim.dispose();
+    _pageCtrl?.dispose();
     super.dispose();
   }
 
@@ -157,22 +253,18 @@ class _RestrictionSetupState extends State<RestrictionSetup>
     widget.onChanged(next);
   }
 
-  /// چند آیتم در این مساحت جا می‌شود؟ (باکس را پر کن)
   int _capacityFor(BuildContext context, double innerSide) {
-    // تخمین اندازه یک برچسب متوسط
     final double chipH = context.m * 1.15 + context.vX2s * 2 + context.vX3s;
-    final double chipW = context.baseScale * 7.5; // عرض تقریبی برچسب متوسط
+    final double chipW = context.baseScale * 7.5;
     final double gapH = context.hX3s;
     final double gapV = context.vX3s;
-
     final int cols = math.max(1, ((innerSide + gapH) / (chipW + gapH)).floor());
     final int rows = math.max(1, ((innerSide + gapV) / (chipH + gapV)).floor());
-    // حداقل ۶ تا روی خیلی کوچک؛ حداکثر ۲۴ تا که شلوغ افراطی نشود
     return (cols * rows).clamp(6, 24);
   }
 
   List<List<Map<String, dynamic>>> _pages(int perPage) {
-    const source = RestrictionSetup.items;
+    final source = RestrictionSetup.items;
     final out = <List<Map<String, dynamic>>>[];
     for (int i = 0; i < source.length; i += perPage) {
       out.add(source.sublist(i, math.min(i + perPage, source.length)));
@@ -181,31 +273,214 @@ class _RestrictionSetupState extends State<RestrictionSetup>
     return out;
   }
 
-  void _goTo(int target, int pageCount) {
-    if (pageCount <= 0) return;
-    target = target % pageCount;
+  void _goToCube(int target, int pageCount) {
+    if (pageCount <= 0 || _anim.isAnimating) return;
+    target %= pageCount;
     if (target < 0) target += pageCount;
-    if (target == _face || _cube.isAnimating) return;
-
+    if (target == _face) return;
     final int forward = (target - _face) % pageCount;
     final int backward = (_face - target) % pageCount;
     final int dir = forward <= backward ? 1 : -1;
-
     setState(() {
       _dir = dir;
-      _pendingFace = target;
-      _showIncoming = false;
-      _dragDx = 0;
+      _fromFace = _face;
+      _toFace = target;
+      _drag = 0;
+      _dragging = false;
     });
-    _cube.forward(from: 0);
+    _anim.forward(from: 0);
   }
 
-  void _goNext(int n) => _goTo(_face + 1, n);
-  void _goPrev(int n) => _goTo(_face - 1, n);
+  void _snapDrag(int pageCount) {
+    if (_anim.isAnimating || pageCount <= 0) return;
+    if (_drag < -0.2) {
+      _goToCube(_face + 1, pageCount);
+    } else if (_drag > 0.2) {
+      _goToCube(_face - 1, pageCount);
+    } else {
+      setState(() {
+        _dragging = false;
+        _drag = 0;
+      });
+    }
+  }
+
+  double _cubeAngle() {
+    if (_anim.isAnimating) {
+      return -_dir * _turn.value * (math.pi / 2);
+    }
+    return _drag;
+  }
+
+  Widget _buildFaceShell({
+    required BuildContext context,
+    required double side,
+    required double greenPad,
+    required List<Map<String, dynamic>> items,
+  }) {
+    return _CubeFace(
+      side: side,
+      greenPad: greenPad,
+      items: items,
+      currentLang: widget.currentLang,
+      selected: widget.selectedRestrictions,
+      onToggle: _toggle,
+    );
+  }
+
+  /// مکعب از بیرون — ۶ وجه (high) یا ۳ وجه (medium)
+  Widget _buildCube({
+    required BuildContext context,
+    required double side,
+    required double greenPad,
+    required List<List<Map<String, dynamic>>> pages,
+  }) {
+    final double half = side * 0.5;
+    final int n = pages.length;
+    final bool six = _cubeFaceCount >= 6;
+
+    return GestureDetector(
+      onHorizontalDragStart: (_) {
+        if (_anim.isAnimating) return;
+        setState(() {
+          _dragging = true;
+          _fromFace = _face;
+          _drag = 0;
+        });
+      },
+      onHorizontalDragUpdate: (d) {
+        if (_anim.isAnimating || !_dragging) return;
+        final double delta = d.delta.dx / side * 0.9;
+        setState(() {
+          _drag = (_drag + delta).clamp(-math.pi / 2, math.pi / 2);
+          _dir = _drag <= 0 ? 1 : -1;
+        });
+      },
+      onHorizontalDragEnd: (_) => _snapDrag(n),
+      child: AnimatedBuilder(
+        animation: _anim,
+        builder: (context, _) {
+          final double cubeY = _cubeAngle();
+          final int cur = _anim.isAnimating ? _fromFace : _face;
+          int pageAt(int delta) => (cur + delta + n * 8) % n;
+
+          double facingY(double offsetY) => math.cos(cubeY + offsetY);
+          double facingX(double offsetX) =>
+              math.cos(offsetX).abs() * 0.55 + 0.15;
+
+          Widget faceLayer({
+            required int pageIndex,
+            double rotY = 0,
+            double rotX = 0,
+            required double facing,
+          }) {
+            if (facing < 0.04) return const SizedBox.shrink();
+
+            final Matrix4 m = Matrix4.identity()
+              ..setEntry(3, 2, 0.00085)
+              ..rotateY(cubeY + rotY)
+              ..rotateX(rotX)
+              ..translateByDouble(0.0, 0.0, -half, 1.0);
+
+            final double opacity = (0.18 + 0.82 * facing).clamp(0.0, 1.0);
+
+            return Transform(
+              alignment: Alignment.center,
+              transform: m,
+              filterQuality: FilterQuality.medium,
+              child: Opacity(
+                opacity: opacity,
+                child: RepaintBoundary(
+                  child: _buildFaceShell(
+                    context: context,
+                    side: side,
+                    greenPad: greenPad,
+                    items: pages[pageIndex],
+                  ),
+                ),
+              ),
+            );
+          }
+
+          final layers = <Widget>[
+            if (six)
+              faceLayer(
+                pageIndex: pageAt(2),
+                rotY: math.pi,
+                facing: facingY(math.pi),
+              ),
+            faceLayer(
+              pageIndex: pageAt(-1),
+              rotY: -math.pi / 2,
+              facing: facingY(-math.pi / 2),
+            ),
+            faceLayer(
+              pageIndex: pageAt(1),
+              rotY: math.pi / 2,
+              facing: facingY(math.pi / 2),
+            ),
+            if (six) ...[
+              faceLayer(
+                pageIndex: pageAt(3),
+                rotX: math.pi / 2,
+                facing: facingX(math.pi / 2),
+              ),
+              faceLayer(
+                pageIndex: pageAt(-2),
+                rotX: -math.pi / 2,
+                facing: facingX(-math.pi / 2),
+              ),
+            ],
+            faceLayer(
+              pageIndex: pageAt(0),
+              rotY: 0,
+              facing: facingY(0),
+            ),
+          ];
+
+          return Stack(alignment: Alignment.center, children: layers);
+        },
+      ),
+    );
+  }
+
+  /// دستگاه ضعیف: PageView ساده بدون ۳D
+  Widget _buildSimple({
+    required BuildContext context,
+    required double side,
+    required double greenPad,
+    required List<List<Map<String, dynamic>>> pages,
+  }) {
+    _pageCtrl ??= PageController(initialPage: _face);
+    final Duration pageDur = HardwareProfiler.getOptimizedSpeed(
+      AS.balanced,
+      ignoreHW: false,
+      context: context,
+    );
+
+    return SizedBox(
+      width: side,
+      height: side,
+      child: PageView.builder(
+        controller: _pageCtrl,
+        itemCount: pages.length,
+        onPageChanged: (i) => setState(() => _face = i),
+        itemBuilder: (context, index) {
+          return _buildFaceShell(
+            context: context,
+            side: side,
+            greenPad: greenPad,
+            items: pages[index],
+          );
+        },
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final bool cube = _useCube && !MediaQuery.disableAnimationsOf(context);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -242,22 +517,15 @@ class _RestrictionSetupState extends State<RestrictionSetup>
               final double cap = context.vX5l + context.vX2l;
               if (side > cap) side = cap;
 
-              // حاشیه سبز دور باکس
               final double greenPad = context.s;
               final double innerSide = (side - greenPad * 2).clamp(40.0, side);
-
               final int perPage = _capacityFor(context, innerSide);
               final pages = _pages(perPage);
-
-              // اگر بعد از تغییر ظرفیت، face از بازه خارج شد
               if (_face >= pages.length) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (mounted) setState(() => _face = pages.length - 1);
                 });
               }
-
-              final int displayIndex = (_showIncoming ? _pendingFace : _face)
-                  .clamp(0, pages.length - 1);
 
               return Column(
                 mainAxisSize: MainAxisSize.min,
@@ -266,109 +534,46 @@ class _RestrictionSetupState extends State<RestrictionSetup>
                     child: SizedBox(
                       width: side,
                       height: side,
-                      child: GestureDetector(
-                        onHorizontalDragUpdate: (d) {
-                          if (_cube.isAnimating) return;
-                          setState(() => _dragDx += d.delta.dx);
-                        },
-                        onHorizontalDragEnd: (d) {
-                          if (_cube.isAnimating) return;
-                          final v = d.primaryVelocity ?? 0;
-                          if (v < -180 || _dragDx < -48) {
-                            _goNext(pages.length);
-                          } else if (v > 180 || _dragDx > 48) {
-                            _goPrev(pages.length);
-                          } else {
-                            setState(() => _dragDx = 0);
-                          }
-                        },
-                        child: AnimatedBuilder(
-                          animation: _cube,
-                          builder: (context, _) {
-                            final face = Container(
-                              width: side,
-                              height: side,
-                              padding: EdgeInsets.all(greenPad),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.primary,
-                                borderRadius:
-                                    BorderRadius.circular(context.m),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: theme.colorScheme.primary
-                                        .withValues(alpha: 0.25),
-                                    blurRadius: context.s,
-                                    offset: Offset(0, context.vX4s),
-                                  ),
-                                ],
-                              ),
-                              child: Container(
-                                width: double.infinity,
-                                height: double.infinity,
-                                padding: EdgeInsets.all(context.x2s),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.onPrimary
-                                      .withValues(alpha: 0.14),
-                                  borderRadius:
-                                      BorderRadius.circular(context.s),
-                                ),
-                                child: _TagsOnly(
-                                  items: pages[displayIndex],
-                                  currentLang: widget.currentLang,
-                                  selected: widget.selectedRestrictions,
-                                  onToggle: _toggle,
-                                ),
-                              ),
-                            );
-
-                            // فقط هنگام درگ یا انیمیشن — حالت ساکن بدون ماتریس ۳D
-                            // (همان باگ کج بودن اول ورود)
-                            final bool active =
-                                _cube.isAnimating || _dragDx.abs() > 1.5;
-                            if (!active) {
-                              return RepaintBoundary(child: face);
-                            }
-
-                            final double t = Curves.easeInOutCubic
-                                .transform(_cube.value);
-                            final double rot = _cube.isAnimating
-                                ? _dir * t * (math.pi / 2)
-                                : (_dragDx / side) * 0.45;
-                            final double zoom = _cube.isAnimating
-                                ? 1.0 - 0.12 * math.sin(t * math.pi)
-                                : 1.0;
-
-                            final Matrix4 m = Matrix4.identity()
-                              ..setEntry(3, 2, 0.00115)
-                              ..rotateY(rot);
-                            m.multiply(
-                              Matrix4.diagonal3Values(zoom, zoom, 1.0),
-                            );
-
-                            return Transform(
-                              alignment: Alignment.center,
-                              transform: m,
-                              filterQuality: FilterQuality.low,
-                              child: RepaintBoundary(child: face),
-                            );
-                          },
-                        ),
-                      ),
+                      child: cube
+                          ? _buildCube(
+                              context: context,
+                              side: side,
+                              greenPad: greenPad,
+                              pages: pages,
+                            )
+                          : _buildSimple(
+                              context: context,
+                              side: side,
+                              greenPad: greenPad,
+                              pages: pages,
+                            ),
                     ),
                   ),
                   SizedBox(height: context.vX3s),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(pages.length, (i) {
-                      final on = (!_cube.isAnimating && i == _face) ||
-                          (_cube.isAnimating && i == _pendingFace);
+                      final on = i == _face ||
+                          (_anim.isAnimating && cube && i == _toFace);
                       return Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: context.hX4s,
-                        ),
+                        padding: EdgeInsets.symmetric(horizontal: context.hX4s),
                         child: GestureDetector(
                           behavior: HitTestBehavior.opaque,
-                          onTap: () => _goTo(i, pages.length),
+                          onTap: () {
+                            if (cube) {
+                              _goToCube(i, pages.length);
+                            } else {
+                              _pageCtrl?.animateToPage(
+                                i,
+                                duration: HardwareProfiler.getOptimizedSpeed(
+                                  AS.balanced,
+                                  ignoreHW: false,
+                                  context: context,
+                                ),
+                                curve: AC.easeInOutSine,
+                              );
+                            }
+                          },
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 220),
                             curve: Curves.easeOutCubic,
@@ -379,8 +584,7 @@ class _RestrictionSetupState extends State<RestrictionSetup>
                                   ? theme.colorScheme.primary
                                   : theme.colorScheme.onSurface
                                       .withValues(alpha: 0.25),
-                              borderRadius:
-                                  BorderRadius.circular(context.x2s),
+                              borderRadius: BorderRadius.circular(context.x2s),
                             ),
                           ),
                         ),
@@ -393,6 +597,60 @@ class _RestrictionSetupState extends State<RestrictionSetup>
           ),
         ),
       ],
+    );
+  }
+}
+
+class _CubeFace extends StatelessWidget {
+  final double side;
+  final double greenPad;
+  final List<Map<String, dynamic>> items;
+  final String currentLang;
+  final List<int> selected;
+  final ValueChanged<int> onToggle;
+
+  const _CubeFace({
+    required this.side,
+    required this.greenPad,
+    required this.items,
+    required this.currentLang,
+    required this.selected,
+    required this.onToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SizedBox(
+      width: side,
+      height: side,
+      child: Container(
+        padding: EdgeInsets.all(greenPad),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primary,
+          borderRadius: BorderRadius.circular(context.m),
+          boxShadow: [
+            BoxShadow(
+              color: theme.colorScheme.primary.withValues(alpha: 0.22),
+              blurRadius: context.s,
+              offset: Offset(0, context.vX4s),
+            ),
+          ],
+        ),
+        child: Container(
+          padding: EdgeInsets.all(context.x2s),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.onPrimary.withValues(alpha: 0.14),
+            borderRadius: BorderRadius.circular(context.s),
+          ),
+          child: _TagsOnly(
+            items: items,
+            currentLang: currentLang,
+            selected: selected,
+            onToggle: onToggle,
+          ),
+        ),
+      ),
     );
   }
 }
@@ -467,9 +725,8 @@ class _TagChip extends StatelessWidget {
     final Color bg = selected
         ? theme.colorScheme.onPrimary.withValues(alpha: 0.95)
         : theme.colorScheme.onPrimary.withValues(alpha: 0.20);
-    final Color fg = selected
-        ? theme.colorScheme.primary
-        : theme.colorScheme.onPrimary;
+    final Color fg =
+        selected ? theme.colorScheme.primary : theme.colorScheme.onPrimary;
     final Color borderColor = selected
         ? theme.colorScheme.onPrimary
         : theme.colorScheme.onPrimary.withValues(alpha: 0.40);
