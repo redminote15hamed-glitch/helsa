@@ -24,7 +24,7 @@ class RestrictionSetup extends StatefulWidget {
     required this.onChanged,
   });
 
-  static const List<Map<String, dynamic>> items = [
+static const List<Map<String, dynamic>> items = [
     {'id': 1, 'icon': Icons.local_drink_rounded, 'title': 'restrict_dairy'},
     {'id': 2, 'icon': Icons.egg_outlined, 'title': 'restrict_eggs'},
     {'id': 3, 'icon': Icons.spa_rounded, 'title': 'restrict_nuts'},
@@ -38,11 +38,7 @@ class RestrictionSetup extends StatefulWidget {
     {'id': 11, 'icon': Icons.brightness_1_rounded, 'title': 'restrict_sesame'},
     {'id': 12, 'icon': Icons.science_rounded, 'title': 'restrict_mustard'},
     {'id': 13, 'icon': Icons.eco_rounded, 'title': 'restrict_celery'},
-    {
-      'id': 14,
-      'icon': Icons.bubble_chart_rounded,
-      'title': 'restrict_sulfites'
-    },
+    {'id': 14, 'icon': Icons.bubble_chart_rounded, 'title': 'restrict_sulfites'},
     {'id': 15, 'icon': Icons.local_florist_rounded, 'title': 'restrict_lupin'},
     {'id': 16, 'icon': Icons.agriculture_rounded, 'title': 'restrict_corn'},
     {'id': 17, 'icon': Icons.hive_rounded, 'title': 'restrict_honey'},
@@ -67,11 +63,7 @@ class RestrictionSetup extends StatefulWidget {
     {'id': 36, 'icon': Icons.favorite_rounded, 'title': 'restrict_strawberry'},
     {'id': 37, 'icon': Icons.brightness_5_rounded, 'title': 'restrict_citrus'},
     {'id': 38, 'icon': Icons.emoji_nature_rounded, 'title': 'restrict_kiwi'},
-    {
-      'id': 39,
-      'icon': Icons.sentiment_satisfied_rounded,
-      'title': 'restrict_banana'
-    },
+    {'id': 39, 'icon': Icons.sentiment_satisfied_rounded, 'title': 'restrict_banana'},
     {'id': 40, 'icon': Icons.spa, 'title': 'restrict_avocado'},
     {'id': 41, 'icon': Icons.filter_vintage_rounded, 'title': 'restrict_peach'},
     {'id': 42, 'icon': Icons.apple, 'title': 'restrict_apple'},
@@ -83,18 +75,10 @@ class RestrictionSetup extends StatefulWidget {
     {'id': 48, 'icon': Icons.bloodtype_rounded, 'title': 'restrict_histamine'},
     {'id': 49, 'icon': Icons.restaurant_rounded, 'title': 'restrict_fodmap'},
     {'id': 50, 'icon': Icons.water_drop_outlined, 'title': 'restrict_fructose'},
-    {
-      'id': 51,
-      'icon': Icons.warning_amber_rounded,
-      'title': 'restrict_histamine_rich'
-    },
+    {'id': 51, 'icon': Icons.warning_amber_rounded, 'title': 'restrict_histamine_rich'},
     {'id': 52, 'icon': Icons.spa_rounded, 'title': 'restrict_garlic'},
     {'id': 53, 'icon': Icons.radio_button_checked, 'title': 'restrict_onion'},
-    {
-      'id': 54,
-      'icon': Icons.local_fire_department_rounded,
-      'title': 'restrict_pepper'
-    },
+    {'id': 54, 'icon': Icons.local_fire_department_rounded, 'title': 'restrict_pepper'},
     {'id': 55, 'icon': Icons.whatshot_rounded, 'title': 'restrict_chili'},
     {'id': 56, 'icon': Icons.cloud_rounded, 'title': 'restrict_mushroom'},
     {'id': 57, 'icon': Icons.grain_outlined, 'title': 'restrict_legumes'},
@@ -104,28 +88,12 @@ class RestrictionSetup extends StatefulWidget {
     {'id': 61, 'icon': Icons.eco_outlined, 'title': 'restrict_pea'},
     {'id': 62, 'icon': Icons.ramen_dining_rounded, 'title': 'restrict_rice'},
     {'id': 63, 'icon': Icons.grass_outlined, 'title': 'restrict_oat'},
-    {
-      'id': 64,
-      'icon': Icons.horizontal_split_rounded,
-      'title': 'restrict_barley'
-    },
+    {'id': 64, 'icon': Icons.horizontal_split_rounded, 'title': 'restrict_barley'},
     {'id': 65, 'icon': Icons.view_week_rounded, 'title': 'restrict_rye'},
-    {
-      'id': 66,
-      'icon': Icons.change_history_rounded,
-      'title': 'restrict_buckwheat'
-    },
+    {'id': 66, 'icon': Icons.change_history_rounded, 'title': 'restrict_buckwheat'},
     {'id': 67, 'icon': Icons.square_rounded, 'title': 'restrict_potato'},
-    {
-      'id': 68,
-      'icon': Icons.kebab_dining_rounded,
-      'title': 'restrict_red_meat'
-    },
-    {
-      'id': 69,
-      'icon': Icons.breakfast_dining_rounded,
-      'title': 'restrict_pork'
-    },
+    {'id': 68, 'icon': Icons.kebab_dining_rounded, 'title': 'restrict_red_meat'},
+    {'id': 69, 'icon': Icons.breakfast_dining_rounded, 'title': 'restrict_pork'},
     {'id': 70, 'icon': Icons.lunch_dining_rounded, 'title': 'restrict_beef'},
     {'id': 71, 'icon': Icons.fastfood_rounded, 'title': 'restrict_chicken'},
     {'id': 72, 'icon': Icons.egg_outlined, 'title': 'restrict_egg_white'},
@@ -133,24 +101,12 @@ class RestrictionSetup extends StatefulWidget {
     {'id': 74, 'icon': Icons.cookie_rounded, 'title': 'restrict_gelatin'},
     {'id': 75, 'icon': Icons.science, 'title': 'restrict_msg'},
     {'id': 76, 'icon': Icons.medication_rounded, 'title': 'restrict_aspartame'},
-    {
-      'id': 77,
-      'icon': Icons.inventory_2_rounded,
-      'title': 'restrict_preservatives'
-    },
-    {
-      'id': 78,
-      'icon': Icons.palette_rounded,
-      'title': 'restrict_food_coloring'
-    },
+    {'id': 77, 'icon': Icons.inventory_2_rounded, 'title': 'restrict_preservatives'},
+    {'id': 78, 'icon': Icons.palette_rounded, 'title': 'restrict_food_coloring'},
     {'id': 79, 'icon': Icons.cloud_queue_rounded, 'title': 'restrict_sulfur'},
     {'id': 80, 'icon': Icons.local_bar_rounded, 'title': 'restrict_alcohol'},
     {'id': 81, 'icon': Icons.opacity, 'title': 'restrict_vinegar'},
-    {
-      'id': 82,
-      'icon': Icons.scatter_plot_rounded,
-      'title': 'restrict_spice_mix'
-    },
+    {'id': 82, 'icon': Icons.scatter_plot_rounded, 'title': 'restrict_spice_mix'},
   ];
 
   @override
@@ -201,7 +157,8 @@ class _RestrictionSetupState extends State<RestrictionSetup>
   }
 
   void _resolveMode() {
-    final themeCfg = AnimatorThemeConfig.of(HardwareProfiler.currentTheme);
+    final themeCfg =
+        AnimatorThemeConfig.of(HardwareProfiler.currentTheme);
     if (!themeCfg.enable3D || HardwareProfiler.isLowEndDevice()) {
       _useCube = false;
       _cubeFaceCount = 0;
@@ -377,10 +334,10 @@ class _RestrictionSetupState extends State<RestrictionSetup>
             if (facing < 0.04) return const SizedBox.shrink();
 
             final Matrix4 m = Matrix4.identity()
-              ..setEntry(3, 2, 0.00085)
+              ..setEntry(3, 2, 0.00055)
               ..rotateY(cubeY + rotY)
               ..rotateX(rotX)
-              ..translateByDouble(0.0, 0.0, -half, 1.0);
+              ..translateByDouble(0.0, 0.0, -half * 0.92, 1.0);
 
             final double opacity = (0.18 + 0.82 * facing).clamp(0.0, 1.0);
 
@@ -438,7 +395,19 @@ class _RestrictionSetupState extends State<RestrictionSetup>
             ),
           ];
 
-          return Stack(alignment: Alignment.center, children: layers);
+          // clip تا پرسپکتیو از باکس بیرون نزند و عنوان را نپوشاند
+          return ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: SizedBox(
+              width: side,
+              height: side,
+              child: Stack(
+                clipBehavior: Clip.hardEdge,
+                alignment: Alignment.center,
+                children: layers,
+              ),
+            ),
+          );
         },
       ),
     );
@@ -508,14 +477,17 @@ class _RestrictionSetupState extends State<RestrictionSetup>
           template: MotionTemplate.flipX,
           child: LayoutBuilder(
             builder: (context, constraints) {
-              double side = constraints.maxWidth * 0.92;
+              // مربع جمع‌وجور — جا برای عنوان و نقطه‌ها بماند
+              double side = constraints.maxWidth * 0.88;
               if (constraints.maxHeight.isFinite &&
-                  constraints.maxHeight > 0 &&
-                  side > constraints.maxHeight * 0.9) {
-                side = constraints.maxHeight * 0.9;
+                  constraints.maxHeight > 0) {
+                // حداکثر ۷۰٪ ارتفاع تا عنوان بالا دیده شود
+                final double byH = constraints.maxHeight * 0.70;
+                if (side > byH) side = byH;
               }
-              final double cap = context.vX5l + context.vX2l;
+              final double cap = context.vX4l + context.vXl;
               if (side > cap) side = cap;
+              if (side < 120) side = 120;
 
               final double greenPad = context.s;
               final double innerSide = (side - greenPad * 2).clamp(40.0, side);
@@ -531,22 +503,25 @@ class _RestrictionSetupState extends State<RestrictionSetup>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Center(
-                    child: SizedBox(
-                      width: side,
-                      height: side,
-                      child: cube
-                          ? _buildCube(
-                              context: context,
-                              side: side,
-                              greenPad: greenPad,
-                              pages: pages,
-                            )
-                          : _buildSimple(
-                              context: context,
-                              side: side,
-                              greenPad: greenPad,
-                              pages: pages,
-                            ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(context.m),
+                      child: SizedBox(
+                        width: side,
+                        height: side,
+                        child: cube
+                            ? _buildCube(
+                                context: context,
+                                side: side,
+                                greenPad: greenPad,
+                                pages: pages,
+                              )
+                            : _buildSimple(
+                                context: context,
+                                side: side,
+                                greenPad: greenPad,
+                                pages: pages,
+                              ),
+                      ),
                     ),
                   ),
                   SizedBox(height: context.vX3s),
@@ -556,7 +531,8 @@ class _RestrictionSetupState extends State<RestrictionSetup>
                       final on = i == _face ||
                           (_anim.isAnimating && cube && i == _toFace);
                       return Padding(
-                        padding: EdgeInsets.symmetric(horizontal: context.hX4s),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: context.hX4s),
                         child: GestureDetector(
                           behavior: HitTestBehavior.opaque,
                           onTap: () {
@@ -584,7 +560,8 @@ class _RestrictionSetupState extends State<RestrictionSetup>
                                   ? theme.colorScheme.primary
                                   : theme.colorScheme.onSurface
                                       .withValues(alpha: 0.25),
-                              borderRadius: BorderRadius.circular(context.x2s),
+                              borderRadius:
+                                  BorderRadius.circular(context.x2s),
                             ),
                           ),
                         ),
