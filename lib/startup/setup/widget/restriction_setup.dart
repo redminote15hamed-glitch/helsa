@@ -211,18 +211,18 @@ class _RestrictionSetupState extends State<RestrictionSetup>
   }
 
   int _capacityFor(BuildContext context, double innerSide) {
-    // روی صفحه کوچک برچسب‌ها فشرده‌تر → صفحات بیشتر (نقطه‌ها)
-    final double scale = context.baseScale;
-    final double chipH = scale * 2.8;
-    final double chipW = scale * 6.2;
+    // ارتفاع واقعی‌تر برچسب تا از پایین باکس نزند بیرون
+    final double chipH =
+        context.m * 1.2 + context.vX2s * 2 + context.vX3s * 2;
+    final double chipW = context.baseScale * 7.8;
     final double gapH = context.hX3s;
     final double gapV = context.vX3s;
     final int cols =
         math.max(2, ((innerSide + gapH) / (chipW + gapH)).floor());
     final int rows =
         math.max(2, ((innerSide + gapV) / (chipH + gapV)).floor());
-    // حداقل ۶، حداکثر ۲۰ در هر وجه
-    return (cols * rows).clamp(6, 20);
+    // کمتر در هر وجه → بدون برش؛ صفحات بیشتر (نقطه)
+    return (cols * rows).clamp(6, 12);
   }
 
   List<List<Map<String, dynamic>>> _pages(int perPage) {
@@ -470,19 +470,17 @@ class _RestrictionSetupState extends State<RestrictionSetup>
           template: MotionTemplate.flipX,
           child: LayoutBuilder(
             builder: (context, constraints) {
-              // ریسپانسیو: پر کردن فضای موجود (نه سقف ثابت پیکسلی)
-              // animator فقط مدت/سطح ۳D را می‌دهد — روی سایز اثر ندارد
-              double side = constraints.maxWidth * 0.94;
-              if (constraints.maxHeight.isFinite &&
-                  constraints.maxHeight > 0) {
-                // جا برای نقطه‌های پایین (~۸٪)
-                final double byH = constraints.maxHeight * 0.90;
-                if (side > byH) side = byH;
-              }
-              // فقط کف خیلی کوچک؛ سقف ثابت نداریم
-              if (side < 140) {
-                side = math.min(140.0, constraints.maxWidth * 0.96);
-              }
+              // سایز از عرض والد + ارتفاع صفحه (LayoutBuilder داخل اسکرول
+              // اغلب maxHeight بی‌نهایت می‌دهد؛ MediaQuery قابل اعتمادتر است)
+              final Size screen = MediaQuery.sizeOf(context);
+              final double maxW = constraints.maxWidth.isFinite &&
+                      constraints.maxWidth > 0
+                  ? constraints.maxWidth
+                  : screen.width;
+              // حدود نیمی از ارتفاع صفحه برای مربع سبز (عنوان و دکمه‌ها جدا)
+              final double maxH = screen.height * 0.50;
+              double side = math.min(maxW * 0.94, maxH);
+              if (side < 180) side = math.min(180.0, maxW * 0.96);
 
               final double greenPad = context.s;
               final double innerSide = (side - greenPad * 2).clamp(40.0, side);
@@ -519,7 +517,7 @@ class _RestrictionSetupState extends State<RestrictionSetup>
                       ),
                     ),
                   ),
-                  SizedBox(height: context.vX3s),
+                  SizedBox(height: context.vS),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(pages.length, (i) {
