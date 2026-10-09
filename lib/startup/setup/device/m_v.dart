@@ -7,6 +7,7 @@ import 'package:helsa/setting/responsive/responsive_utils.dart';
 import 'package:helsa/startup/setup/widget/setup_header.dart';
 import 'package:helsa/startup/setup/widget/title_setup.dart';
 import 'package:helsa/startup/setup/widget/continue_button.dart';
+import 'package:helsa/startup/setup/widget/skip_button.dart';
 
 class SetupMobileVertical extends StatelessWidget {
   final int currentStep;
@@ -119,14 +120,35 @@ class SetupMobileVertical extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  ContinueButton(
-                    currentLang: currentLang,
-                    stepIndex: currentStep,
-                    isStepValid: isStepValid,
-                    onContinue: onContinuePressed,
-                    showSkip: showSkip,
-                    onSkip: onSkip,
-                  ),
+                  if (showSkip && onSkip != null)
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: SkipButton(
+                            currentLang: currentLang,
+                            onSkip: onSkip!,
+                          ),
+                        ),
+                        SizedBox(width: context.hS),
+                        Expanded(
+                          flex: 3,
+                          child: ContinueButton(
+                            currentLang: currentLang,
+                            stepIndex: currentStep,
+                            isStepValid: isStepValid,
+                            onContinue: onContinuePressed,
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    ContinueButton(
+                      currentLang: currentLang,
+                      stepIndex: currentStep,
+                      isStepValid: isStepValid,
+                      onContinue: onContinuePressed,
+                    ),
                   SizedBox(height: context.vX3s),
                 ],
               ),

@@ -157,6 +157,13 @@ class _RestrictionSetupState extends State<RestrictionSetup>
   }
 
   void _resolveMode() {
+    // TEMP: always 3D cube (no PageView fallback)
+    if (HardwareProfiler.forceHighEnd) {
+      _useCube = true;
+      _cubeFaceCount = 4;
+      return;
+    }
+
     final themeCfg =
         AnimatorThemeConfig.of(HardwareProfiler.currentTheme);
     if (!themeCfg.enable3D || HardwareProfiler.isLowEndDevice()) {
@@ -182,14 +189,18 @@ class _RestrictionSetupState extends State<RestrictionSetup>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    // بعد از init پروفایلر دوباره تصمیم بگیر (A10s و مشابه)
+    final bool wasCube = _useCube;
+    _resolveMode();
     if (MediaQuery.disableAnimationsOf(context)) {
-      if (_useCube) {
-        setState(() {
-          _useCube = false;
-          _cubeFaceCount = 0;
-          _pageCtrl ??= PageController(initialPage: _face);
-        });
-      }
+      _useCube = false;
+      _cubeFaceCount = 0;
+    }
+    if (wasCube && !_useCube) {
+      _pageCtrl ??= PageController(initialPage: _face);
+    }
+    if (!wasCube && _useCube) {
+      // از ساده به مکعب؛ معمولاً لازم نیست
     }
   }
 
@@ -222,7 +233,7 @@ class _RestrictionSetupState extends State<RestrictionSetup>
     final int rows =
         math.max(2, ((innerSide + gapV) / (chipH + gapV)).floor());
     // کمتر در هر وجه → بدون برش؛ صفحات بیشتر (نقطه)
-    return (cols * rows).clamp(6, 12);
+    return (cols * rows).clamp(6, 10);
   }
 
   List<List<Map<String, dynamic>>> _pages(int perPage) {
@@ -595,6 +606,7 @@ class _CubeFace extends StatelessWidget {
       width: side,
       height: side,
       child: Container(
+        clipBehavior: Clip.hardEdge,
         padding: EdgeInsets.all(greenPad),
         decoration: BoxDecoration(
           color: theme.colorScheme.primary,
@@ -608,6 +620,7 @@ class _CubeFace extends StatelessWidget {
           ],
         ),
         child: Container(
+          clipBehavior: Clip.hardEdge,
           padding: EdgeInsets.all(context.x2s),
           decoration: BoxDecoration(
             color: theme.colorScheme.onPrimary.withValues(alpha: 0.14),
@@ -663,6 +676,10 @@ class _TagsOnly extends StatelessWidget {
                       ),
                       selected: selected.contains(item['id'] as int),
                       onTap: () => onToggle(item['id'] as int),
+                      // دو ستون تقریبی داخل باکس
+                      maxWidth: constraints.maxWidth.isFinite
+                          ? (constraints.maxWidth - context.hX3s) / 2
+                          : null,
                     ),
                 ],
               ),
@@ -679,18 +696,22 @@ class _TagChip extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final double? maxWidth;
 
   const _TagChip({
     required this.icon,
     required this.label,
     required this.selected,
     required this.onTap,
+    this.maxWidth,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final double radius = context.x2s;
+    // حداکثر عرض برچسب ≈ نصف عرض در دسترس تا از باکس سبز بیرون نزند
+    final double maxChipW = maxWidth ?? (MediaQuery.sizeOf(context).width * 0.40);
 
     final Color bg = selected
         ? theme.colorScheme.onPrimary.withValues(alpha: 0.95)
@@ -706,42 +727,48 @@ class _TagChip extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(radius),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: EdgeInsets.symmetric(
-            horizontal: context.hS,
-            vertical: context.vX2s,
-          ),
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.circular(radius),
-            border: Border.all(
-              color: borderColor,
-              width: context.baseScale * 0.07,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxChipW),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: EdgeInsets.symmetric(
+              horizontal: context.hX2s,
+              vertical: context.vX2s,
             ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Iconer(
-                icon: icon,
-                template: IconTemplate.medium,
-                customColor: fg,
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: BorderRadius.circular(radius),
+              border: Border.all(
+                color: borderColor,
+                width: context.baseScale * 0.07,
               ),
-              SizedBox(width: context.hX3s),
-              TextFielder(
-                text: label,
-                template: TextTemplate.caption,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                customStyle: TextStyle(
-                  fontSize: context.m,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                  color: fg,
-                  height: 1.15,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Iconer(
+                  icon: icon,
+                  template: IconTemplate.small,
+                  customColor: fg,
+                  useGradient: false,
                 ),
-              ),
-            ],
+                SizedBox(width: context.hX3s),
+                Flexible(
+                  child: TextFielder(
+                    text: label,
+                    template: TextTemplate.caption,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    customStyle: TextStyle(
+                      fontSize: context.m * 0.95,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                      color: fg,
+                      height: 1.15,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
