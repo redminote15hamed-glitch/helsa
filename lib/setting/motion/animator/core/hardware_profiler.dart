@@ -11,8 +11,8 @@ enum DeviceTier { low, medium, high }
 abstract class HardwareProfiler {
   static bool _isLowEndOverride = false;
 
-  /// TEMP: force strongest tier everywhere (3D on all devices). Set false later.
-  static bool forceHighEnd = true;
+  /// TEMP debug: set true to force 3D on all devices.
+  static bool forceHighEnd = false;
   static ThemePackage currentTheme = ThemePackage.standard;
   static DeviceTier? _cachedTier;
 

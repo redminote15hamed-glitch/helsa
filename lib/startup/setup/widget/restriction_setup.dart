@@ -157,13 +157,6 @@ class _RestrictionSetupState extends State<RestrictionSetup>
   }
 
   void _resolveMode() {
-    // TEMP: always 3D cube (no PageView fallback)
-    if (HardwareProfiler.forceHighEnd) {
-      _useCube = true;
-      _cubeFaceCount = 4;
-      return;
-    }
-
     final themeCfg =
         AnimatorThemeConfig.of(HardwareProfiler.currentTheme);
     if (!themeCfg.enable3D || HardwareProfiler.isLowEndDevice()) {
@@ -189,7 +182,6 @@ class _RestrictionSetupState extends State<RestrictionSetup>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // بعد از init پروفایلر دوباره تصمیم بگیر (A10s و مشابه)
     final bool wasCube = _useCube;
     _resolveMode();
     if (MediaQuery.disableAnimationsOf(context)) {
@@ -198,9 +190,6 @@ class _RestrictionSetupState extends State<RestrictionSetup>
     }
     if (wasCube && !_useCube) {
       _pageCtrl ??= PageController(initialPage: _face);
-    }
-    if (!wasCube && _useCube) {
-      // از ساده به مکعب؛ معمولاً لازم نیست
     }
   }
 
@@ -481,17 +470,23 @@ class _RestrictionSetupState extends State<RestrictionSetup>
           template: MotionTemplate.flipX,
           child: LayoutBuilder(
             builder: (context, constraints) {
-              // سایز از عرض والد + ارتفاع صفحه (LayoutBuilder داخل اسکرول
-              // اغلب maxHeight بی‌نهایت می‌دهد؛ MediaQuery قابل اعتمادتر است)
+              // پر کردن فضای محتوا (کیوب و PageView یکسان)
               final Size screen = MediaQuery.sizeOf(context);
               final double maxW = constraints.maxWidth.isFinite &&
                       constraints.maxWidth > 0
                   ? constraints.maxWidth
                   : screen.width;
-              // حدود نیمی از ارتفاع صفحه برای مربع سبز (عنوان و دکمه‌ها جدا)
-              final double maxH = screen.height * 0.50;
-              double side = math.min(maxW * 0.94, maxH);
-              if (side < 180) side = math.min(180.0, maxW * 0.96);
+              // ارتفاع در دسترس تقریبی: صفحه − هدر − عنوان − دکمه‌ها − نقطه
+              final double maxH = screen.height * 0.58;
+              double side = math.min(maxW * 0.96, maxH);
+              // اگر والد ارتفاع محدود داد، از آن استفاده کن
+              if (constraints.maxHeight.isFinite &&
+                  constraints.maxHeight > 0) {
+                final double byParent = constraints.maxHeight * 0.92;
+                if (byParent > side) side = math.min(byParent, maxW * 0.96);
+                if (side > byParent) side = byParent;
+              }
+              if (side < 200) side = math.min(200.0, maxW * 0.98);
 
               final double greenPad = context.s;
               final double innerSide = (side - greenPad * 2).clamp(40.0, side);
