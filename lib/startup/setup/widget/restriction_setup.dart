@@ -127,8 +127,8 @@ class _RestrictionSetupState extends State<RestrictionSetup>
   bool _dragging = false;
   bool _useCube = true;
 
-  /// high → ۶ وجه | medium → ۳ وجه | low / no-3D → PageView
-  int _cubeFaceCount = 6;
+  /// high → ۴ وجه | medium → ۳ وجه | low → PageView (حداکثر ۴)
+  int _cubeFaceCount = 4;
 
   @override
   void initState() {
@@ -167,7 +167,7 @@ class _RestrictionSetupState extends State<RestrictionSetup>
     _useCube = true;
     switch (HardwareProfiler.getDeviceTier()) {
       case DeviceTier.high:
-        _cubeFaceCount = 6;
+        _cubeFaceCount = 4;
         break;
       case DeviceTier.medium:
         _cubeFaceCount = 3;
@@ -211,13 +211,18 @@ class _RestrictionSetupState extends State<RestrictionSetup>
   }
 
   int _capacityFor(BuildContext context, double innerSide) {
-    final double chipH = context.m * 1.15 + context.vX2s * 2 + context.vX3s;
-    final double chipW = context.baseScale * 7.5;
+    // روی صفحه کوچک برچسب‌ها فشرده‌تر → صفحات بیشتر (نقطه‌ها)
+    final double scale = context.baseScale;
+    final double chipH = scale * 2.8;
+    final double chipW = scale * 6.2;
     final double gapH = context.hX3s;
     final double gapV = context.vX3s;
-    final int cols = math.max(1, ((innerSide + gapH) / (chipW + gapH)).floor());
-    final int rows = math.max(1, ((innerSide + gapV) / (chipH + gapV)).floor());
-    return (cols * rows).clamp(6, 24);
+    final int cols =
+        math.max(2, ((innerSide + gapH) / (chipW + gapH)).floor());
+    final int rows =
+        math.max(2, ((innerSide + gapV) / (chipH + gapV)).floor());
+    // حداقل ۶، حداکثر ۲۰ در هر وجه
+    return (cols * rows).clamp(6, 20);
   }
 
   List<List<Map<String, dynamic>>> _pages(int perPage) {
@@ -294,7 +299,7 @@ class _RestrictionSetupState extends State<RestrictionSetup>
   }) {
     final double half = side * 0.5;
     final int n = pages.length;
-    final bool six = _cubeFaceCount >= 6;
+    final bool four = _cubeFaceCount >= 4;
 
     return GestureDetector(
       onHorizontalDragStart: (_) {
@@ -360,7 +365,7 @@ class _RestrictionSetupState extends State<RestrictionSetup>
           }
 
           final layers = <Widget>[
-            if (six)
+            if (four)
               faceLayer(
                 pageIndex: pageAt(2),
                 rotY: math.pi,
@@ -376,18 +381,6 @@ class _RestrictionSetupState extends State<RestrictionSetup>
               rotY: math.pi / 2,
               facing: facingY(math.pi / 2),
             ),
-            if (six) ...[
-              faceLayer(
-                pageIndex: pageAt(3),
-                rotX: math.pi / 2,
-                facing: facingX(math.pi / 2),
-              ),
-              faceLayer(
-                pageIndex: pageAt(-2),
-                rotX: -math.pi / 2,
-                facing: facingX(-math.pi / 2),
-              ),
-            ],
             faceLayer(
               pageIndex: pageAt(0),
               rotY: 0,
@@ -477,17 +470,19 @@ class _RestrictionSetupState extends State<RestrictionSetup>
           template: MotionTemplate.flipX,
           child: LayoutBuilder(
             builder: (context, constraints) {
-              // مربع جمع‌وجور — جا برای عنوان و نقطه‌ها بماند
-              double side = constraints.maxWidth * 0.88;
+              // ریسپانسیو: پر کردن فضای موجود (نه سقف ثابت پیکسلی)
+              // animator فقط مدت/سطح ۳D را می‌دهد — روی سایز اثر ندارد
+              double side = constraints.maxWidth * 0.94;
               if (constraints.maxHeight.isFinite &&
                   constraints.maxHeight > 0) {
-                // حداکثر ۷۰٪ ارتفاع تا عنوان بالا دیده شود
-                final double byH = constraints.maxHeight * 0.70;
+                // جا برای نقطه‌های پایین (~۸٪)
+                final double byH = constraints.maxHeight * 0.90;
                 if (side > byH) side = byH;
               }
-              final double cap = context.vX4l + context.vXl;
-              if (side > cap) side = cap;
-              if (side < 120) side = 120;
+              // فقط کف خیلی کوچک؛ سقف ثابت نداریم
+              if (side < 140) {
+                side = math.min(140.0, constraints.maxWidth * 0.96);
+              }
 
               final double greenPad = context.s;
               final double innerSide = (side - greenPad * 2).clamp(40.0, side);
