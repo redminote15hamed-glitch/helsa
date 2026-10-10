@@ -210,19 +210,17 @@ class _RestrictionSetupState extends State<RestrictionSetup>
     widget.onChanged(next);
   }
 
+  /// چند برچسب در یک وجه جا می‌شود؟ → صفحه اول پر، بعد صفحه بعد
   int _capacityFor(BuildContext context, double innerSide) {
-    // ارتفاع واقعی‌تر برچسب تا از پایین باکس نزند بیرون
-    final double chipH =
-        context.m * 1.2 + context.vX2s * 2 + context.vX3s * 2;
-    final double chipW = context.baseScale * 7.8;
     final double gapH = context.hX3s;
     final double gapV = context.vX3s;
-    final int cols =
-        math.max(2, ((innerSide + gapH) / (chipW + gapH)).floor());
-    final int rows =
-        math.max(2, ((innerSide + gapV) / (chipH + gapV)).floor());
-    // کمتر در هر وجه → بدون برش؛ صفحات بیشتر (نقطه)
-    return (cols * rows).clamp(6, 10);
+    // برآورد فشرده تا باکس خالی نماند (نه ۲تایی)
+    final double chipH = math.max(40.0, context.m + context.vX2s * 2 + 4);
+    final double chipW = math.max(88.0, innerSide * 0.42);
+    int cols = math.max(2, ((innerSide + gapH) / (chipW + gapH)).floor());
+    int rows = math.max(3, ((innerSide + gapV) / (chipH + gapV)).floor());
+    // پر کردن صفحه؛ فقط صفحهٔ آخر ممکن است ناقص باشد
+    return (cols * rows).clamp(8, 28);
   }
 
   List<List<Map<String, dynamic>>> _pages(int perPage) {
@@ -470,23 +468,21 @@ class _RestrictionSetupState extends State<RestrictionSetup>
           template: MotionTemplate.flipX,
           child: LayoutBuilder(
             builder: (context, constraints) {
-              // پر کردن فضای محتوا (کیوب و PageView یکسان)
+              // اول باکس را بزرگ کن؛ بعد ظرفیت از روی همان اندازه
               final Size screen = MediaQuery.sizeOf(context);
               final double maxW = constraints.maxWidth.isFinite &&
                       constraints.maxWidth > 0
                   ? constraints.maxWidth
                   : screen.width;
-              // ارتفاع در دسترس تقریبی: صفحه − هدر − عنوان − دکمه‌ها − نقطه
-              final double maxH = screen.height * 0.58;
+              final double maxH = screen.height * 0.62;
               double side = math.min(maxW * 0.96, maxH);
-              // اگر والد ارتفاع محدود داد، از آن استفاده کن
               if (constraints.maxHeight.isFinite &&
                   constraints.maxHeight > 0) {
-                final double byParent = constraints.maxHeight * 0.92;
-                if (byParent > side) side = math.min(byParent, maxW * 0.96);
-                if (side > byParent) side = byParent;
+                final double byParent = constraints.maxHeight * 0.95;
+                side = math.min(math.max(side, byParent * 0.85), byParent);
+                side = math.min(side, maxW * 0.96);
               }
-              if (side < 200) side = math.min(200.0, maxW * 0.98);
+              if (side < 220) side = math.min(220.0, maxW * 0.98);
 
               final double greenPad = context.s;
               final double innerSide = (side - greenPad * 2).clamp(40.0, side);

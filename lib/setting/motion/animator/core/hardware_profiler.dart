@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:ui';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:disk_space_plus/disk_space_plus.dart';
@@ -102,13 +103,15 @@ abstract class HardwareProfiler {
 
   /// Priority: RAM (strong) → Refresh → Storage% → CPU → Android version
   static DeviceTier getDeviceTier() {
-    // TEMP: always high → 3D everywhere
     if (forceHighEnd) return DeviceTier.high;
-
     if (_isLowEndOverride) return DeviceTier.low;
 
-    // قبل از init → ۳D سنگین روشن نشود
-    if (!_initialized) return DeviceTier.low;
+    // وب / دسکتاپ: بدون رم اندروید → high (مکعب برای تست)
+    final bool desktopLike = kIsWeb ||
+        (!Platform.isAndroid && !Platform.isIOS);
+    if (!_initialized) {
+      return desktopLike ? DeviceTier.high : DeviceTier.low;
+    }
 
     if (_cachedTier != null) return _cachedTier!;
 
@@ -170,6 +173,12 @@ abstract class HardwareProfiler {
     }
 
     // آستانه low: score >= 3
+    // وب/دسکتاپ بدون داده رم → قوی فرض کن
+    if (_ramMB == null && _androidSdk == null && desktopLike) {
+      _cachedTier = DeviceTier.high;
+      return _cachedTier!;
+    }
+
     if (score >= 3) {
       _cachedTier = DeviceTier.low;
     } else if (score <= 0) {
