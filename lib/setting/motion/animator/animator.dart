@@ -12,7 +12,7 @@
 /// MyWidget().toPress()
 /// ```
 
-library animator;
+library;
 
 export 'core/speeds.dart';
 export 'core/curves.dart';

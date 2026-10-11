@@ -4,8 +4,8 @@ import 'package:helsa/setting/kit/buttoner.dart';
 import 'package:helsa/setting/motion/displayer.dart';
 import 'package:helsa/startup/setup/widget/setup_text.dart';
 
-/// Skip — same vertical size as Continue (uses Buttoner).
-/// Always enabled; softer look via opacity.
+/// Skip — same vertical size as Continue (Buttoner).
+/// Always enabled, full opacity (not disabled look).
 class SkipButton extends StatelessWidget {
   final String currentLang;
   final VoidCallback onSkip;
@@ -22,8 +22,7 @@ class SkipButton extends StatelessWidget {
       index: 5,
       template: MotionTemplate.bottomSlide,
       child: Opacity(
-        // between disabled continue (0.5) and enabled (1.0)
-        opacity: 0.72,
+        opacity: 1.0,
         child: Buttoner(
           text: SetupText.getString(currentLang, 'skip'),
           template: ButtonTemplate.flatOnSurface,

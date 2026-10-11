@@ -109,7 +109,7 @@ class SetupMobileVertical extends StatelessWidget {
           ),
         ),
 
-        // دکمه ادامه: با کیبورد بالا نمی‌آید (خارج از padding کیبورد)
+        // دکمه‌های پایین: حاشیه از لبه گوشی + SafeArea
         SafeArea(
           top: false,
           child: AnimatedOpacity(
@@ -117,40 +117,49 @@ class SetupMobileVertical extends StatelessWidget {
             duration: const Duration(milliseconds: 180),
             child: IgnorePointer(
               ignoring: keyboardOpen,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (showSkip && onSkip != null)
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: SkipButton(
-                            currentLang: currentLang,
-                            onSkip: onSkip!,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  context.hM,
+                  0,
+                  context.hM,
+                  context.vS,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (showSkip && onSkip != null)
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // Skip ≈ 1/3 of Continue → flex 1 : 3
+                          Expanded(
+                            flex: 1,
+                            child: SkipButton(
+                              currentLang: currentLang,
+                              onSkip: onSkip!,
+                            ),
                           ),
-                        ),
-                        SizedBox(width: context.hS),
-                        Expanded(
-                          flex: 3,
-                          child: ContinueButton(
-                            currentLang: currentLang,
-                            stepIndex: currentStep,
-                            isStepValid: isStepValid,
-                            onContinue: onContinuePressed,
+                          SizedBox(width: context.hS),
+                          Expanded(
+                            flex: 3,
+                            child: ContinueButton(
+                              currentLang: currentLang,
+                              stepIndex: currentStep,
+                              isStepValid: isStepValid,
+                              onContinue: onContinuePressed,
+                            ),
                           ),
-                        ),
-                      ],
-                    )
-                  else
-                    ContinueButton(
-                      currentLang: currentLang,
-                      stepIndex: currentStep,
-                      isStepValid: isStepValid,
-                      onContinue: onContinuePressed,
-                    ),
-                  SizedBox(height: context.vX3s),
-                ],
+                        ],
+                      )
+                    else
+                      ContinueButton(
+                        currentLang: currentLang,
+                        stepIndex: currentStep,
+                        isStepValid: isStepValid,
+                        onContinue: onContinuePressed,
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
