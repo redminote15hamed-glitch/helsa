@@ -239,6 +239,7 @@ class _SetupScreenState extends State<SetupScreen> {
           key: const ValueKey(8),
           currentLang: lang,
           selectedFoods: List<int>.from(_selectedFavorites),
+          selectedRestrictions: List<int>.from(_selectedRestrictions),
           onChanged: (list) => setState(() {
             _selectedFavorites
               ..clear()
