@@ -9,6 +9,7 @@ import 'package:helsa/startup/setup/widget/physical_setup.dart';
 import 'package:helsa/startup/setup/widget/activity_setup.dart';
 import 'package:helsa/startup/setup/widget/diet_setup.dart';
 import 'package:helsa/startup/setup/widget/restriction_setup.dart';
+import 'package:helsa/startup/setup/widget/favorite_food_setup.dart';
 import 'package:helsa/startup/setup/widget/sleep_setup.dart';
 import 'device/m_v.dart';
 
@@ -21,7 +22,7 @@ class SetupScreen extends StatefulWidget {
 
 class _SetupScreenState extends State<SetupScreen> {
   /// فقط این عدد را عوض کن وقتی استپ جدید (مثل حساسیت غذایی) اضافه شد
-  static const int kTotalSetupSteps = 9; // + restriction
+  static const int kTotalSetupSteps = 10; // + favorite food
 
   /// تا وقتی کاربر انتخاب نکرده: زبان دستگاه (fa/en/fr) وگرنه en
   String _selectedLang = 'en';
@@ -45,6 +46,7 @@ class _SetupScreenState extends State<SetupScreen> {
   int? _selectedActivityLevel;
   int? _selectedDiet;
   final List<int> _selectedRestrictions = [];
+  final List<int> _selectedFavorites = [];
 
   String? _selectedSleepTime;
   String? _selectedWakeTime;
@@ -83,9 +85,17 @@ class _SetupScreenState extends State<SetupScreen> {
   }
 
   void _onSkipRestrictions() {
-    // نادیده گرفتن انتخاب‌ها و رفتن به استپ بعد
     setState(() {
       _selectedRestrictions.clear();
+      if (_currentStep < kTotalSetupSteps - 1) {
+        _currentStep++;
+      }
+    });
+  }
+
+  void _onSkipFavorites() {
+    setState(() {
+      _selectedFavorites.clear();
       if (_currentStep < kTotalSetupSteps - 1) {
         _currentStep++;
       }
@@ -134,6 +144,8 @@ class _SetupScreenState extends State<SetupScreen> {
       case 7:
         return _selectedRestrictions.isNotEmpty;
       case 8:
+        return _selectedFavorites.isNotEmpty;
+      case 9:
         return _selectedSleepTime != null && _selectedWakeTime != null;
       default:
         return false;
@@ -223,8 +235,20 @@ class _SetupScreenState extends State<SetupScreen> {
         );
 
       case 8:
-        return SleepWakeSetup(
+        return FavoriteFoodSetup(
           key: const ValueKey(8),
+          currentLang: lang,
+          selectedFoods: List<int>.from(_selectedFavorites),
+          onChanged: (list) => setState(() {
+            _selectedFavorites
+              ..clear()
+              ..addAll(list);
+          }),
+        );
+
+      case 9:
+        return SleepWakeSetup(
+          key: const ValueKey(9),
           currentLang: lang,
           selectedSleepTime: _selectedSleepTime,
           selectedWakeTime: _selectedWakeTime,
@@ -263,8 +287,10 @@ class _SetupScreenState extends State<SetupScreen> {
             isStepValid: _isStepValid,
             onBackPressed: _handleBack,
             onContinuePressed: _onContinuePressed,
-            showSkip: _currentStep == 7,
-            onSkip: _currentStep == 7 ? _onSkipRestrictions : null,
+            showSkip: _currentStep == 7 || _currentStep == 8,
+            onSkip: _currentStep == 7
+                ? _onSkipRestrictions
+                : (_currentStep == 8 ? _onSkipFavorites : null),
             buildStepContent: _buildStepContent,
           ),
           mobileVertical: SetupMobileVertical(
@@ -274,8 +300,10 @@ class _SetupScreenState extends State<SetupScreen> {
             isStepValid: _isStepValid,
             onBackPressed: _handleBack,
             onContinuePressed: _onContinuePressed,
-            showSkip: _currentStep == 7,
-            onSkip: _currentStep == 7 ? _onSkipRestrictions : null,
+            showSkip: _currentStep == 7 || _currentStep == 8,
+            onSkip: _currentStep == 7
+                ? _onSkipRestrictions
+                : (_currentStep == 8 ? _onSkipFavorites : null),
             buildStepContent: _buildStepContent,
           ),
           defaultHorizontal: SetupMobileVertical(
@@ -285,8 +313,10 @@ class _SetupScreenState extends State<SetupScreen> {
             isStepValid: _isStepValid,
             onBackPressed: _handleBack,
             onContinuePressed: _onContinuePressed,
-            showSkip: _currentStep == 7,
-            onSkip: _currentStep == 7 ? _onSkipRestrictions : null,
+            showSkip: _currentStep == 7 || _currentStep == 8,
+            onSkip: _currentStep == 7
+                ? _onSkipRestrictions
+                : (_currentStep == 8 ? _onSkipFavorites : null),
             buildStepContent: _buildStepContent,
           ),
         ),

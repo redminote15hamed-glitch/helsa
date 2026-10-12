@@ -52,6 +52,9 @@ class ContinueButton extends StatelessWidget {
         errorMessage = SetupText.getString(currentLang, 'err_restriction_level');
         break;
       case 8:
+        errorMessage = SetupText.getString(currentLang, 'err_favorite_food');
+        break;
+      case 9:
         errorMessage = SetupText.getString(currentLang, 'err_sleep');
         break;
       default:
