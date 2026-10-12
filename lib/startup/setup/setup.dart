@@ -10,6 +10,7 @@ import 'package:helsa/startup/setup/widget/activity_setup.dart';
 import 'package:helsa/startup/setup/widget/diet_setup.dart';
 import 'package:helsa/startup/setup/widget/restriction_setup.dart';
 import 'package:helsa/startup/setup/widget/favorite_food_setup.dart';
+import 'package:helsa/startup/setup/widget/summary_setup.dart';
 import 'package:helsa/startup/setup/widget/sleep_setup.dart';
 import 'device/m_v.dart';
 
@@ -22,7 +23,7 @@ class SetupScreen extends StatefulWidget {
 
 class _SetupScreenState extends State<SetupScreen> {
   /// فقط این عدد را عوض کن وقتی استپ جدید (مثل حساسیت غذایی) اضافه شد
-  static const int kTotalSetupSteps = 10; // + favorite food
+  static const int kTotalSetupSteps = 11; // + summary
 
   /// تا وقتی کاربر انتخاب نکرده: زبان دستگاه (fa/en/fr) وگرنه en
   String _selectedLang = 'en';
@@ -112,6 +113,11 @@ class _SetupScreenState extends State<SetupScreen> {
 
     if (_currentStep < kTotalSetupSteps - 1) {
       setState(() => _currentStep++);
+    } else {
+      // پایان راه‌اندازی
+      if (mounted) {
+        Navigator.of(context).maybePop(true);
+      }
     }
   }
 
@@ -147,6 +153,8 @@ class _SetupScreenState extends State<SetupScreen> {
         return _selectedFavorites.isNotEmpty;
       case 9:
         return _selectedSleepTime != null && _selectedWakeTime != null;
+      case 10:
+        return true; // summary — always ready to start
       default:
         return false;
     }
@@ -259,6 +267,25 @@ class _SetupScreenState extends State<SetupScreen> {
           onWakeTimeSelected: (time) {
             setState(() => _selectedWakeTime = time);
           },
+        );
+
+      case 10:
+        return SummarySetup(
+          key: const ValueKey(10),
+          currentLang: lang,
+          firstName: _firstNameController.text,
+          lastName: _lastNameController.text,
+          gender: _selectedGender,
+          age: _selectedAge,
+          height: _selectedHeight,
+          weight: _selectedWeight,
+          waist: _selectedWaist,
+          activityLevel: _selectedActivityLevel,
+          diet: _selectedDiet,
+          restrictions: List<int>.from(_selectedRestrictions),
+          favorites: List<int>.from(_selectedFavorites),
+          sleepTime: _selectedSleepTime,
+          wakeTime: _selectedWakeTime,
         );
 
       default:

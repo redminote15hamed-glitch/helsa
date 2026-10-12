@@ -5,7 +5,8 @@ import 'package:helsa/setting/motion/displayer.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
 import 'package:helsa/startup/setup/widget/setup_text.dart';
 
-/// Skip — full primary (theme green), same vertical feel as Continue.
+/// Jump (formerly Skip) — theme primary green.
+/// Height matches Continue via Expanded + stretch in parent Row.
 class SkipButton extends StatelessWidget {
   final String currentLang;
   final VoidCallback onSkip;
@@ -31,20 +32,22 @@ class SkipButton extends StatelessWidget {
           onTap: onSkip,
           borderRadius: BorderRadius.circular(context.m),
           child: Ink(
+            // پر ارتفاع والد (هم‌ارتفاع Continue)
+            width: double.infinity,
+            height: double.infinity,
             decoration: BoxDecoration(
               color: bg,
               borderRadius: BorderRadius.circular(context.m),
             ),
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                vertical: context.vS,
-                horizontal: context.hS,
-              ),
-              child: Center(
+            child: Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: context.hX2s),
                 child: TextFielder(
-                  text: SetupText.getString(currentLang, 'skip'),
+                  text: SetupText.getString(currentLang, 'jump'),
                   template: TextTemplate.button,
                   textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   customStyle: TextStyle(
                     color: fg,
                     fontWeight: FontWeight.w700,

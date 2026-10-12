@@ -19,8 +19,16 @@ class ContinueButton extends StatelessWidget {
     required this.onContinue,
   });
 
+  /// استپ خلاصه (۱۰) → شروع ؛ بقیه → ادامه
+  String _buttonLabel() {
+    if (stepIndex == 10) {
+      return SetupText.getString(currentLang, 'start');
+    }
+    return SetupText.getString(currentLang, 'continue');
+  }
+
   void _handleTap(BuildContext context) {
-    if (isStepValid) {
+    if (isStepValid || stepIndex == 10) {
       onContinue();
       return;
     }
@@ -57,9 +65,14 @@ class ContinueButton extends StatelessWidget {
       case 9:
         errorMessage = SetupText.getString(currentLang, 'err_sleep');
         break;
+      case 10:
+        errorMessage = '';
+        break;
       default:
         errorMessage = SetupText.getString(currentLang, 'err_restriction_level');
     }
+
+    if (errorMessage.isEmpty) return;
 
     SnackBarer.show(
       context,
@@ -70,15 +83,17 @@ class ContinueButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool active = isStepValid || stepIndex == 10;
+
     return Displayer(
       index: 6,
       template: MotionTemplate.bottomSlide,
       child: Opacity(
-        opacity: isStepValid ? 1.0 : 0.5,
+        opacity: active ? 1.0 : 0.5,
         child: Buttoner(
-          text: SetupText.getString(currentLang, 'continue'),
+          text: _buttonLabel(),
           template: ButtonTemplate.flatOnSurface,
-          isSelected: isStepValid,
+          isSelected: active,
           onTap: () => _handleTap(context),
         ),
       ),
