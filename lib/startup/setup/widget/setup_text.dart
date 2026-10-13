@@ -44,6 +44,10 @@ class SetupText extends StatelessWidget {
       'summary_favorites': 'مورد علاقه‌ها',
       'summary_sleep': 'خواب',
       'start': 'شروع',
+      'support_copy': 'کپی',
+      'support_copied': 'کپی شد',
+      'support_hint': 'ارسال مشکلات و پیشنهادات',
+
 
       'search_hint': 'جستجو...',
       'search_no_results': 'بدون نتیجه',
@@ -286,6 +290,10 @@ class SetupText extends StatelessWidget {
       'summary_favorites': 'Favorites',
       'summary_sleep': 'Sleep',
       'start': 'Start',
+      'support_copy': 'Copy',
+      'support_copied': 'Copied',
+      'support_hint': 'Send issues and suggestions',
+
 
       'search_hint': 'Search...',
       'search_no_results': 'No results',
@@ -527,6 +535,10 @@ class SetupText extends StatelessWidget {
       'summary_favorites': 'Favoris',
       'summary_sleep': 'Sommeil',
       'start': 'Commencer',
+      'support_copy': 'Copier',
+      'support_copied': 'Copié',
+      'support_hint': 'Envoyer problèmes et suggestions',
+
 
       'search_hint': 'Rechercher...',
       'search_no_results': 'Aucun résultat',
