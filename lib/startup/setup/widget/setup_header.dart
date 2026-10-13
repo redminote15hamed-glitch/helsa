@@ -26,20 +26,29 @@ class SetupHeader extends StatelessWidget {
     this.currentLang = 'fa',
   });
 
+  /// Normalize language codes (en_US → en, etc.)
+  String get _lang {
+    final c = currentLang.toLowerCase();
+    if (c.startsWith('fa') || c.startsWith('per')) return 'fa';
+    if (c.startsWith('fr')) return 'fr';
+    if (c.startsWith('en')) return 'en';
+    return c;
+  }
+
   void _showSupportSheet(BuildContext context) {
     final theme = Theme.of(context);
+    final media = MediaQuery.of(context);
+    // زیر هدر / آیکون ساپورت
+    final double topPad = media.padding.top + context.vL + context.vS;
 
     showGeneralDialog<void>(
       context: context,
       barrierDismissible: true,
       barrierLabel: 'support',
-      barrierColor: Colors.black54,
-      transitionDuration: const Duration(milliseconds: 320),
-      pageBuilder: (ctx, anim, secAnim) {
-        return const SizedBox.shrink();
-      },
+      barrierColor: Colors.black38,
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (ctx, anim, secAnim) => const SizedBox.shrink(),
       transitionBuilder: (ctx, animation, secondaryAnimation, child) {
-        // ورود از چپ + خروج از چپ (همان مسیر)
         final Animation<Offset> slide = Tween<Offset>(
           begin: const Offset(-1.0, 0.0),
           end: Offset.zero,
@@ -50,7 +59,6 @@ class SetupHeader extends StatelessWidget {
             reverseCurve: Curves.easeInCubic,
           ),
         );
-
         final Animation<double> fade = CurvedAnimation(
           parent: animation,
           curve: Curves.easeOut,
@@ -62,26 +70,27 @@ class SetupHeader extends StatelessWidget {
           child: FadeTransition(
             opacity: fade,
             child: Align(
-              alignment: Alignment.bottomCenter,
+              alignment: Alignment.topRight,
               child: Material(
                 color: Colors.transparent,
-                child: SafeArea(
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      context.hM,
-                      0,
-                      context.hM,
-                      context.vM,
-                    ),
-                    child: Displayer(
-                      index: 0,
-                      template: MotionTemplate.leftSlide,
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    top: topPad,
+                    right: context.hM,
+                    left: context.hM,
+                  ),
+                  child: Displayer(
+                    index: 0,
+                    template: MotionTemplate.leftSlide,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: media.size.width * 0.92,
+                      ),
                       child: Container(
-                        width: double.infinity,
                         padding: EdgeInsets.fromLTRB(
-                          context.hM,
+                          context.hS,
                           context.vS,
-                          context.hM,
+                          context.hS,
                           context.vS,
                         ),
                         decoration: BoxDecoration(
@@ -89,28 +98,19 @@ class SetupHeader extends StatelessWidget {
                           borderRadius: BorderRadius.circular(context.m * 1.2),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.18),
+                              color: Colors.black.withValues(alpha: 0.2),
                               blurRadius: context.baseScale * 0.8,
-                              offset: Offset(0, context.baseScale * 0.15),
+                              offset: Offset(0, context.baseScale * 0.12),
                             ),
                           ],
                         ),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             Container(
-                              width: context.baseScale * 2.2,
-                              height: context.baseScale * 0.22,
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.onSurface
-                                    .withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(context.m),
-                              ),
-                            ),
-                            SizedBox(height: context.vS),
-                            Container(
                               padding: EdgeInsets.symmetric(
-                                horizontal: context.hS,
+                                horizontal: context.hX2s,
                                 vertical: context.vX2s,
                               ),
                               decoration: BoxDecoration(
@@ -141,7 +141,7 @@ class SetupHeader extends StatelessWidget {
                                       customStyle: TextStyle(
                                         color: theme.colorScheme.onSurface,
                                         fontWeight: FontWeight.w600,
-                                        fontSize: context.m * 0.9,
+                                        fontSize: context.m * 0.85,
                                       ),
                                     ),
                                   ),
@@ -163,7 +163,7 @@ class SetupHeader extends StatelessWidget {
                                             SnackBar(
                                               content: Text(
                                                 SetupText.getString(
-                                                  currentLang,
+                                                  _lang,
                                                   'support_copied',
                                                 ),
                                               ),
@@ -193,7 +193,7 @@ class SetupHeader extends StatelessWidget {
                                             SizedBox(width: context.hX3s),
                                             Text(
                                               SetupText.getString(
-                                                currentLang,
+                                                _lang,
                                                 'support_copy',
                                               ),
                                               style: TextStyle(
@@ -211,10 +211,10 @@ class SetupHeader extends StatelessWidget {
                                 ],
                               ),
                             ),
-                            SizedBox(height: context.vS),
+                            SizedBox(height: context.vX2s),
                             TextFielder(
                               text: SetupText.getString(
-                                currentLang,
+                                _lang,
                                 'support_hint',
                               ),
                               template: TextTemplate.caption,
