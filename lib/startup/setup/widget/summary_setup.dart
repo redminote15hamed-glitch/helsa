@@ -236,12 +236,18 @@ class _SummaryTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // فارسی / عربی → RTL: آیکون راست، برچسب، مقدار چپ
+    final bool rtl =
+        currentLang == 'fa' || currentLang == 'ar' || currentLang == 'he';
+    final TextDirection dir = rtl ? TextDirection.rtl : TextDirection.ltr;
+
     return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: context.hS,
         vertical: context.vX2s,
       ),
       child: Row(
+        textDirection: dir,
         children: [
           Iconer(
             icon: data.icon,
@@ -250,26 +256,24 @@ class _SummaryTile extends StatelessWidget {
             useGradient: false,
           ),
           SizedBox(width: context.hX2s),
-          Expanded(
-            flex: 2,
-            child: TextFielder(
-              text: SetupText.getString(currentLang, data.labelKey),
-              template: TextTemplate.caption,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              customStyle: TextStyle(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
-                fontSize: context.s,
-              ),
+          // برچسب (وزن، جنسیت، ...)
+          TextFielder(
+            text: SetupText.getString(currentLang, data.labelKey),
+            template: TextTemplate.caption,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            customStyle: TextStyle(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+              fontSize: context.s,
             ),
           ),
-          SizedBox(width: context.hX3s),
+          SizedBox(width: context.hX2s),
+          // مقدار کاربر — باقی فضا
           Expanded(
-            flex: 3,
             child: TextFielder(
               text: data.value,
               template: TextTemplate.body,
-              textAlign: TextAlign.end,
+              textAlign: rtl ? TextAlign.left : TextAlign.right,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               customStyle: TextStyle(

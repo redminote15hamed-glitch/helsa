@@ -1,4 +1,4 @@
-import 'dart:math' as math;
+// lib/startup/setup/widget/title_setup.dart
 import 'package:flutter/material.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
 import 'package:helsa/setting/kit/iconer.dart';
@@ -16,62 +16,26 @@ class TitleSetup extends StatelessWidget {
     required this.step,
   });
 
+  static const Map<int, (IconData, String)> _map = {
+    0: (Icons.language_rounded, 'title'),
+    1: (Icons.person_rounded, 'familiarity_title'),
+    2: (Icons.transgender_rounded, 'gender_title'),
+    3: (Icons.cake_rounded, 'age_title'),
+    4: (Icons.self_improvement_rounded, 'physical_data_title'),
+    5: (Icons.fitness_center_rounded, 'activity_title'),
+    6: (Icons.restaurant_menu_rounded, 'diet_title'),
+    7: (Icons.health_and_safety_rounded, 'restriction_title'),
+    8: (Icons.favorite_rounded, 'favorite_food_title'),
+    9: (Icons.nightlight_round, 'sleep_title'),
+    10: (Icons.fact_check_rounded, 'summary_title'),
+  };
+
   @override
   Widget build(BuildContext context) {
-    IconData icon;
-    String textKey;
+    final entry = _map[step] ?? (Icons.fact_check_rounded, 'summary_title');
+    final IconData icon = entry.$1;
+    final String textKey = entry.$2;
 
-    switch (step) {
-      case 0:
-        icon = Icons.language_rounded;
-        textKey = 'title';
-        break;
-      case 1:
-        icon = Icons.person_rounded;
-        textKey = 'familiarity_title';
-        break;
-      case 2:
-        icon = Icons.transgender_rounded;
-        textKey = 'gender_title';
-        break;
-      case 3:
-        icon = Icons.cake_rounded;
-        textKey = 'age_title';
-        break;
-      case 4:
-        icon = Icons.self_improvement_rounded;
-        textKey = 'physical_data_title';
-        break;
-      case 5:
-        icon = Icons.fitness_center_rounded;
-        textKey = 'activity_title';
-        break;
-      case 6:
-        icon = Icons.restaurant_menu_rounded;
-        textKey = 'diet_title';
-        break;
-      case 7:
-        icon = Icons.health_and_safety_rounded;
-        textKey = 'restriction_title';
-        break;
-      case 8:
-        icon = Icons.favorite_rounded;
-        textKey = 'favorite_food_title';
-        break;
-      case 9:
-        icon = Icons.nightlight_round;
-        textKey = 'sleep_title';
-        break;
-      default:
-        icon = Icons.info_rounded;
-        textKey = 'title';
-    }
-
-    final Widget iconWidget = step == 9
-        ? _SleepTitleIcon(color: Theme.of(context).colorScheme.primary)
-        : Iconer(icon: icon, template: IconTemplate.giant);
-
-    // mainAxisSize.min تا در ارتفاع کم (شناور) overflow ندهد
     return Column(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
@@ -79,13 +43,18 @@ class TitleSetup extends StatelessWidget {
         Displayer(
           index: 0,
           template: MotionTemplate.zoomFade,
-          child: iconWidget,
+          child: Iconer(
+            key: ValueKey('title_icon_$step'),
+            icon: icon,
+            template: IconTemplate.giant,
+          ),
         ),
         SizedBox(height: context.vX3s),
         Displayer(
           index: 1,
           template: MotionTemplate.flipX,
           child: TextFielder(
+            key: ValueKey('title_text_$step'),
             text: SetupText.getString(currentLang, textKey),
             template: TextTemplate.title,
             textAlign: TextAlign.center,
@@ -96,97 +65,5 @@ class TitleSetup extends StatelessWidget {
         ),
       ],
     );
-  }
-}
-
-/// هلال + ستاره چهارپر داخل فضای باز
-class _SleepTitleIcon extends StatelessWidget {
-  final Color color;
-
-  const _SleepTitleIcon({required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    final double unit = context.baseScale;
-
-    final double boxW = unit * 3.8;
-    final double boxH = unit * 3.2;
-
-    final double moonSize = unit * 3.0;
-    final double starSize = unit * 0.95;
-
-    final double starLeft = boxW * 0.52;
-    final double starTop = boxH * 0.18;
-
-    return SizedBox(
-      width: boxW,
-      height: boxH,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned(
-            left: 0,
-            top: (boxH - moonSize) / 2,
-            child: Icon(
-              Icons.nightlight_round,
-              size: moonSize,
-              color: color,
-            ),
-          ),
-          Positioned(
-            left: starLeft,
-            top: starTop,
-            child: CustomPaint(
-              size: Size(starSize, starSize),
-              painter: _FourPointStarPainter(color: color),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FourPointStarPainter extends CustomPainter {
-  final Color color;
-
-  _FourPointStarPainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-
-    final cx = size.width / 2;
-    final cy = size.height / 2;
-    final outer = size.width / 2;
-    final inner = outer * 0.28;
-
-    final path = Path();
-    for (int i = 0; i < 4; i++) {
-      final outerAngle = -math.pi / 2 + i * math.pi / 2;
-      final innerAngle = outerAngle + math.pi / 4;
-
-      final ox = cx + outer * math.cos(outerAngle);
-      final oy = cy + outer * math.sin(outerAngle);
-      final ix = cx + inner * math.cos(innerAngle);
-      final iy = cy + inner * math.sin(innerAngle);
-
-      if (i == 0) {
-        path.moveTo(ox, oy);
-      } else {
-        path.lineTo(ox, oy);
-      }
-      path.lineTo(ix, iy);
-    }
-    path.close();
-
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _FourPointStarPainter oldDelegate) {
-    return oldDelegate.color != color;
   }
 }

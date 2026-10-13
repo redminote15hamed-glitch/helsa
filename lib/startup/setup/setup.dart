@@ -111,14 +111,16 @@ class _SetupScreenState extends State<SetupScreen> {
     }
     if (!mounted) return;
 
-    if (_currentStep < kTotalSetupSteps - 1) {
-      setState(() => _currentStep++);
-    } else {
-      // پایان راه‌اندازی
-      if (mounted) {
-        Navigator.of(context).maybePop(true);
+    // آخرین استپ (خلاصه = ۱۰) → تمام؛ به عقب برنگرد
+    if (_currentStep >= kTotalSetupSteps - 1) {
+      final nav = Navigator.of(context);
+      if (nav.canPop()) {
+        nav.pop(true);
       }
+      return;
     }
+
+    setState(() => _currentStep++);
   }
 
   void _handleBack() {
