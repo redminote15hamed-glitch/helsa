@@ -1,14 +1,19 @@
 // فایل: main.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/gestures.dart';
 import 'package:helsa/startup/splash/splash_screen.dart';
 import 'package:helsa/setting/color/theme_color.dart';
 import 'package:helsa/setting/color/edge_to_edge.dart';
-import 'package:flutter/gestures.dart';
+import 'package:helsa/setting/storage/profile_store.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+
+  // Hive — قبل از runApp
+  await ProfileStore.init();
+
   runApp(const MyApp());
 }
 
@@ -20,10 +25,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  // استفاده از تم سیستم به عنوان تم پیش‌فرض بدون قفل کردن متد
   ThemeData? _customTheme;
 
-  // تابعی برای تغییر تم از داخل تنظیمات یا انیمیشن سوییچ تم
   void _updateTheme(ThemeData newTheme) {
     setState(() {
       _customTheme = newTheme;
@@ -32,7 +35,6 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    // اگر کاربر تم سفارشی انتخاب نکرده باشد، برنامه به صورت کاملاً داینامیک با تغییرات تم سیستم تغییر موضع می‌دهد
     final effectiveTheme = _customTheme ?? AppTheme.getTheme(context);
 
     return MaterialApp(
@@ -43,6 +45,8 @@ class _MyAppState extends State<MyApp> {
       builder: (context, child) {
         return EdgeToEdgeWrapper(child: child!);
       },
+      // بعد از اسپلش، خود SplashScreen باید چک کند:
+      // ProfileStore.isSetupDone ? Home : Setup
       home: SplashScreen(onThemeChanged: _updateTheme),
     );
   }

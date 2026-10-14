@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:helsa/setting/responsive/device_modifier.dart';
 import 'package:helsa/setting/motion/transitioner.dart';
-
-// وارد کردن SetupScreen به جای IntroScreen
+import 'package:helsa/setting/storage/profile_store.dart';
 import 'package:helsa/startup/setup/setup.dart';
+import 'package:helsa/home/home_screen.dart';
 
 import 'device/m_v.dart';
 import 'device/m_h.dart';
@@ -45,23 +45,23 @@ class _SplashScreenState extends State<SplashScreen> {
       _isNavigating = true;
     });
 
-    // تغییر اینجا: هدایت مستقیم به SetupScreen
+    // اگر setup قبلاً در Hive تمام شده → خانه؛ وگرنه → setup
+    final Widget nextPage = ProfileStore.isSetupDone
+        ? const HomeScreen()
+        : const SetupScreen();
+
     await Navigator.of(context).pushReplacement(
-      // استفاده از pushReplacement برای جلوگیری از بازگشت به اسپلش
       Transitioner.createRoute(
-        page: const SetupScreen(),
+        page: nextPage,
         template: TransitionTemplate.zoomFade,
       ),
     );
 
-    // اگر می‌خواهید پس از بازگشت از Setup (در صورت پاپ شدن)، دوباره اسپلش اجرا شود:
     if (mounted) {
       setState(() {
         _isNavigating = false;
         _renderKey = UniqueKey();
       });
-      // معمولاً اسپلش نباید دوباره تکرار شود، اما طبق منطق خودتان اضافه شد
-      // _startSplashCycle();
     }
   }
 
