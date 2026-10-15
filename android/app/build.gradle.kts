@@ -1,3 +1,4 @@
+// مسیر: android/app/build.gradle.kts
 plugins {
     id("com.android.application")
     id("dev.flutter.flutter-gradle-plugin")
@@ -5,7 +6,6 @@ plugins {
 
 android {
     namespace = "com.example.helsa"
-    // قفل روی 36 تا خطای android-37 در CI نیاید
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
