@@ -1,12 +1,11 @@
 // lib/home/services/walking_notification.dart
-import 'dart:async';
+// API: flutter_local_notifications 20+ / 22 (named parameters)
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:helsa/setting/storage/profile_store.dart';
 import 'package:helsa/home/services/step_tracker.dart';
 
-/// نوتیفیکیشن تشخیص پیاده‌روی + تأیید کاربر (بله / خیر)
 class WalkingNotification {
   WalkingNotification._();
   static final WalkingNotification instance = WalkingNotification._();
@@ -22,7 +21,6 @@ class WalkingNotification {
   bool _ready = false;
   bool _confirmed = false;
   DateTime? _suppressedUntil;
-  int _lastShownSteps = -1;
 
   String get _lang {
     final raw =
@@ -35,7 +33,6 @@ class WalkingNotification {
   String _t(String key) {
     const m = {
       'fa': {
-        'title': 'Helsa',
         'ask': 'شما در حال پیاده‌روی هستید؟',
         'yes': 'بله',
         'no': 'خیر',
@@ -43,7 +40,6 @@ class WalkingNotification {
         'steps': 'قدم',
       },
       'en': {
-        'title': 'Helsa',
         'ask': 'Are you walking?',
         'yes': 'Yes',
         'no': 'No',
@@ -51,7 +47,6 @@ class WalkingNotification {
         'steps': 'steps',
       },
       'fr': {
-        'title': 'Helsa',
         'ask': 'Êtes-vous en train de marcher ?',
         'yes': 'Oui',
         'no': 'Non',
@@ -72,7 +67,6 @@ class WalkingNotification {
       requestSoundPermission: false,
     );
 
-    // API جدید: settings نام‌دار
     await _plugin.initialize(
       settings: const InitializationSettings(
         android: androidInit,
@@ -126,7 +120,6 @@ class WalkingNotification {
       await _showConfirmed(steps);
       return;
     }
-    _lastShownSteps = steps;
 
     final android = AndroidNotificationDetails(
       _channelId,
@@ -152,7 +145,6 @@ class WalkingNotification {
       ],
     );
 
-    // API جدید: id / title / body / notificationDetails نام‌دار
     await _plugin.show(
       id: _notifId,
       title: '$steps ${_t('steps')}',
@@ -162,7 +154,6 @@ class WalkingNotification {
   }
 
   Future<void> _showConfirmed(int steps) async {
-    _lastShownSteps = steps;
     final android = AndroidNotificationDetails(
       _channelId,
       'Walking',
@@ -197,6 +188,5 @@ class WalkingNotification {
 
   Future<void> cancel() async {
     await _plugin.cancel(id: _notifId);
-    _lastShownSteps = -1;
   }
 }
