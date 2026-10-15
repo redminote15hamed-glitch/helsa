@@ -2,13 +2,29 @@
 import 'package:flutter/material.dart';
 
 class ColorPalette {
+  // ═══════════════════════════════════════════════════════════
+  // پالت ارشد + مکمل‌ها (همه تعریف شده؛ بعداً هرجا لازم استفاده شود)
+  // سبز · یشمی · نارنجی · آبی · پس‌زمینه فعلی
+  // ═══════════════════════════════════════════════════════════
+
+  // ── سبز (primary) ─────────────────────────────────────────
   static const Color mintPrimary = Color(0xFF10B981);
   static const Color mintDark = Color(0xFF047857);
   static const Color mintLight = Color(0xFFD1FAE5);
 
+  // ── یشمی ──────────────────────────────────────────────────
+  static const Color mintAccent = Color(0xFF7DDFC3);
+
+  // ── نارنجی (مکمل پس‌زمینه — پیشنهاد ارشد) ────────────────
+  static const Color calorieBurn = Color(0xFFFF8C42);
+  static const Color calorieBurnDeep = Color(0xFFF97316);
+
+  // ── آبی (پیشنهاد برای استفاده بعدی) ──────────────────────
+  static const Color skyBlue = Color(0xFF4C8DFF);
   static const Color tealSecondary = Color(0xFF0EA5E9);
   static const Color tealDark = Color(0xFF0369A1);
 
+  // ── پس‌زمینه فعلی (light / dark) ──────────────────────────
   static const Color bgLight = Color(0xFFF8FAFC);
   static const Color surfaceLight = Colors.white;
   static const Color textMainLight = Color(0xFF0F172A);
@@ -21,13 +37,19 @@ class ColorPalette {
   static const Color textSubDark = Color(0xFF94A3B8);
   static const Color borderDark = Color(0xFF1E293B);
 
+  // ── Status ────────────────────────────────────────────────
   static const Color success = Color(0xFF10B981);
   static const Color warning = Color(0xFFF59E0B);
   static const Color error = Color(0xFFEF4444);
   static const Color info = Color(0xFF3B82F6);
 
+  // ── Home metrics (الان) ───────────────────────────────────
+  static const Color steps = mintPrimary; // سبز
+  static const Color activeTime = mintAccent; // یشمی
+  // کالری → calorieBurn (نارنجی)
+
+  // ── Feature (استفاده بعدی) ────────────────────────────────
   static const Color weightGraph = Color(0xFF6366F1);
-  static const Color calorieBurn = Color(0xFFF97316);
   static const Color waterTracker = Color(0xFF38BDF8);
   static const Color sleepQuality = Color(0xFF8B5CF6);
 }

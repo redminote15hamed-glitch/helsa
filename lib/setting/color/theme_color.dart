@@ -9,8 +9,10 @@ class AppTheme {
     colorScheme: const ColorScheme.light(
       primary: ColorPalette.mintPrimary,
       onPrimary: Colors.white,
-      secondary: ColorPalette.tealSecondary,
-      onSecondary: Colors.white,
+      secondary: ColorPalette.mintAccent, // یشمی
+      onSecondary: ColorPalette.textMainLight,
+      tertiary: ColorPalette.calorieBurn, // نارنجی
+      onTertiary: Colors.white,
       surface: ColorPalette.surfaceLight,
       onSurface: ColorPalette.textMainLight,
       error: ColorPalette.error,
@@ -62,8 +64,10 @@ class AppTheme {
     colorScheme: const ColorScheme.dark(
       primary: ColorPalette.mintPrimary,
       onPrimary: ColorPalette.bgDark,
-      secondary: ColorPalette.tealSecondary,
-      onSecondary: Colors.white,
+      secondary: ColorPalette.mintAccent, // یشمی
+      onSecondary: ColorPalette.bgDark,
+      tertiary: ColorPalette.calorieBurn, // نارنجی
+      onTertiary: Colors.white,
       surface: ColorPalette.surfaceDark,
       onSurface: ColorPalette.textMainDark,
       error: ColorPalette.error,
@@ -113,16 +117,18 @@ class AppTheme {
     useMaterial3: true,
     brightness: Brightness.light,
     colorScheme: const ColorScheme.light(
-      primary: ColorPalette.weightGraph,
+      primary: ColorPalette.mintPrimary,
       onPrimary: Colors.white,
-      secondary: ColorPalette.calorieBurn,
-      onSecondary: Colors.white,
+      secondary: ColorPalette.mintAccent,
+      onSecondary: ColorPalette.textMainLight,
+      tertiary: ColorPalette.calorieBurn,
+      onTertiary: Colors.white,
       surface: Color(0xFFF0FDF4),
       onSurface: ColorPalette.textMainLight,
       error: ColorPalette.error,
       outline: Color(0xFFDCFCE7),
     ),
-    scaffoldBackgroundColor: const Color(0x0ffefafc),
+    scaffoldBackgroundColor: const Color(0xFFFEFAFC),
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.transparent,
       foregroundColor: ColorPalette.textMainLight,
@@ -143,7 +149,7 @@ class AppTheme {
       ),
     ),
     floatingActionButtonTheme: const FloatingActionButtonThemeData(
-      backgroundColor: ColorPalette.weightGraph,
+      backgroundColor: ColorPalette.mintPrimary,
       foregroundColor: Colors.white,
     ),
     textTheme: const TextTheme(
