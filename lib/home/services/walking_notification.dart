@@ -1,5 +1,5 @@
 // lib/home/services/walking_notification.dart
-// API: flutter_local_notifications 20+ / 22 (named parameters)
+// سازگار با flutter_local_notifications 19.x (آرگومان positional)
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -67,11 +67,9 @@ class WalkingNotification {
       requestSoundPermission: false,
     );
 
+    // 19.x: اولین آرگومان positional است
     await _plugin.initialize(
-      settings: const InitializationSettings(
-        android: androidInit,
-        iOS: iosInit,
-      ),
+      const InitializationSettings(android: androidInit, iOS: iosInit),
       onDidReceiveNotificationResponse: _onAction,
     );
 
@@ -145,11 +143,12 @@ class WalkingNotification {
       ],
     );
 
+    // 19.x: show(id, title, body, details)
     await _plugin.show(
-      id: _notifId,
-      title: '$steps ${_t('steps')}',
-      body: _t('ask'),
-      notificationDetails: NotificationDetails(android: android),
+      _notifId,
+      '$steps ${_t('steps')}',
+      _t('ask'),
+      NotificationDetails(android: android),
     );
   }
 
@@ -166,10 +165,10 @@ class WalkingNotification {
     );
 
     await _plugin.show(
-      id: _notifId,
-      title: '$steps ${_t('steps')}',
-      body: _t('walking'),
-      notificationDetails: NotificationDetails(android: android),
+      _notifId,
+      '$steps ${_t('steps')}',
+      _t('walking'),
+      NotificationDetails(android: android),
     );
   }
 
@@ -187,6 +186,7 @@ class WalkingNotification {
   }
 
   Future<void> cancel() async {
-    await _plugin.cancel(id: _notifId);
+    // 19.x: cancel(id) positional
+    await _plugin.cancel(_notifId);
   }
 }
