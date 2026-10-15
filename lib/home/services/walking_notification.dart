@@ -20,8 +20,8 @@ class WalkingNotification {
       FlutterLocalNotificationsPlugin();
 
   bool _ready = false;
-  bool _confirmed = false; // کاربر گفته بله
-  DateTime? _suppressedUntil; // بعد از «خیر» تا ۱ ساعت سکوت
+  bool _confirmed = false;
+  DateTime? _suppressedUntil;
   int _lastShownSteps = -1;
 
   String get _lang {
@@ -72,8 +72,12 @@ class WalkingNotification {
       requestSoundPermission: false,
     );
 
+    // API جدید: settings نام‌دار
     await _plugin.initialize(
-      const InitializationSettings(android: androidInit, iOS: iosInit),
+      settings: const InitializationSettings(
+        android: androidInit,
+        iOS: iosInit,
+      ),
       onDidReceiveNotificationResponse: _onAction,
     );
 
@@ -88,12 +92,9 @@ class WalkingNotification {
       ),
     );
 
-    // Android 13+
     await Permission.notification.request();
 
     _ready = true;
-
-    // گوش به StepTracker
     StepTracker.instance.addListener(_onTracker);
   }
 
@@ -101,7 +102,6 @@ class WalkingNotification {
     final t = StepTracker.instance;
     if (!_ready) return;
 
-    // در بازه سکوت بعد از «خیر»
     if (_suppressedUntil != null &&
         DateTime.now().isBefore(_suppressedUntil!)) {
       return;
@@ -115,10 +115,8 @@ class WalkingNotification {
     if (t.isWalking) {
       _showOrUpdate(t.steps);
     } else if (!_confirmed) {
-      // اگر دیگر راه نمی‌رود و هنوز تأیید نشده → ببند
       cancel();
     } else {
-      // تأیید شده ولی موقتاً ایستاده → فقط عدد را نگه دار / آپدیت
       _showConfirmed(t.steps);
     }
   }
@@ -127,10 +125,6 @@ class WalkingNotification {
     if (_confirmed) {
       await _showConfirmed(steps);
       return;
-    }
-    // همان steps را هی آپدیت نکن مگر تغییر کرده
-    if (steps == _lastShownSteps && _lastShownSteps >= 0) {
-      // همچنان آپدیت متن برای زنده بودن
     }
     _lastShownSteps = steps;
 
@@ -158,11 +152,12 @@ class WalkingNotification {
       ],
     );
 
+    // API جدید: id / title / body / notificationDetails نام‌دار
     await _plugin.show(
-      _notifId,
-      '$steps ${_t('steps')}',
-      _t('ask'),
-      NotificationDetails(android: android),
+      id: _notifId,
+      title: '$steps ${_t('steps')}',
+      body: _t('ask'),
+      notificationDetails: NotificationDetails(android: android),
     );
   }
 
@@ -177,14 +172,13 @@ class WalkingNotification {
       ongoing: true,
       autoCancel: false,
       onlyAlertOnce: true,
-      // بدون دکمه — فقط عدد قدم
     );
 
     await _plugin.show(
-      _notifId,
-      '$steps ${_t('steps')}',
-      _t('walking'),
-      NotificationDetails(android: android),
+      id: _notifId,
+      title: '$steps ${_t('steps')}',
+      body: _t('walking'),
+      notificationDetails: NotificationDetails(android: android),
     );
   }
 
@@ -196,14 +190,13 @@ class WalkingNotification {
     } else if (action == _actionNo) {
       _confirmed = false;
       _suppressedUntil = DateTime.now().add(const Duration(hours: 1));
-      // شمارش تایمر پیاده‌روی را متوقف کن
       StepTracker.instance.pauseWalkingDetection();
       cancel();
     }
   }
 
   Future<void> cancel() async {
-    await _plugin.cancel(_notifId);
+    await _plugin.cancel(id: _notifId);
     _lastShownSteps = -1;
   }
 }
