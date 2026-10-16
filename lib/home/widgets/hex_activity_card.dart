@@ -1,106 +1,81 @@
 // lib/home/widgets/hex_activity_card.dart
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:helsa/setting/kit/iconer.dart';
-import 'package:helsa/setting/kit/textfielder.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
-import 'package:helsa/setting/storage/profile_store.dart';
 import 'package:helsa/setting/color/color_palette.dart';
 
-/// سه شش‌ضلعی تو در تو (قدم / کالری / زمان) + راهنمای رنگ سمت دیگر.
+/// 3 nested hexagons: steps (outer), calories (mid), active time (inner).
+/// Unfilled arc = same color @ 50% opacity; filled = 100%.
+/// Icons sit at the top vertex of each ring (like circular health UIs).
 class HexActivityCard extends StatelessWidget {
+  final String language;
   final int steps;
   final int stepsGoal;
-  final int calories;
-  final int caloriesGoal;
+  final double calories;
+  final double caloriesGoal;
   final int activeMinutes;
   final int activeMinutesGoal;
-  /// اگر ست شود به‌جای "دقیقه" خام نشان داده می‌شود (مثلاً 12:34)
-  final String? activeTimeText;
-
-  /// Optional override; defaults to profile language.
-  final String? language;
+  final String activeTimeText;
 
   const HexActivityCard({
     super.key,
-    this.steps = 0,
-    this.stepsGoal = 8000,
-    this.calories = 0,
-    this.caloriesGoal = 300,
-    this.activeMinutes = 0,
-    this.activeMinutesGoal = 30,
-    this.activeTimeText,
-    this.language,
+    required this.language,
+    required this.steps,
+    required this.stepsGoal,
+    required this.calories,
+    required this.caloriesGoal,
+    required this.activeMinutes,
+    required this.activeMinutesGoal,
+    required this.activeTimeText,
   });
 
-  static const Color stepsColor = ColorPalette.steps;
-  static const Color caloriesColor = ColorPalette.calorieBurn;
-  static const Color timeColor = ColorPalette.activeTime;
+  bool get _rtl =>
+      language.toLowerCase().startsWith('fa') ||
+      language.toLowerCase().startsWith('ar');
 
-  String get _lang {
-    final raw = (language ??
-            ProfileStore.profile?['language']?.toString() ??
-            'en')
-        .toLowerCase();
-    if (raw.startsWith('fa')) return 'fa';
-    if (raw.startsWith('fr')) return 'fr';
-    return 'en';
-  }
-
-  bool get _rtl => _lang == 'fa';
-
-  String _t(String key) {
-    const map = {
-      'fa': {
-        'steps': 'قدم',
-        'calories': 'کالری',
-        'time': 'زمان حرکت',
-        'kcal': 'kcal',
-        'min': 'دقیقه',
-      },
-      'en': {
-        'steps': 'Steps',
-        'calories': 'Calories',
-        'time': 'Active time',
-        'kcal': 'kcal',
-        'min': 'min',
-      },
-      'fr': {
-        'steps': 'Pas',
-        'calories': 'Calories',
-        'time': 'Temps actif',
-        'kcal': 'kcal',
-        'min': 'min',
-      },
+  String _label(String key) {
+    const fa = {
+      'steps': 'قدم',
+      'calories': 'کالری',
+      'active': 'زمان حرکت',
     };
-    return map[_lang]?[key] ?? map['en']![key]!;
-  }
-
-  double _p(int v, int goal) {
-    if (goal <= 0) return 0;
-    return (v / goal).clamp(0.0, 1.0);
+    const en = {
+      'steps': 'Steps',
+      'calories': 'Calories',
+      'active': 'Active',
+    };
+    const fr = {
+      'steps': 'Pas',
+      'calories': 'Calories',
+      'active': 'Actif',
+    };
+    final code = language.toLowerCase();
+    final map = code.startsWith('fa')
+        ? fa
+        : code.startsWith('fr')
+            ? fr
+            : en;
+    return map[key] ?? key;
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final hexSize = context.baseScale * 7.2;
+    final stepsColor = ColorPalette.mintAccent;
+    final calColor = ColorPalette.calorieBurn;
+    final activeColor = theme.colorScheme.primary;
 
-    final hex = SizedBox(
-      width: hexSize,
-      height: hexSize,
-      child: CustomPaint(
-        painter: _NestedHexPainter(
-          stepsProgress: _p(steps, stepsGoal),
-          caloriesProgress: _p(calories, caloriesGoal),
-          timeProgress: _p(activeMinutes, activeMinutesGoal),
-          stepsColor: stepsColor,
-          caloriesColor: caloriesColor,
-          timeColor: timeColor,
-          trackColor: theme.colorScheme.onSurface.withValues(alpha: 0.12),
-        ),
-      ),
-    );
+    final stepsP = stepsGoal <= 0
+        ? 0.0
+        : (steps / stepsGoal).clamp(0.0, 1.0);
+    final calP = caloriesGoal <= 0
+        ? 0.0
+        : (calories / caloriesGoal).clamp(0.0, 1.0);
+    final actP = activeMinutesGoal <= 0
+        ? 0.0
+        : (activeMinutes / activeMinutesGoal).clamp(0.0, 1.0);
+
+    final hexSize = context.baseScale * 7.2;
 
     final legend = Column(
       crossAxisAlignment:
@@ -110,31 +85,72 @@ class HexActivityCard extends StatelessWidget {
         _LegendRow(
           color: stepsColor,
           icon: Icons.directions_walk_rounded,
-          label: _t('steps'),
+          title: _label('steps'),
           value: '$steps / $stepsGoal',
         ),
         SizedBox(height: context.vX2s),
         _LegendRow(
-          color: caloriesColor,
+          color: calColor,
           icon: Icons.local_fire_department_rounded,
-          label: _t('calories'),
-          value: '$calories / $caloriesGoal ${_t('kcal')}',
+          title: _label('calories'),
+          value:
+              '${calories.toStringAsFixed(0)} / ${caloriesGoal.toStringAsFixed(0)} kcal',
         ),
         SizedBox(height: context.vX2s),
         _LegendRow(
-          color: timeColor,
-          icon: Icons.timer_rounded,
-          label: _t('time'),
-          value: '$activeMinutes / $activeMinutesGoal ${_t('min')}',
+          color: activeColor,
+          icon: Icons.timer_outlined,
+          title: _label('active'),
+          value: activeTimeText,
         ),
       ],
     );
 
+    final hex = SizedBox(
+      width: hexSize,
+      height: hexSize,
+      child: CustomPaint(
+        painter: _NestedHexPainter(
+          stepsProgress: stepsP,
+          caloriesProgress: calP,
+          activeProgress: actP,
+          stepsColor: stepsColor,
+          caloriesColor: calColor,
+          activeColor: activeColor,
+          strokeWidth: context.baseScale * 0.28,
+          ringGap: context.baseScale * 0.55, // فاصله بیشتر بین حلقه‌ها
+        ),
+        child: Stack(
+          children: [
+            // آیکون بالای هر حلقه (نزدیک رأس بالا)
+            _TopIcon(
+              color: stepsColor,
+              icon: Icons.directions_walk_rounded,
+              size: context.m * 0.85,
+              topFraction: 0.02,
+            ),
+            _TopIcon(
+              color: calColor,
+              icon: Icons.local_fire_department_rounded,
+              size: context.m * 0.75,
+              topFraction: 0.18,
+            ),
+            _TopIcon(
+              color: activeColor,
+              icon: Icons.timer_outlined,
+              size: context.m * 0.65,
+              topFraction: 0.34,
+            ),
+          ],
+        ),
+      ),
+    );
+
     return Container(
-      padding: EdgeInsets.all(context.hS),
+      padding: EdgeInsets.all(context.m),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(context.m),
+        borderRadius: BorderRadius.circular(context.m * 1.2),
         border: Border.all(
           color: theme.colorScheme.outline.withValues(alpha: 0.12),
         ),
@@ -142,12 +158,33 @@ class HexActivityCard extends StatelessWidget {
       child: Row(
         textDirection: _rtl ? TextDirection.rtl : TextDirection.ltr,
         children: [
-          // شش‌ضلعی‌ها — در LTR چپ، در RTL راست (اولین فرزند جهت)
-          hex,
-          SizedBox(width: context.hS),
           Expanded(child: legend),
+          SizedBox(width: context.hS),
+          hex,
         ],
       ),
+    );
+  }
+}
+
+class _TopIcon extends StatelessWidget {
+  final Color color;
+  final IconData icon;
+  final double size;
+  final double topFraction;
+
+  const _TopIcon({
+    required this.color,
+    required this.icon,
+    required this.size,
+    required this.topFraction,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment(0, -1 + topFraction * 2),
+      child: Icon(icon, size: size, color: color),
     );
   }
 }
@@ -155,60 +192,52 @@ class HexActivityCard extends StatelessWidget {
 class _LegendRow extends StatelessWidget {
   final Color color;
   final IconData icon;
-  final String label;
+  final String title;
   final String value;
 
   const _LegendRow({
     required this.color,
     required this.icon,
-    required this.label,
+    required this.title,
     required this.value,
   });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: context.s * 0.7,
-          height: context.s * 0.7,
+          width: context.s * 0.55,
+          height: context.s * 0.55,
           decoration: BoxDecoration(
             color: color,
             shape: BoxShape.circle,
           ),
         ),
         SizedBox(width: context.hX3s),
-        Iconer(
-          icon: icon,
-          template: IconTemplate.small,
-          customColor: color,
-          useGradient: false,
-        ),
+        Icon(icon, size: context.m * 0.9, color: color),
         SizedBox(width: context.hX3s),
-        Expanded(
+        Flexible(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextFielder(
-                text: label,
-                template: TextTemplate.caption,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                customStyle: TextStyle(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
-                  fontSize: context.s * 0.85,
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: context.s * 0.9,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.55),
                 ),
               ),
-              TextFielder(
-                text: value,
-                template: TextTemplate.body,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                customStyle: TextStyle(
-                  color: theme.colorScheme.onSurface,
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: context.m * 0.95,
                   fontWeight: FontWeight.w700,
-                  fontSize: context.m * 0.9,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ],
@@ -222,99 +251,28 @@ class _LegendRow extends StatelessWidget {
 class _NestedHexPainter extends CustomPainter {
   final double stepsProgress;
   final double caloriesProgress;
-  final double timeProgress;
+  final double activeProgress;
   final Color stepsColor;
   final Color caloriesColor;
-  final Color timeColor;
-  final Color trackColor;
+  final Color activeColor;
+  final double strokeWidth;
+  final double ringGap;
 
   _NestedHexPainter({
     required this.stepsProgress,
     required this.caloriesProgress,
-    required this.timeProgress,
+    required this.activeProgress,
     required this.stepsColor,
     required this.caloriesColor,
-    required this.timeColor,
-    required this.trackColor,
+    required this.activeColor,
+    required this.strokeWidth,
+    required this.ringGap,
   });
 
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final maxR = size.shortestSide / 2;
-
-    // outer → steps, mid → calories, inner → time
-    _drawHexRing(
-      canvas,
-      center,
-      maxR * 0.90,
-      maxR * 0.18,
-      trackColor,
-      stepsColor,
-      stepsProgress,
-    );
-    _drawHexRing(
-      canvas,
-      center,
-      maxR * 0.64,
-      maxR * 0.17,
-      trackColor,
-      caloriesColor,
-      caloriesProgress,
-    );
-    _drawHexRing(
-      canvas,
-      center,
-      maxR * 0.38,
-      maxR * 0.16,
-      trackColor,
-      timeColor,
-      timeProgress,
-    );
-  }
-
-  void _drawHexRing(
-    Canvas canvas,
-    Offset center,
-    double radius,
-    double stroke,
-    Color track,
-    Color progressColor,
-    double progress,
-  ) {
-    // مسیر باز از رأس بالا، ساعت‌گرد — پیشرفت از بالا شروع می‌شود
-    final path = _hexPathFromTop(center, radius);
-
-    final trackPaint = Paint()
-      ..color = track
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = stroke
-      ..strokeJoin = StrokeJoin.round
-      ..strokeCap = StrokeCap.round;
-
-    // ترک کامل (بسته)
-    final closed = Path.from(path)..close();
-    canvas.drawPath(closed, trackPaint);
-
-    if (progress <= 0) return;
-
-    final metric = path.computeMetrics().first;
-    final extract = metric.extractPath(0, metric.length * progress.clamp(0.0, 1.0));
-
-    final progressPaint = Paint()
-      ..color = progressColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = stroke
-      ..strokeJoin = StrokeJoin.round
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawPath(extract, progressPaint);
-  }
-
-  /// رأس بالا (angle = -pi/2) → ساعت‌گرد، بدون close برای metric تمیز
-  Path _hexPathFromTop(Offset center, double radius) {
+  Path _hexPath(Offset center, double radius) {
     final path = Path();
-    for (int i = 0; i <= 6; i++) {
+    for (int i = 0; i < 6; i++) {
+      // رأس بالا: -90°
       final angle = -math.pi / 2 + i * math.pi / 3;
       final x = center.dx + radius * math.cos(angle);
       final y = center.dy + radius * math.sin(angle);
@@ -324,17 +282,68 @@ class _NestedHexPainter extends CustomPainter {
         path.lineTo(x, y);
       }
     }
+    path.close();
     return path;
   }
 
-  @override
-  bool shouldRepaint(covariant _NestedHexPainter old) {
-    return old.stepsProgress != stepsProgress ||
-        old.caloriesProgress != caloriesProgress ||
-        old.timeProgress != timeProgress ||
-        old.stepsColor != stepsColor ||
-        old.caloriesColor != caloriesColor ||
-        old.timeColor != timeColor ||
-        old.trackColor != trackColor;
+  void _drawRing(
+    Canvas canvas,
+    Offset center,
+    double radius,
+    double progress,
+    Color color,
+    double stroke,
+  ) {
+    final path = _hexPath(center, radius);
+    final metric = path.computeMetrics().first;
+
+    // پس‌زمینه: همان رنگ با شفافیت ۵۰٪ (نه سفید/خاکستری)
+    final bgPaint = Paint()
+      ..color = color.withValues(alpha: 0.50)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    canvas.drawPath(path, bgPaint);
+
+    // قسمت پر شده: شفافیت ۱۰۰٪
+    if (progress > 0) {
+      final extract = metric.extractPath(0, metric.length * progress);
+      final fgPaint = Paint()
+        ..color = color.withValues(alpha: 1.0)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round;
+      canvas.drawPath(extract, fgPaint);
+    }
   }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final maxR = math.min(size.width, size.height) / 2 - strokeWidth;
+
+    // سه حلقه با فاصله بیشتر (ringGap)
+    final rOuter = maxR;
+    final rMid = maxR - ringGap - strokeWidth;
+    final rInner = maxR - 2 * (ringGap + strokeWidth);
+
+    _drawRing(canvas, center, rOuter, stepsProgress, stepsColor, strokeWidth);
+    _drawRing(
+        canvas, center, rMid, caloriesProgress, caloriesColor, strokeWidth);
+    _drawRing(
+        canvas, center, rInner, activeProgress, activeColor, strokeWidth);
+  }
+
+  @override
+  bool shouldRepaint(covariant _NestedHexPainter old) =>
+      old.stepsProgress != stepsProgress ||
+      old.caloriesProgress != caloriesProgress ||
+      old.activeProgress != activeProgress ||
+      old.stepsColor != stepsColor ||
+      old.caloriesColor != caloriesColor ||
+      old.activeColor != activeColor ||
+      old.strokeWidth != strokeWidth ||
+      old.ringGap != ringGap;
 }

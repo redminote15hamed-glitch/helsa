@@ -47,6 +47,9 @@ class SetupText extends StatelessWidget {
       'support_copy': 'کپی',
       'support_copied': 'کپی شد',
       'support_hint': 'ارسال مشکلات و پیشنهادات',
+      'perm_activity': 'برای فعال شدن شمارش قدم، دسترسی به فعالیت‌های بدنی را بدهید.',
+      'perm_grant': 'اجازه دسترسی',
+
 
 
       'search_hint': 'جستجو...',
@@ -293,6 +296,9 @@ class SetupText extends StatelessWidget {
       'support_copy': 'Copy',
       'support_copied': 'Copied',
       'support_hint': 'Send issues and suggestions',
+      'perm_activity': 'To enable step counting, allow access to physical activity.',
+      'perm_grant': 'Allow access',
+
 
 
       'search_hint': 'Search...',
@@ -538,6 +544,9 @@ class SetupText extends StatelessWidget {
       'support_copy': 'Copier',
       'support_copied': 'Copié',
       'support_hint': 'Envoyer problèmes et suggestions',
+      'perm_activity': 'Pour activer le compteur de pas, autorisez l\'accès à l\'activité physique.',
+      'perm_grant': 'Autoriser',
+
 
 
       'search_hint': 'Rechercher...',

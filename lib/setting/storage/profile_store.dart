@@ -1,43 +1,44 @@
 // lib/setting/storage/profile_store.dart
-import 'package:hive_flutter/hive_flutter.dart';
+// Facade: keeps old API, uses separate Hive boxes under the hood.
+import 'package:helsa/setting/storage/storage_init.dart';
+import 'package:helsa/setting/storage/meta_store.dart';
+import 'package:helsa/setting/storage/identity_store.dart';
+import 'package:helsa/setting/storage/gender_store.dart';
+import 'package:helsa/setting/storage/age_store.dart';
+import 'package:helsa/setting/storage/body_store.dart';
+import 'package:helsa/setting/storage/activity_store.dart';
+import 'package:helsa/setting/storage/diet_store.dart';
+import 'package:helsa/setting/storage/restriction_store.dart';
+import 'package:helsa/setting/storage/favorite_store.dart';
+import 'package:helsa/setting/storage/sleep_store.dart';
 
-/// Local profile storage (Hive).
-/// Call [ProfileStore.init] once in main() before runApp.
 class ProfileStore {
   ProfileStore._();
 
-  static const String boxName = 'helsa_profile';
-  static const String keyProfile = 'profile';
+  static Future<void> init() => StorageInit.init();
 
-  static Box<dynamic>? _box;
-
-  static Future<void> init() async {
-    await Hive.initFlutter();
-    _box = await Hive.openBox<dynamic>(boxName);
-  }
-
-  static Box<dynamic> get box {
-    final b = _box;
-    if (b == null || !b.isOpen) {
-      throw StateError('ProfileStore.init() must be called before use.');
-    }
-    return b;
-  }
-
-  static bool get isSetupDone {
-    final map = box.get(keyProfile);
-    if (map is Map) {
-      return map['setupDone'] == true;
-    }
-    return false;
-  }
+  static bool get isSetupDone => MetaStore.isSetupDone;
 
   static Map<String, dynamic>? get profile {
-    final map = box.get(keyProfile);
-    if (map is Map) {
-      return Map<String, dynamic>.from(map);
-    }
-    return null;
+    if (!MetaStore.isSetupDone) return null;
+    return {
+      'setupDone': true,
+      'language': MetaStore.language,
+      'firstName': IdentityStore.firstName,
+      'lastName': IdentityStore.lastName,
+      'gender': GenderStore.gender,
+      'age': AgeStore.age,
+      'height': BodyStore.height,
+      'weight': BodyStore.weight,
+      'waist': BodyStore.waist,
+      'activityLevel': ActivityStore.activityLevel,
+      'diet': DietStore.diet,
+      'restrictions': RestrictionStore.list,
+      'favorites': FavoriteStore.list,
+      'sleepTime': SleepStore.sleepTime,
+      'wakeTime': SleepStore.wakeTime,
+      'savedAt': MetaStore.savedAt,
+    };
   }
 
   static Future<void> saveProfile({
@@ -55,30 +56,23 @@ class ProfileStore {
     required List<int> favorites,
     required String? sleepTime,
     required String? wakeTime,
-  }) async {
-    final data = <String, dynamic>{
-      'setupDone': true,
-      'language': language,
-      'firstName': firstName.trim(),
-      'lastName': lastName.trim(),
-      'gender': gender,
-      'age': age,
-      'height': height,
-      'weight': weight,
-      'waist': waist,
-      'activityLevel': activityLevel,
-      'diet': diet,
-      'restrictions': List<int>.from(restrictions),
-      'favorites': List<int>.from(favorites),
-      'sleepTime': sleepTime,
-      'wakeTime': wakeTime,
-      'savedAt': DateTime.now().toIso8601String(),
-    };
-    await box.put(keyProfile, data);
-  }
+  }) =>
+      StorageInit.saveFullSetup(
+        language: language,
+        firstName: firstName,
+        lastName: lastName,
+        gender: gender,
+        age: age,
+        height: height,
+        weight: weight,
+        waist: waist,
+        activityLevel: activityLevel,
+        diet: diet,
+        restrictions: restrictions,
+        favorites: favorites,
+        sleepTime: sleepTime,
+        wakeTime: wakeTime,
+      );
 
-  /// For debug / reset onboarding
-  static Future<void> clear() async {
-    await box.delete(keyProfile);
-  }
+  static Future<void> clear() => StorageInit.clearAll();
 }
