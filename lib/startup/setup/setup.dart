@@ -1,6 +1,9 @@
+// lib/startup/setup/setup.dart
 import 'dart:ui' show PlatformDispatcher;
 import 'package:flutter/material.dart';
 import 'package:helsa/setting/responsive/device_modifier.dart';
+import 'package:helsa/setting/storage/profile_store.dart';
+import 'package:helsa/home/home_screen.dart';
 import 'package:helsa/startup/setup/widget/language_select.dart';
 import 'package:helsa/startup/setup/widget/name_setup.dart';
 import 'package:helsa/startup/setup/widget/gender_setup.dart';
@@ -22,23 +25,18 @@ class SetupScreen extends StatefulWidget {
 }
 
 class _SetupScreenState extends State<SetupScreen> {
-  /// فقط این عدد را عوض کن وقتی استپ جدید (مثل حساسیت غذایی) اضافه شد
-  static const int kTotalSetupSteps = 11; // + summary
+  static const int kTotalSetupSteps = 11;
 
-  /// تا وقتی کاربر انتخاب نکرده: زبان دستگاه (fa/en/fr) وگرنه en
   String _selectedLang = 'en';
   bool _hasUserSelected = false;
-
   int _currentStep = 0;
 
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
-
   final FocusNode _firstNameFocus = FocusNode();
   final FocusNode _lastNameFocus = FocusNode();
 
   bool _isNameFilled = false;
-
   String? _selectedGender;
   int? _selectedAge;
   double? _selectedHeight;
@@ -48,7 +46,6 @@ class _SetupScreenState extends State<SetupScreen> {
   int? _selectedDiet;
   final List<int> _selectedRestrictions = [];
   final List<int> _selectedFavorites = [];
-
   String? _selectedSleepTime;
   String? _selectedWakeTime;
 
@@ -58,7 +55,6 @@ class _SetupScreenState extends State<SetupScreen> {
     _selectedLang = _langFromDevice();
   }
 
-  /// زبان سیستم → فقط fa / en / fr ؛ غیر از این‌ها → en
   static String _langFromDevice() {
     final String code =
         PlatformDispatcher.instance.locale.languageCode.toLowerCase();
@@ -78,8 +74,7 @@ class _SetupScreenState extends State<SetupScreen> {
   void _validateNameFields() {
     final bool currentlyFilled =
         _firstNameController.text.trim().isNotEmpty &&
-        _lastNameController.text.trim().isNotEmpty;
-
+            _lastNameController.text.trim().isNotEmpty;
     if (_isNameFilled != currentlyFilled) {
       setState(() => _isNameFilled = currentlyFilled);
     }
@@ -103,6 +98,29 @@ class _SetupScreenState extends State<SetupScreen> {
     });
   }
 
+  Future<void> _finishSetup() async {
+    await ProfileStore.saveProfile(
+      language: _selectedLang,
+      firstName: _firstNameController.text,
+      lastName: _lastNameController.text,
+      gender: _selectedGender,
+      age: _selectedAge,
+      height: _selectedHeight,
+      weight: _selectedWeight,
+      waist: _selectedWaist,
+      activityLevel: _selectedActivityLevel,
+      diet: _selectedDiet,
+      restrictions: List<int>.from(_selectedRestrictions),
+      favorites: List<int>.from(_selectedFavorites),
+      sleepTime: _selectedSleepTime,
+      wakeTime: _selectedWakeTime,
+    );
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const HomeScreen()),
+    );
+  }
+
   Future<void> _onContinuePressed() async {
     FocusScope.of(context).unfocus();
 
@@ -111,12 +129,9 @@ class _SetupScreenState extends State<SetupScreen> {
     }
     if (!mounted) return;
 
-    // آخرین استپ (خلاصه = ۱۰) → تمام؛ به عقب برنگرد
+    // آخرین استپ (خلاصه) → ذخیره Hive + رفتن به صفحه اصلی
     if (_currentStep >= kTotalSetupSteps - 1) {
-      final nav = Navigator.of(context);
-      if (nav.canPop()) {
-        nav.pop(true);
-      }
+      await _finishSetup();
       return;
     }
 
@@ -127,7 +142,9 @@ class _SetupScreenState extends State<SetupScreen> {
     if (_currentStep > 0) {
       setState(() => _currentStep--);
     } else {
-      Navigator.of(context).pop();
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
     }
   }
 
@@ -156,7 +173,7 @@ class _SetupScreenState extends State<SetupScreen> {
       case 9:
         return _selectedSleepTime != null && _selectedWakeTime != null;
       case 10:
-        return true; // summary — always ready to start
+        return true;
       default:
         return false;
     }
@@ -175,7 +192,6 @@ class _SetupScreenState extends State<SetupScreen> {
             _hasUserSelected = true;
           }),
         );
-
       case 1:
         return NameSetup(
           key: const ValueKey(1),
@@ -186,7 +202,6 @@ class _SetupScreenState extends State<SetupScreen> {
           lastNameFocus: _lastNameFocus,
           onTextChanged: _validateNameFields,
         );
-
       case 2:
         return GenderSetup(
           key: const ValueKey(2),
@@ -194,7 +209,6 @@ class _SetupScreenState extends State<SetupScreen> {
           selectedGender: _selectedGender,
           onGenderSelected: (g) => setState(() => _selectedGender = g),
         );
-
       case 3:
         return AgeSetup(
           key: const ValueKey(3),
@@ -202,7 +216,6 @@ class _SetupScreenState extends State<SetupScreen> {
           selectedAge: _selectedAge,
           onAgeSelected: (age) => setState(() => _selectedAge = age),
         );
-
       case 4:
         return PhysicalSetup(
           key: const ValueKey(4),
@@ -214,7 +227,6 @@ class _SetupScreenState extends State<SetupScreen> {
           onWeightChanged: (v) => setState(() => _selectedWeight = v),
           onWaistChanged: (v) => setState(() => _selectedWaist = v),
         );
-
       case 5:
         return ActivitySetup(
           key: const ValueKey(5),
@@ -223,7 +235,6 @@ class _SetupScreenState extends State<SetupScreen> {
           onActivitySelected: (index) =>
               setState(() => _selectedActivityLevel = index),
         );
-
       case 6:
         return DietSetup(
           key: const ValueKey(6),
@@ -231,7 +242,6 @@ class _SetupScreenState extends State<SetupScreen> {
           selectedDiet: _selectedDiet,
           onDietSelected: (index) => setState(() => _selectedDiet = index),
         );
-
       case 7:
         return RestrictionSetup(
           key: const ValueKey(7),
@@ -243,7 +253,6 @@ class _SetupScreenState extends State<SetupScreen> {
               ..addAll(list);
           }),
         );
-
       case 8:
         return FavoriteFoodSetup(
           key: const ValueKey(8),
@@ -256,7 +265,6 @@ class _SetupScreenState extends State<SetupScreen> {
               ..addAll(list);
           }),
         );
-
       case 9:
         return SleepWakeSetup(
           key: const ValueKey(9),
@@ -270,7 +278,6 @@ class _SetupScreenState extends State<SetupScreen> {
             setState(() => _selectedWakeTime = time);
           },
         );
-
       case 10:
         return SummarySetup(
           key: const ValueKey(10),
@@ -289,7 +296,6 @@ class _SetupScreenState extends State<SetupScreen> {
           sleepTime: _selectedSleepTime,
           wakeTime: _selectedWakeTime,
         );
-
       default:
         return const SizedBox();
     }

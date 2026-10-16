@@ -1,9 +1,6 @@
 // lib/startup/setup/device/m_v.dart
-
 import 'package:flutter/material.dart';
-
 import 'package:helsa/setting/responsive/responsive_utils.dart';
-
 import 'package:helsa/startup/setup/widget/setup_header.dart';
 import 'package:helsa/startup/setup/widget/title_setup.dart';
 import 'package:helsa/startup/setup/widget/continue_button.dart';
@@ -53,10 +50,9 @@ class SetupMobileVertical extends StatelessWidget {
                   onBackPressed: onBackPressed,
                   currentStep: currentStep,
                   totalSteps: totalSteps,
+                  currentLang: currentLang, // زبان فعلی → متن ساپورت
                 ),
                 Expanded(
-                  // فقط همین ناحیه با ارتفاع کیبورد کم می‌شود
-                  // → عنوان و فیلدها بالای کیبورد جمع می‌شوند
                   child: Padding(
                     padding: EdgeInsets.only(bottom: keyboardBottom),
                     child: LayoutBuilder(
@@ -72,7 +68,6 @@ class SetupMobileVertical extends StatelessWidget {
                               minHeight: constraints.maxHeight,
                             ),
                             child: Column(
-                              // کیبورد باز: از بالا؛ بسته: وسط
                               mainAxisAlignment: keyboardOpen
                                   ? MainAxisAlignment.start
                                   : MainAxisAlignment.center,
@@ -108,8 +103,6 @@ class SetupMobileVertical extends StatelessWidget {
             ),
           ),
         ),
-
-        // دکمه‌های پایین: حاشیه از لبه گوشی + SafeArea
         SafeArea(
           top: false,
           child: AnimatedOpacity(
@@ -132,7 +125,6 @@ class SetupMobileVertical extends StatelessWidget {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            // Jump ≈ 1/3 of Continue → flex 1 : 3
                             Expanded(
                               flex: 1,
                               child: SkipButton(
