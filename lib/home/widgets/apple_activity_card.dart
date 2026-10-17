@@ -1,10 +1,13 @@
 // lib/home/widgets/apple_activity_card.dart
-// سه سیب متریک: پر شدن از پایین به بالا + موج لبه + آیکون به‌جای برگ
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
 import 'package:helsa/setting/color/color_palette.dart';
 import 'package:helsa/home/home_text.dart';
+import 'package:helsa/home/services/step_tracker.dart';
+
+enum _GoalKind { steps, calories, active }
 
 class AppleActivityCard extends StatefulWidget {
   final String language;
@@ -54,6 +57,63 @@ class _AppleActivityCardState extends State<AppleActivityCard>
     return (value / goal).clamp(0.0, 1.0).toDouble();
   }
 
+  Future<void> _editGoal(_GoalKind kind, int currentGoal) async {
+    final controller = TextEditingController(text: '$currentGoal');
+    final titleKey = switch (kind) {
+      _GoalKind.steps => 'goal_steps',
+      _GoalKind.calories => 'goal_calories',
+      _GoalKind.active => 'goal_active',
+    };
+
+    final result = await showDialog<int>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: Text(HomeText.getString(widget.language, titleKey)),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            autofocus: true,
+            decoration: InputDecoration(
+              hintText: HomeText.getString(widget.language, 'goal_hint'),
+            ),
+            onSubmitted: (v) {
+              final n = int.tryParse(v.trim());
+              if (n != null && n > 0) Navigator.of(ctx).pop(n);
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(HomeText.getString(widget.language, 'cancel')),
+            ),
+            FilledButton(
+              onPressed: () {
+                final n = int.tryParse(controller.text.trim());
+                if (n != null && n > 0) Navigator.of(ctx).pop(n);
+              },
+              child: Text(HomeText.getString(widget.language, 'confirm')),
+            ),
+          ],
+        );
+      },
+    );
+
+    controller.dispose();
+    if (result == null) return;
+
+    final tracker = StepTracker.instance;
+    switch (kind) {
+      case _GoalKind.steps:
+        await tracker.setStepsGoal(result);
+      case _GoalKind.calories:
+        await tracker.setCaloriesGoal(result);
+      case _GoalKind.active:
+        await tracker.setActiveGoal(result);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final stepsP = _p(widget.steps, widget.stepsGoal);
@@ -62,40 +122,48 @@ class _AppleActivityCardState extends State<AppleActivityCard>
 
     final items = <_AppleSpec>[
       _AppleSpec(
+        kind: _GoalKind.steps,
         color: ColorPalette.mintPrimary,
         icon: Icons.directions_walk_rounded,
         progress: stepsP,
         percentLabel: '${(stepsP * 100).round()}%',
         detailLabel: '${widget.steps} / ${widget.stepsGoal}',
+        goalValue: widget.stepsGoal,
       ),
       _AppleSpec(
+        kind: _GoalKind.calories,
         color: ColorPalette.calorieBurn,
         icon: Icons.local_fire_department_rounded,
         progress: calP,
         percentLabel: '${(calP * 100).round()}%',
         detailLabel:
             '${widget.calories.toStringAsFixed(0)} / ${widget.caloriesGoal.toStringAsFixed(0)}',
+        goalValue: widget.caloriesGoal.round(),
       ),
       _AppleSpec(
+        kind: _GoalKind.active,
         color: ColorPalette.skyBlue,
         icon: Icons.timer_outlined,
         progress: actP,
         percentLabel: '${(actP * 100).round()}%',
         detailLabel:
             '${widget.activeMinutes} / ${widget.activeMinutesGoal} ${HomeText.getString(widget.language, 'minutes')}',
+        goalValue: widget.activeMinutesGoal,
       ),
     ];
 
     return Padding(
       padding: EdgeInsets.symmetric(vertical: context.vX2s),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           for (int i = 0; i < items.length; i++) ...[
             if (i > 0) SizedBox(width: context.hS),
             Expanded(
-              child: _AppleMetric(
-                spec: items[i],
-                wave: _wave,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () => _editGoal(items[i].kind, items[i].goalValue),
+                child: _AppleMetric(spec: items[i], wave: _wave),
               ),
             ),
           ],
@@ -106,18 +174,22 @@ class _AppleActivityCardState extends State<AppleActivityCard>
 }
 
 class _AppleSpec {
+  final _GoalKind kind;
   final Color color;
   final IconData icon;
   final double progress;
   final String percentLabel;
   final String detailLabel;
+  final int goalValue;
 
   const _AppleSpec({
+    required this.kind,
     required this.color,
     required this.icon,
     required this.progress,
     required this.percentLabel,
     required this.detailLabel,
+    required this.goalValue,
   });
 }
 
@@ -125,40 +197,45 @@ class _AppleMetric extends StatelessWidget {
   final _AppleSpec spec;
   final Animation<double> wave;
 
-  const _AppleMetric({
-    required this.spec,
-    required this.wave,
-  });
+  const _AppleMetric({required this.spec, required this.wave});
 
   @override
   Widget build(BuildContext context) {
-    final size = context.baseScale * 5.2;
+    final size = context.baseScale * 5.6;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
           width: size,
-          height: size * 1.15,
+          height: size * 1.22,
           child: AnimatedBuilder(
             animation: wave,
             builder: (context, _) {
-              return CustomPaint(
-                painter: _ApplePainter(
-                  color: spec.color,
-                  progress: spec.progress,
-                  wavePhase: wave.value * math.pi * 2,
-                  emptyOpacity: 0.40,
-                ),
-                child: Align(
-                  // جای برگ — صاف بالای سیب
-                  alignment: const Alignment(0, -0.92),
-                  child: Icon(
-                    spec.icon,
-                    size: size * 0.22,
-                    color: spec.color,
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned.fill(
+                    child: CustomPaint(
+                      painter: _ApplePainter(
+                        color: spec.color,
+                        progress: spec.progress,
+                        wavePhase: wave.value * math.pi * 2,
+                        emptyOpacity: 0.40,
+                      ),
+                    ),
                   ),
-                ),
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: Icon(
+                      spec.icon,
+                      size: size * 0.34,
+                      color: spec.color,
+                    ),
+                  ),
+                ],
               );
             },
           ),
@@ -172,7 +249,7 @@ class _AppleMetric extends StatelessWidget {
             color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
-        SizedBox(height: context.vX4s * 0.4),
+        SizedBox(height: context.vX4s * 0.35),
         Text(
           spec.detailLabel,
           textAlign: TextAlign.center,
@@ -191,7 +268,6 @@ class _AppleMetric extends StatelessWidget {
   }
 }
 
-/// اسکلت سیب + پر شدن از پایین با لبه موج‌دار
 class _ApplePainter extends CustomPainter {
   final Color color;
   final double progress;
@@ -208,36 +284,34 @@ class _ApplePainter extends CustomPainter {
   Path _applePath(Size size) {
     final w = size.width;
     final h = size.height;
-    final path = Path();
+    final top = h * 0.16;
+    final bottom = h * 0.96;
+    final midY = h * 0.52;
+    final cx = w * 0.50;
 
-    // اسکلت سیب (شبیه لوگوی داخل دایره، بدون برگ)
-    path.moveTo(w * 0.50, h * 0.18);
-    // شانه راست
+    final path = Path();
+    path.moveTo(cx, top + h * 0.06);
     path.cubicTo(
-      w * 0.72, h * 0.18,
-      w * 0.92, h * 0.34,
-      w * 0.90, h * 0.55,
+      w * 0.78, top + h * 0.02,
+      w * 0.98, midY * 0.55,
+      w * 0.94, midY,
     );
     path.cubicTo(
-      w * 0.88, h * 0.78,
-      w * 0.70, h * 0.96,
-      w * 0.50, h * 0.96,
+      w * 0.90, h * 0.78,
+      w * 0.72, bottom,
+      cx, bottom,
     );
     path.cubicTo(
-      w * 0.30, h * 0.96,
-      w * 0.12, h * 0.78,
-      w * 0.10, h * 0.55,
+      w * 0.28, bottom,
+      w * 0.10, h * 0.78,
+      w * 0.06, midY,
     );
     path.cubicTo(
-      w * 0.08, h * 0.34,
-      w * 0.28, h * 0.18,
-      w * 0.50, h * 0.18,
+      w * 0.02, midY * 0.55,
+      w * 0.22, top + h * 0.02,
+      cx, top + h * 0.06,
     );
     path.close();
-
-    // فرورفتگی کوچک بالای سیب (dimple)
-    // با stroke جدا کشیده می‌شود
-
     return path;
   }
 
@@ -245,63 +319,65 @@ class _ApplePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final apple = _applePath(size);
 
-    // خالی: همان رنگ با ۴۰٪
-    final emptyPaint = Paint()
-      ..color = color.withValues(alpha: emptyOpacity)
-      ..style = PaintingStyle.fill;
-    canvas.drawPath(apple, emptyPaint);
+    canvas.drawPath(
+      apple,
+      Paint()
+        ..color = color.withValues(alpha: emptyOpacity)
+        ..style = PaintingStyle.fill,
+    );
 
-    // پر شدن از پایین
     if (progress > 0.001) {
       canvas.save();
       canvas.clipPath(apple);
-
-      final fillTop = size.height * (1.0 - progress);
-      final waveAmp = size.height * 0.018;
-      final wave = Path();
-      wave.moveTo(0, size.height);
-      wave.lineTo(0, fillTop);
-      const steps = 24;
-      for (int i = 0; i <= steps; i++) {
-        final x = size.width * (i / steps);
+      final bounds = apple.getBounds();
+      final fillTop = bounds.bottom - bounds.height * progress;
+      final amp = size.height * 0.016;
+      final wave = Path()
+        ..moveTo(bounds.left, bounds.bottom)
+        ..lineTo(bounds.left, fillTop);
+      const n = 28;
+      for (int i = 0; i <= n; i++) {
+        final x = bounds.left + bounds.width * (i / n);
         final y = fillTop +
-            math.sin(wavePhase + i * 0.55) * waveAmp +
-            math.sin(wavePhase * 1.3 + i * 0.9) * waveAmp * 0.45;
+            math.sin(wavePhase + i * 0.5) * amp +
+            math.sin(wavePhase * 1.4 + i * 0.85) * amp * 0.4;
         wave.lineTo(x, y);
       }
-      wave.lineTo(size.width, size.height);
-      wave.close();
-
-      final fillPaint = Paint()
-        ..color = color.withValues(alpha: 1.0)
-        ..style = PaintingStyle.fill;
-      canvas.drawPath(wave, fillPaint);
+      wave
+        ..lineTo(bounds.right, bounds.bottom)
+        ..close();
+      canvas.drawPath(
+        wave,
+        Paint()
+          ..color = color
+          ..style = PaintingStyle.fill,
+      );
       canvas.restore();
     }
 
-    // خط اسکلت
-    final stroke = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = size.width * 0.045
-      ..strokeJoin = StrokeJoin.round;
-    canvas.drawPath(apple, stroke);
-
-    // فرورفتگی بالای سیب
-    final dimple = Path();
-    dimple.moveTo(size.width * 0.42, size.height * 0.20);
-    dimple.quadraticBezierTo(
-      size.width * 0.50,
-      size.height * 0.28,
-      size.width * 0.58,
-      size.height * 0.20,
+    canvas.drawPath(
+      apple,
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = size.width * 0.055
+        ..strokeJoin = StrokeJoin.round,
     );
+
+    final dimple = Path()
+      ..moveTo(size.width * 0.38, size.height * 0.22)
+      ..quadraticBezierTo(
+        size.width * 0.50,
+        size.height * 0.32,
+        size.width * 0.62,
+        size.height * 0.22,
+      );
     canvas.drawPath(
       dimple,
       Paint()
         ..color = color
         ..style = PaintingStyle.stroke
-        ..strokeWidth = size.width * 0.035
+        ..strokeWidth = size.width * 0.04
         ..strokeCap = StrokeCap.round,
     );
   }

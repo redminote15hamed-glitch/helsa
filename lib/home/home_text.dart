@@ -1,5 +1,4 @@
 // lib/home/home_text.dart
-/// Localized strings for Home screen (separate from setup flow).
 class HomeText {
   HomeText._();
 
@@ -12,6 +11,12 @@ class HomeText {
       'calories': 'کالری',
       'active': 'زمان حرکت',
       'minutes': 'دقیقه',
+      'goal_steps': 'تغییر هدف قدم',
+      'goal_calories': 'تغییر هدف کالری',
+      'goal_active': 'تغییر هدف زمان حرکت',
+      'goal_hint': 'عدد هدف را وارد کنید',
+      'confirm': 'تأیید',
+      'cancel': 'انصراف',
     },
     'en': {
       'perm_activity':
@@ -21,6 +26,12 @@ class HomeText {
       'calories': 'Calories',
       'active': 'Active',
       'minutes': 'min',
+      'goal_steps': 'Change steps goal',
+      'goal_calories': 'Change calories goal',
+      'goal_active': 'Change active time goal',
+      'goal_hint': 'Enter goal value',
+      'confirm': 'Confirm',
+      'cancel': 'Cancel',
     },
     'fr': {
       'perm_activity':
@@ -30,6 +41,12 @@ class HomeText {
       'calories': 'Calories',
       'active': 'Actif',
       'minutes': 'min',
+      'goal_steps': 'Modifier l\'objectif de pas',
+      'goal_calories': 'Modifier l\'objectif de calories',
+      'goal_active': 'Modifier l\'objectif de temps actif',
+      'goal_hint': 'Entrez l\'objectif',
+      'confirm': 'Confirmer',
+      'cancel': 'Annuler',
     },
   };
 

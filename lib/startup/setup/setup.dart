@@ -3,7 +3,7 @@ import 'dart:ui' show PlatformDispatcher;
 import 'package:flutter/material.dart';
 import 'package:helsa/setting/responsive/device_modifier.dart';
 import 'package:helsa/setting/storage/profile_store.dart';
-import 'package:helsa/home/home_screen.dart';
+import 'package:helsa/startup/permissions/permissions_screen.dart';
 import 'package:helsa/startup/setup/widget/language_select.dart';
 import 'package:helsa/startup/setup/widget/name_setup.dart';
 import 'package:helsa/startup/setup/widget/gender_setup.dart';
@@ -98,6 +98,7 @@ class _SetupScreenState extends State<SetupScreen> {
     });
   }
 
+  /// ذخیره پروفایل + رفتن به Permissions (نه Home)
   Future<void> _finishSetup() async {
     await ProfileStore.saveProfile(
       language: _selectedLang,
@@ -117,7 +118,9 @@ class _SetupScreenState extends State<SetupScreen> {
     );
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
+      MaterialPageRoute(
+        builder: (_) => PermissionsScreen(language: _selectedLang),
+      ),
     );
   }
 
@@ -129,7 +132,6 @@ class _SetupScreenState extends State<SetupScreen> {
     }
     if (!mounted) return;
 
-    // آخرین استپ (خلاصه) → ذخیره Hive + رفتن به صفحه اصلی
     if (_currentStep >= kTotalSetupSteps - 1) {
       await _finishSetup();
       return;

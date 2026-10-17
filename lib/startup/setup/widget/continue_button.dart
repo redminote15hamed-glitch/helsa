@@ -19,11 +19,8 @@ class ContinueButton extends StatelessWidget {
     required this.onContinue,
   });
 
-  /// استپ خلاصه (۱۰) → شروع ؛ بقیه → ادامه
+  /// همه استپ‌های setup → ادامه (Start فقط روی Permissions)
   String _buttonLabel() {
-    if (stepIndex == 10) {
-      return SetupText.getString(currentLang, 'start');
-    }
     return SetupText.getString(currentLang, 'continue');
   }
 

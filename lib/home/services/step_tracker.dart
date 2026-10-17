@@ -3,13 +3,10 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:helsa/setting/storage/meta_store.dart';
 import 'package:helsa/setting/storage/body_store.dart';
-import 'package:helsa/setting/storage/activity_store.dart';
-import 'package:helsa/setting/storage/age_store.dart';
-import 'package:helsa/setting/storage/gender_store.dart';
+import 'package:helsa/setting/storage/steps_store.dart';
+import 'package:helsa/home/services/goal_calculator.dart';
 
-/// Real step / calorie / active-time tracker.
 class StepTracker extends ChangeNotifier {
   StepTracker._();
   static final StepTracker instance = StepTracker._();
@@ -18,58 +15,83 @@ class StepTracker extends ChangeNotifier {
   StreamSubscription<PedestrianStatus>? _statusSub;
 
   int _steps = 0;
-  int _baseSteps = 0; // device counter at start of day / session
-  bool _hasBase = false;
+  int? _baseDevice;
   bool _isWalking = false;
   bool _permissionGranted = false;
   bool _paused = false;
 
   DateTime? _walkStartedAt;
-  Duration _activeAccumulated = Duration.zero;
+  int _activeMs = 0;
   Timer? _tick;
+  DateTime? _lastStepAt;
 
   int get steps => _steps;
   bool get isWalking => _isWalking && !_paused;
   bool get permissionGranted => _permissionGranted;
   bool get isPaused => _paused;
 
+  /// هدف سفارشی کاربر اولویت دارد؛ وگرنه از پروفایل (GoalCalculator)
   int get stepsGoal {
-    // simple goal from activity level
-    final level = ActivityStore.activityLevel ?? 1;
-    const goals = [5000, 6500, 8000, 10000, 12000];
-    return goals[level.clamp(0, goals.length - 1)];
+    final custom = StepsStore.customStepsGoal;
+    if (custom != null) return custom;
+    try {
+      return GoalCalculator.stepsGoal();
+    } catch (_) {
+      return 8000;
+    }
   }
 
   double get calories {
-    // rough: 0.04 kcal per step adjusted by weight
-    final w = BodyStore.weight ?? 70.0;
-    return _steps * 0.04 * (w / 70.0);
+    try {
+      final w = BodyStore.weight ?? 70.0;
+      return _steps * 0.04 * (w / 70.0);
+    } catch (_) {
+      return _steps * 0.04;
+    }
   }
 
   double get caloriesGoal {
-    final level = ActivityStore.activityLevel ?? 1;
-    const goals = [150.0, 220.0, 300.0, 400.0, 500.0];
-    return goals[level.clamp(0, goals.length - 1)];
+    final custom = StepsStore.customCaloriesGoal;
+    if (custom != null) return custom.toDouble();
+    try {
+      return GoalCalculator.caloriesGoal();
+    } catch (_) {
+      return 300.0;
+    }
   }
 
-  int get activeMinutes => _activeAccumulated.inMinutes +
-      (_walkStartedAt != null && !_paused
-          ? DateTime.now().difference(_walkStartedAt!).inMinutes
-          : 0);
+  int get activeMinutes {
+    var ms = _activeMs;
+    if (_walkStartedAt != null && !_paused) {
+      ms += DateTime.now().difference(_walkStartedAt!).inMilliseconds;
+    }
+    return (ms / 60000).floor();
+  }
 
   int get activeMinutesGoal {
-    final level = ActivityStore.activityLevel ?? 1;
-    const goals = [20, 25, 30, 45, 60];
-    return goals[level.clamp(0, goals.length - 1)];
+    final custom = StepsStore.customActiveGoal;
+    if (custom != null) return custom;
+    try {
+      return GoalCalculator.activeMinutesGoal();
+    } catch (_) {
+      return 30;
+    }
   }
 
-  String get activeTimeLabel {
-    final m = activeMinutes;
-    return '$m';
-  }
+  String get activeTimeLabel => '$activeMinutes';
 
   Future<void> init() async {
-    if (kIsWeb) return;
+    try {
+      await StepsStore.open();
+      _steps = StepsStore.steps;
+      _baseDevice = StepsStore.baseDeviceSteps;
+      _activeMs = StepsStore.activeMs;
+    } catch (_) {}
+
+    if (kIsWeb) {
+      notifyListeners();
+      return;
+    }
 
     final ar = await Permission.activityRecognition.request();
     final sensors = await Permission.sensors.request();
@@ -96,51 +118,115 @@ class StepTracker extends ChangeNotifier {
     } catch (_) {
       _permissionGranted = false;
     }
+
+    _tick?.cancel();
+    _tick = Timer.periodic(const Duration(seconds: 5), (_) => _onTick());
+    notifyListeners();
+  }
+
+  void _onTick() {
+    if (_paused) return;
+    final now = DateTime.now();
+
+    if (_lastStepAt != null &&
+        now.difference(_lastStepAt!).inSeconds <= 12 &&
+        !_isWalking) {
+      _isWalking = true;
+      _walkStartedAt ??= now;
+    }
+
+    if (_isWalking &&
+        _lastStepAt != null &&
+        now.difference(_lastStepAt!).inSeconds > 20) {
+      if (_walkStartedAt != null) {
+        _activeMs += now.difference(_walkStartedAt!).inMilliseconds;
+        _walkStartedAt = null;
+        StepsStore.saveActiveMs(_activeMs);
+      }
+      _isWalking = false;
+    }
+
+    if (_isWalking && _walkStartedAt != null) {
+      StepsStore.saveActiveMs(
+        _activeMs + now.difference(_walkStartedAt!).inMilliseconds,
+      );
+    }
     notifyListeners();
   }
 
   void _onStepCount(StepCount event) {
     if (_paused) return;
-    if (!_hasBase) {
-      _baseSteps = event.steps;
-      _hasBase = true;
+
+    if (_baseDevice == null) {
+      _baseDevice = event.steps - _steps;
+      if (_baseDevice! < 0) _baseDevice = event.steps;
+      StepsStore.saveBaseDeviceSteps(_baseDevice!);
     }
-    final today = event.steps - _baseSteps;
-    _steps = today < 0 ? event.steps : today;
+
+    final today = event.steps - _baseDevice!;
+    final next = today < 0 ? 0 : today;
+
+    if (next > _steps) {
+      _lastStepAt = DateTime.now();
+      if (!_isWalking) {
+        _isWalking = true;
+        _walkStartedAt = DateTime.now();
+      }
+    }
+
+    _steps = next;
+    StepsStore.saveSteps(_steps);
     notifyListeners();
   }
 
   void _onStatus(PedestrianStatus event) {
     if (_paused) return;
-    final walking = event.status == 'walking';
+    final walking = event.status.toLowerCase() == 'walking';
     if (walking && !_isWalking) {
       _isWalking = true;
       _walkStartedAt = DateTime.now();
-      _tick ??= Timer.periodic(const Duration(seconds: 15), (_) {
-        if (!_paused) notifyListeners();
-      });
+      _lastStepAt = DateTime.now();
     } else if (!walking && _isWalking) {
-      if (_walkStartedAt != null) {
-        _activeAccumulated += DateTime.now().difference(_walkStartedAt!);
-        _walkStartedAt = null;
+      final last = _lastStepAt;
+      if (last == null || DateTime.now().difference(last).inSeconds > 15) {
+        if (_walkStartedAt != null) {
+          _activeMs +=
+              DateTime.now().difference(_walkStartedAt!).inMilliseconds;
+          _walkStartedAt = null;
+          StepsStore.saveActiveMs(_activeMs);
+        }
+        _isWalking = false;
       }
-      _isWalking = false;
     }
     notifyListeners();
   }
 
-  /// Notification "Not walking?" → pause for 1 hour (caller sets timer).
+  Future<void> setStepsGoal(int value) async {
+    await StepsStore.saveStepsGoal(value);
+    notifyListeners();
+  }
+
+  Future<void> setCaloriesGoal(int value) async {
+    await StepsStore.saveCaloriesGoal(value);
+    notifyListeners();
+  }
+
+  Future<void> setActiveGoal(int value) async {
+    await StepsStore.saveActiveGoal(value);
+    notifyListeners();
+  }
+
   void pauseWalkingDetection() {
     if (_walkStartedAt != null) {
-      _activeAccumulated += DateTime.now().difference(_walkStartedAt!);
+      _activeMs += DateTime.now().difference(_walkStartedAt!).inMilliseconds;
       _walkStartedAt = null;
+      StepsStore.saveActiveMs(_activeMs);
     }
     _isWalking = false;
     _paused = true;
     notifyListeners();
   }
 
-  /// App opened or suppress window ended.
   void resumeWalkingDetection() {
     _paused = false;
     notifyListeners();
