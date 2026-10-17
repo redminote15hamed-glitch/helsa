@@ -1,10 +1,15 @@
 // lib/home/services/walking_notification.dart
-// Single ongoing notification — updates in place (same id), app language, one action.
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:helsa/setting/storage/meta_store.dart';
 import 'package:helsa/home/services/step_tracker.dart';
+
+/// باید top-level باشد تا اکشن نوتیف در بک‌گراند هم کار کند
+@pragma('vm:entry-point')
+void walkingNotificationBackground(NotificationResponse response) {
+  WalkingNotification.instance.handleAction(response);
+}
 
 class WalkingNotification {
   WalkingNotification._();
@@ -18,9 +23,7 @@ class WalkingNotification {
       FlutterLocalNotificationsPlugin();
 
   bool _ready = false;
-  /// User dismissed the notification (swipe/clear). Do not show until walking again.
   bool _userCleared = false;
-  /// Pause counting until this time (after "not walking?").
   DateTime? _suppressedUntil;
 
   bool get isSuppressed {
@@ -45,6 +48,7 @@ class WalkingNotification {
       'fa': {
         'title_suffix': 'قدم',
         'body': 'قدم زدن برای سلامتی عالیه، حتی کم',
+        'body_paused': 'شمارش ۱ ساعت متوقف شد',
         'not_walking': 'پیاده‌روی نمی‌کنی؟',
         'channel': 'پیاده‌روی',
         'channel_desc': 'شمارش زنده قدم',
@@ -52,6 +56,7 @@ class WalkingNotification {
       'en': {
         'title_suffix': 'steps',
         'body': 'A few steps each day keeps the doctor away',
+        'body_paused': 'Counting paused for 1 hour',
         'not_walking': 'Not walking?',
         'channel': 'Walking',
         'channel_desc': 'Live step count',
@@ -59,13 +64,13 @@ class WalkingNotification {
       'fr': {
         'title_suffix': 'pas',
         'body': 'Quelques pas chaque jour éloignent le médecin',
+        'body_paused': 'Comptage en pause 1 heure',
         'not_walking': 'Pas en train de marcher ?',
         'channel': 'Marche',
         'channel_desc': 'Compteur de pas en direct',
       },
     };
-    final lang = _lang;
-    return m[lang]?[key] ?? m['en']![key]!;
+    return m[_lang]?[key] ?? m['en']![key]!;
   }
 
   Future<void> init() async {
@@ -80,7 +85,9 @@ class WalkingNotification {
 
     await _plugin.initialize(
       const InitializationSettings(android: androidInit, iOS: iosInit),
-      onDidReceiveNotificationResponse: _onAction,
+      onDidReceiveNotificationResponse: handleAction,
+      onDidReceiveBackgroundNotificationResponse:
+          walkingNotificationBackground,
     );
 
     final android = _plugin.resolvePlatformSpecificImplementation<
@@ -90,33 +97,26 @@ class WalkingNotification {
         _channelId,
         _t('channel'),
         description: _t('channel_desc'),
-        importance: Importance.low, // silent refresh, no pop spam
+        importance: Importance.low,
       ),
     );
 
     await Permission.notification.request();
     _ready = true;
-
     StepTracker.instance.addListener(_onTracker);
   }
 
   void _onTracker() {
     if (!_ready || isSuppressed) return;
-
     final t = StepTracker.instance;
-    // فقط وقتی قدم/وضعیت عوض می‌شود همان نوتیف را آپدیت کن
     if (t.isWalking || t.steps > 0) {
       if (_userCleared && !t.isWalking) return;
-      if (_userCleared && t.isWalking) {
-        _userCleared = false; // دوباره راه رفت → دوباره نشان بده
-      }
-      _update(t.steps, t.stepsGoal);
+      if (_userCleared && t.isWalking) _userCleared = false;
+      _update(t.steps, t.stepsGoal, paused: false);
     }
-    // وقتی ایستاد: نوتیف را حذف نکن — همان آخرین عدد می‌ماند تا کاربر clear کند
   }
 
-  /// Refresh same notification id (no new banner spam).
-  Future<void> _update(int steps, int goal) async {
+  Future<void> _update(int steps, int goal, {required bool paused}) async {
     if (!_ready) return;
 
     final android = AndroidNotificationDetails(
@@ -127,55 +127,46 @@ class WalkingNotification {
       priority: Priority.low,
       ongoing: true,
       autoCancel: false,
-      onlyAlertOnce: true, // فقط بار اول صدا/ویبره
+      onlyAlertOnce: true,
       showWhen: false,
       category: AndroidNotificationCategory.progress,
-      // آیکون کوچک نوتیف = launcher
-      largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
-      actions: <AndroidNotificationAction>[
-        AndroidNotificationAction(
-          _actionNotWalking,
-          _t('not_walking'),
-          showsUserInterface: false,
-          cancelNotification: false,
-        ),
-      ],
+      actions: paused
+          ? <AndroidNotificationAction>[]
+          : <AndroidNotificationAction>[
+              AndroidNotificationAction(
+                _actionNotWalking,
+                _t('not_walking'),
+                showsUserInterface: false,
+                cancelNotification: false,
+              ),
+            ],
     );
 
-    final title = '$steps / $goal ${_t('title_suffix')}';
-    final body = _t('body');
-
-    // همان id → فقط محتوا رفرش می‌شود
     await _plugin.show(
       _notifId,
-      title,
-      body,
+      '$steps / $goal ${_t('title_suffix')}',
+      paused ? _t('body_paused') : _t('body'),
       NotificationDetails(android: android),
     );
   }
 
-  void _onAction(NotificationResponse response) {
-    // کاربر نوتیف را clear کرده (dismiss)
-    if (response.notificationResponseType ==
-        NotificationResponseType.selectedNotification) {
-      // tap on body — optional: open app (system default)
-      return;
-    }
-
-    if (response.actionId == _actionNotWalking) {
+  /// هم از foreground و هم background صدا زده می‌شود
+  void handleAction(NotificationResponse response) {
+    final id = response.actionId;
+    if (id == _actionNotWalking) {
       _suppressedUntil = DateTime.now().add(const Duration(hours: 1));
       StepTracker.instance.pauseWalkingDetection();
-      // نوتیف را نگه می‌داریم با آخرین عدد؛ شمارش متوقف
+      final t = StepTracker.instance;
+      // بلافاصله متن نوتیف را عوض کن تا کاربر بفهمد کار کرده
+      _update(t.steps, t.stepsGoal, paused: true);
       return;
     }
   }
 
-  /// Call when system reports notification was dismissed (if wired).
   void onUserCleared() {
     _userCleared = true;
   }
 
-  /// User opened the app during suppress window → resume counting.
   void onAppResumed() {
     if (_suppressedUntil != null) {
       _suppressedUntil = null;
@@ -184,7 +175,7 @@ class WalkingNotification {
     final t = StepTracker.instance;
     if (t.steps > 0 || t.isWalking) {
       _userCleared = false;
-      _update(t.steps, t.stepsGoal);
+      _update(t.steps, t.stepsGoal, paused: false);
     }
   }
 

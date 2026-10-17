@@ -1,17 +1,26 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- قدم‌شمار / تشخیص فعالیت -->
+    <!-- 1) فعالیت بدنی / قدم -->
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION"/>
-    <!-- نوتیفیکیشن (اندروید ۱۳+) -->
+    <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION"/>
+
+    <!-- 2) نوتیفیکیشن (اندروید ۱۳+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-    <!-- برای نوتیفیکیشن پایدار در پس‌زمینه (اختیاری ولی مفید) -->
+
+    <!-- 3) Foreground Service برای شمارش با اپ بسته‌شده -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+
+    <!-- 4) درخواست معافیت بهینه‌سازی باتری -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
 
     <application
         android:label="helsa"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -30,10 +39,26 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
+        <!-- سرویس پس‌زمینه قدم (flutter_foreground_task) -->
+        <service
+            android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
+            android:foregroundServiceType="health"
+            android:exported="false" />
+
+        <receiver
+            android:name="com.pravera.flutter_foreground_task.receiver.RestartReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
     </application>
+
     <queries>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
