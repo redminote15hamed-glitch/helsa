@@ -120,16 +120,16 @@ class StepTracker extends ChangeNotifier {
     }
 
     _tick?.cancel();
-    _tick = Timer.periodic(const Duration(seconds: 5), (_) => _onTick());
+    _tick = Timer.periodic(const Duration(seconds: 1), (_) => _onTick());
     notifyListeners();
   }
 
   void _onTick() {
-    if (_paused) return;
+    if (_paused || StepsStore.isCountingPaused) return;
     final now = DateTime.now();
 
     if (_lastStepAt != null &&
-        now.difference(_lastStepAt!).inSeconds <= 12 &&
+        now.difference(_lastStepAt!).inSeconds <= 8 &&
         !_isWalking) {
       _isWalking = true;
       _walkStartedAt ??= now;
@@ -137,7 +137,7 @@ class StepTracker extends ChangeNotifier {
 
     if (_isWalking &&
         _lastStepAt != null &&
-        now.difference(_lastStepAt!).inSeconds > 20) {
+        now.difference(_lastStepAt!).inSeconds > 12) {
       if (_walkStartedAt != null) {
         _activeMs += now.difference(_walkStartedAt!).inMilliseconds;
         _walkStartedAt = null;
@@ -155,32 +155,49 @@ class StepTracker extends ChangeNotifier {
   }
 
   void _onStepCount(StepCount event) {
-    if (_paused) return;
+    if (_paused || StepsStore.isCountingPaused) return;
 
+    // پایه: شمارنده سخت‌افزار در لحظه شروع امروز
     if (_baseDevice == null) {
+      // اگر از Hive قدم ذخیره داشتیم، پایه را طوری بگذار که همان مقدار بماند
       _baseDevice = event.steps - _steps;
       if (_baseDevice! < 0) _baseDevice = event.steps;
+      StepsStore.saveBaseDeviceSteps(_baseDevice!);
+    }
+
+    // اگر ریبوت گوشی شمارنده را صفر کرده باشد
+    if (event.steps < _baseDevice!) {
+      _baseDevice = event.steps - _steps;
+      if (_baseDevice! < 0) {
+        _baseDevice = event.steps;
+        _steps = 0;
+      }
       StepsStore.saveBaseDeviceSteps(_baseDevice!);
     }
 
     final today = event.steps - _baseDevice!;
     final next = today < 0 ? 0 : today;
 
+    // فقط افزایش واقعی را اعمال کن (از دست دادن رویداد کم شود)
     if (next > _steps) {
       _lastStepAt = DateTime.now();
       if (!_isWalking) {
         _isWalking = true;
         _walkStartedAt = DateTime.now();
       }
+      _steps = next;
+      StepsStore.saveSteps(_steps);
+      notifyListeners();
+    } else if (next != _steps) {
+      // همگام‌سازی بدون پسرفت نادرست
+      _steps = next;
+      StepsStore.saveSteps(_steps);
+      notifyListeners();
     }
-
-    _steps = next;
-    StepsStore.saveSteps(_steps);
-    notifyListeners();
   }
 
   void _onStatus(PedestrianStatus event) {
-    if (_paused) return;
+    if (_paused || StepsStore.isCountingPaused) return;
     final walking = event.status.toLowerCase() == 'walking';
     if (walking && !_isWalking) {
       _isWalking = true;

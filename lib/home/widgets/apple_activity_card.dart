@@ -1,5 +1,5 @@
 // lib/home/widgets/apple_activity_card.dart
-// یک اسکیل واحد برای کل ویجت سیب — شکل / آیکون / خط / موج با هم
+// سیب کلاسیک مثل مرجع + آیکون جدا و بالاتر + اسکیل واحد
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -115,12 +115,11 @@ class _AppleActivityCardState extends State<AppleActivityCard>
     }
   }
 
-  /// یک اندازه پایه برای هر سه سیب — از عرض صفحه، یکسان
   double _unitSize(BuildContext context) {
     final w = MediaQuery.sizeOf(context).width;
-    // سه ستون + padding؛ واحد = ضلع مرجع ویجت کامل (آیکون+سیب)
-    final raw = (w - 48) / 3.4;
-    return raw.clamp(88.0, 128.0);
+    // کمی کوچک‌تر تا سه تا راحت جا شوند و شبیه مرجع بمانند
+    final raw = (w - 40) / 3.55;
+    return raw.clamp(78.0, 112.0);
   }
 
   @override
@@ -168,7 +167,7 @@ class _AppleActivityCardState extends State<AppleActivityCard>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           for (int i = 0; i < items.length; i++) ...[
-            if (i > 0) const SizedBox(width: 8),
+            if (i > 0) const SizedBox(width: 6),
             Expanded(
               child: Center(
                 child: InkWell(
@@ -212,7 +211,7 @@ class _AppleSpec {
 class _AppleMetric extends StatelessWidget {
   final _AppleSpec spec;
   final Animation<double> wave;
-  final double unit; // کل بلوک با یک مقیاس
+  final double unit;
 
   const _AppleMetric({
     required this.spec,
@@ -222,11 +221,12 @@ class _AppleMetric extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // نسبت‌های ثابت داخل unit — همه با هم بزرگ/کوچک می‌شوند
-    final iconSize = unit * 0.28;
-    final iconGap = unit * 0.06; // فاصله آیکون تا سیب
-    final bodyH = unit * 0.92; // ارتفاع بدنه سیب
-    final bodyW = unit * 0.78; // عرض بدنه (از ارتفاع کمتر → سیب نه دایره)
+    // آیکون خیلی بالاتر از بدنه
+    final iconSize = unit * 0.26;
+    final iconGap = unit * 0.28; // فاصله واضح
+    // بدنه باریک‌تر از مربع تا شبیه سیب مرجع باشد
+    final bodyW = unit * 0.72;
+    final bodyH = unit * 0.88;
     final totalH = iconSize + iconGap + bodyH;
 
     return SizedBox(
@@ -252,15 +252,17 @@ class _AppleMetric extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: iconGap),
-                    SizedBox(
-                      width: bodyW,
-                      height: bodyH,
-                      child: CustomPaint(
-                        painter: _ApplePainter(
-                          color: spec.color,
-                          progress: spec.progress,
-                          wavePhase: wave.value * math.pi * 2,
-                          emptyOpacity: 0.40,
+                    Center(
+                      child: SizedBox(
+                        width: bodyW,
+                        height: bodyH,
+                        child: CustomPaint(
+                          painter: _ApplePainter(
+                            color: spec.color,
+                            progress: spec.progress,
+                            wavePhase: wave.value * math.pi * 2,
+                            emptyOpacity: 0.40,
+                          ),
                         ),
                       ),
                     ),
@@ -269,23 +271,23 @@ class _AppleMetric extends StatelessWidget {
               },
             ),
           ),
-          SizedBox(height: unit * 0.08),
+          SizedBox(height: unit * 0.07),
           Text(
             spec.percentLabel,
             style: TextStyle(
               fontWeight: FontWeight.w800,
-              fontSize: (unit * 0.145).clamp(12.0, 18.0),
+              fontSize: (unit * 0.14).clamp(11.0, 17.0),
               color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
-          SizedBox(height: unit * 0.02),
+          SizedBox(height: 2),
           Text(
             spec.detailLabel,
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: (unit * 0.11).clamp(10.0, 14.0),
+              fontSize: (unit * 0.105).clamp(9.5, 13.0),
               color: Theme.of(context)
                   .colorScheme
                   .onSurface
@@ -298,7 +300,7 @@ class _AppleMetric extends StatelessWidget {
   }
 }
 
-/// Path نرمال‌شده 0..1 — با هر Size همان نسبت سیب
+/// سیب خطی کلاسیک شبیه تصویر مرجع (بدون برگ)
 class _ApplePainter extends CustomPainter {
   final Color color;
   final double progress;
@@ -312,23 +314,44 @@ class _ApplePainter extends CustomPainter {
     required this.emptyOpacity,
   });
 
-  /// مختصات نسبی → سیب کلاسیک (شانه پهن، پایین جمع، dimple)
   Path _applePath(Size size) {
     double x(double n) => n * size.width;
     double y(double n) => n * size.height;
 
     final path = Path();
-    // dimple مرکز بالا
-    path.moveTo(x(0.50), y(0.12));
+    // شروع از وسط فرورفتگی بالا (dimple عمیق مثل مرجع)
+    path.moveTo(x(0.50), y(0.16));
 
-    // راست بالا → شانه
-    path.cubicTo(x(0.58), y(0.04), x(0.95), y(0.18), x(0.97), y(0.42));
-    // راست پایین → نوک
-    path.cubicTo(x(0.98), y(0.68), x(0.72), y(0.96), x(0.50), y(0.98));
-    // چپ پایین
-    path.cubicTo(x(0.28), y(0.96), x(0.02), y(0.68), x(0.03), y(0.42));
-    // چپ بالا → dimple
-    path.cubicTo(x(0.05), y(0.18), x(0.42), y(0.04), x(0.50), y(0.12));
+    // قوس راست بالای dimple → شانه راست پهن
+    path.cubicTo(
+      x(0.56), y(0.02),
+      x(0.92), y(0.08),
+      x(0.96), y(0.36),
+    );
+    // شانه راست → پایین راست (جمع‌شونده)
+    path.cubicTo(
+      x(1.00), y(0.58),
+      x(0.88), y(0.82),
+      x(0.68), y(0.94),
+    );
+    // نوک پایین
+    path.cubicTo(
+      x(0.58), y(1.00),
+      x(0.42), y(1.00),
+      x(0.32), y(0.94),
+    );
+    // پایین چپ → شانه چپ
+    path.cubicTo(
+      x(0.12), y(0.82),
+      x(0.00), y(0.58),
+      x(0.04), y(0.36),
+    );
+    // شانه چپ → برگشت به dimple
+    path.cubicTo(
+      x(0.08), y(0.08),
+      x(0.44), y(0.02),
+      x(0.50), y(0.16),
+    );
     path.close();
     return path;
   }
@@ -336,9 +359,8 @@ class _ApplePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final apple = _applePath(size);
-    final strokeW = (size.width * 0.055).clamp(2.0, 5.5);
+    final strokeW = (size.width * 0.06).clamp(2.2, 5.0);
 
-    // پر خالی
     canvas.drawPath(
       apple,
       Paint()
@@ -346,21 +368,20 @@ class _ApplePainter extends CustomPainter {
         ..style = PaintingStyle.fill,
     );
 
-    // موج از پایین
     if (progress > 0.001) {
       canvas.save();
       canvas.clipPath(apple);
       final b = apple.getBounds();
       final fillTop = b.bottom - b.height * progress;
-      final amp = size.height * 0.018;
+      final amp = size.height * 0.02;
       final wave = Path()
         ..moveTo(b.left, b.bottom)
         ..lineTo(b.left, fillTop);
-      for (int i = 0; i <= 32; i++) {
-        final px = b.left + b.width * (i / 32);
+      for (int i = 0; i <= 36; i++) {
+        final px = b.left + b.width * (i / 36);
         final py = fillTop +
-            math.sin(wavePhase + i * 0.48) * amp +
-            math.sin(wavePhase * 1.35 + i * 0.8) * amp * 0.4;
+            math.sin(wavePhase + i * 0.45) * amp +
+            math.sin(wavePhase * 1.4 + i * 0.75) * amp * 0.35;
         wave.lineTo(px, py);
       }
       wave
@@ -370,31 +391,31 @@ class _ApplePainter extends CustomPainter {
       canvas.restore();
     }
 
-    // اسکلت
     canvas.drawPath(
       apple,
       Paint()
         ..color = color
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeW
-        ..strokeJoin = StrokeJoin.round,
+        ..strokeJoin = StrokeJoin.round
+        ..strokeCap = StrokeCap.round,
     );
 
-    // dimple
+    // dimple واضح‌تر (مثل خط مرجع)
     final dimple = Path()
-      ..moveTo(size.width * 0.38, size.height * 0.14)
+      ..moveTo(size.width * 0.34, size.height * 0.18)
       ..quadraticBezierTo(
         size.width * 0.50,
-        size.height * 0.28,
-        size.width * 0.62,
-        size.height * 0.14,
+        size.height * 0.34,
+        size.width * 0.66,
+        size.height * 0.18,
       );
     canvas.drawPath(
       dimple,
       Paint()
         ..color = color
         ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeW * 0.85
+        ..strokeWidth = strokeW * 0.9
         ..strokeCap = StrokeCap.round,
     );
   }

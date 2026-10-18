@@ -61,7 +61,6 @@ class StepsStore {
     return 0;
   }
 
-  // ── اهداف سفارشی (روزبه‌روز ریست نمی‌شوند) ──────────────
   static int? get customStepsGoal {
     final v = _b.get('goal_steps');
     if (v is int) return v;
@@ -81,6 +80,33 @@ class StepsStore {
     if (v is int) return v;
     if (v is num) return v.toInt();
     return null;
+  }
+
+  /// pause تا این millis (epoch) — از نوتیف «پیاده‌روی نمی‌کنی؟»
+  static DateTime? get pauseUntil {
+    final v = _b.get('pause_until');
+    if (v is int) return DateTime.fromMillisecondsSinceEpoch(v);
+    if (v is num) return DateTime.fromMillisecondsSinceEpoch(v.toInt());
+    return null;
+  }
+
+  static bool get isCountingPaused {
+    final until = pauseUntil;
+    if (until == null) return false;
+    if (DateTime.now().isAfter(until)) {
+      _b.delete('pause_until');
+      return false;
+    }
+    return true;
+  }
+
+  static Future<void> setPauseForOneHour() async {
+    final until = DateTime.now().add(const Duration(hours: 1));
+    await _b.put('pause_until', until.millisecondsSinceEpoch);
+  }
+
+  static Future<void> clearPause() async {
+    await _b.delete('pause_until');
   }
 
   static Future<void> saveSteps(int steps) async {
