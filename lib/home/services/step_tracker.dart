@@ -26,11 +26,17 @@ class StepTracker extends ChangeNotifier {
   DateTime? _lastStepAt;
 
   int get steps => _steps;
-  bool get isWalking => _isWalking && !_paused;
+  bool get isWalking => _isWalking && !isPaused;
   bool get permissionGranted => _permissionGranted;
-  bool get isPaused => _paused;
 
-  /// هدف سفارشی کاربر اولویت دارد؛ وگرنه از پروفایل (GoalCalculator)
+  /// pause واقعی: حافظه + فلگ داخل حافظه تا ۱ ساعت
+  bool get isPaused {
+    try {
+      if (StepsStore.isCountingPaused) return true;
+    } catch (_) {}
+    return _paused;
+  }
+
   int get stepsGoal {
     final custom = StepsStore.customStepsGoal;
     if (custom != null) return custom;
@@ -62,7 +68,7 @@ class StepTracker extends ChangeNotifier {
 
   int get activeMinutes {
     var ms = _activeMs;
-    if (_walkStartedAt != null && !_paused) {
+    if (_walkStartedAt != null && !isPaused) {
       ms += DateTime.now().difference(_walkStartedAt!).inMilliseconds;
     }
     return (ms / 60000).floor();
@@ -86,6 +92,7 @@ class StepTracker extends ChangeNotifier {
       _steps = StepsStore.steps;
       _baseDevice = StepsStore.baseDeviceSteps;
       _activeMs = StepsStore.activeMs;
+      _paused = StepsStore.isCountingPaused;
     } catch (_) {}
 
     if (kIsWeb) {
@@ -125,7 +132,14 @@ class StepTracker extends ChangeNotifier {
   }
 
   void _onTick() {
-    if (_paused || StepsStore.isCountingPaused) return;
+    // پایان خودکار ۱ ساعت
+    if (_paused && !StepsStore.isCountingPaused) {
+      _paused = false;
+      notifyListeners();
+      return;
+    }
+    if (isPaused) return;
+
     final now = DateTime.now();
 
     if (_lastStepAt != null &&
@@ -155,17 +169,26 @@ class StepTracker extends ChangeNotifier {
   }
 
   void _onStepCount(StepCount event) {
-    if (_paused || StepsStore.isCountingPaused) return;
+    // ─── حالت pause واقعی ───
+    // قدم‌های این بازه نباید بعداً یک‌جا اضافه شوند:
+    // پایه سخت‌افزار را جلو می‌کشیم تا _steps ثابت بماند.
+    if (isPaused) {
+      _baseDevice = event.steps - _steps;
+      if (_baseDevice! < 0) _baseDevice = event.steps;
+      StepsStore.saveBaseDeviceSteps(_baseDevice!);
+      _isWalking = false;
+      _walkStartedAt = null;
+      _lastStepAt = null;
+      return;
+    }
 
-    // پایه: شمارنده سخت‌افزار در لحظه شروع امروز
     if (_baseDevice == null) {
-      // اگر از Hive قدم ذخیره داشتیم، پایه را طوری بگذار که همان مقدار بماند
       _baseDevice = event.steps - _steps;
       if (_baseDevice! < 0) _baseDevice = event.steps;
       StepsStore.saveBaseDeviceSteps(_baseDevice!);
     }
 
-    // اگر ریبوت گوشی شمارنده را صفر کرده باشد
+    // ریبوت / ریست شمارنده دستگاه
     if (event.steps < _baseDevice!) {
       _baseDevice = event.steps - _steps;
       if (_baseDevice! < 0) {
@@ -178,7 +201,6 @@ class StepTracker extends ChangeNotifier {
     final today = event.steps - _baseDevice!;
     final next = today < 0 ? 0 : today;
 
-    // فقط افزایش واقعی را اعمال کن (از دست دادن رویداد کم شود)
     if (next > _steps) {
       _lastStepAt = DateTime.now();
       if (!_isWalking) {
@@ -189,7 +211,6 @@ class StepTracker extends ChangeNotifier {
       StepsStore.saveSteps(_steps);
       notifyListeners();
     } else if (next != _steps) {
-      // همگام‌سازی بدون پسرفت نادرست
       _steps = next;
       StepsStore.saveSteps(_steps);
       notifyListeners();
@@ -197,7 +218,10 @@ class StepTracker extends ChangeNotifier {
   }
 
   void _onStatus(PedestrianStatus event) {
-    if (_paused || StepsStore.isCountingPaused) return;
+    if (isPaused) {
+      _isWalking = false;
+      return;
+    }
     final walking = event.status.toLowerCase() == 'walking';
     if (walking && !_isWalking) {
       _isWalking = true;
@@ -233,18 +257,33 @@ class StepTracker extends ChangeNotifier {
     notifyListeners();
   }
 
-  void pauseWalkingDetection() {
+  /// توقف واقعی ۱ ساعته — Hive + حافظه
+  Future<void> pauseWalkingDetection() async {
     if (_walkStartedAt != null) {
       _activeMs += DateTime.now().difference(_walkStartedAt!).inMilliseconds;
       _walkStartedAt = null;
-      StepsStore.saveActiveMs(_activeMs);
+      await StepsStore.saveActiveMs(_activeMs);
     }
     _isWalking = false;
+    _lastStepAt = null;
     _paused = true;
+    try {
+      await StepsStore.setPauseForOneHour();
+    } catch (_) {}
     notifyListeners();
   }
 
-  void resumeWalkingDetection() {
+  /// فقط وقتی ۱ ساعت تمام شد یا کاربر صریحاً خواست
+  Future<void> resumeWalkingDetection({bool force = false}) async {
+    if (!force && StepsStore.isCountingPaused) {
+      // هنوز داخل پنجره ۱ ساعته هستیم — resume نکن
+      _paused = true;
+      notifyListeners();
+      return;
+    }
+    try {
+      await StepsStore.clearPause();
+    } catch (_) {}
     _paused = false;
     notifyListeners();
   }

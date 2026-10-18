@@ -1,6 +1,9 @@
 // lib/home/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:helsa/home/widgets/apple_activity_card.dart';
+import 'package:helsa/home/widgets/streak_badge.dart';
+import 'package:helsa/setting/storage/streak_store.dart';
+import 'package:helsa/home/services/sleep_mode.dart';
 import 'package:helsa/home/widgets/ambient_background.dart';
 import 'package:helsa/home/services/step_tracker.dart';
 import 'package:helsa/home/services/walking_notification.dart';
@@ -57,6 +60,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void _onUpdate() {
+    _evalStreak();
     if (mounted) setState(() {});
   }
 
@@ -96,18 +100,45 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 
+
+  Future<void> _evalStreak() async {
+    try {
+      final t = StepTracker.instance;
+      await StreakStore.evaluate(
+        steps: t.steps,
+        stepsGoal: t.stepsGoal,
+        calories: t.calories,
+        caloriesGoal: t.caloriesGoal,
+        activeMinutes: t.activeMinutes,
+        activeMinutesGoal: t.activeMinutesGoal,
+      );
+    } catch (_) {}
+  }
+
   Widget _card(String lang) {
     final double cal = (_tracker.calories as num).toDouble();
     final double calGoal = (_tracker.caloriesGoal as num).toDouble();
+    int streak = 0;
+    try {
+      streak = StreakStore.currentStreak;
+    } catch (_) {}
 
-    return AppleActivityCard(
-      language: lang,
-      steps: _tracker.steps,
-      stepsGoal: _tracker.stepsGoal,
-      calories: cal,
-      caloriesGoal: calGoal,
-      activeMinutes: _tracker.activeMinutes,
-      activeMinutesGoal: _tracker.activeMinutesGoal,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        StreakBadge(language: lang, streak: streak, isNight: SleepMode.isNightNow),
+        AppleActivityCard(
+          language: lang,
+          steps: _tracker.steps,
+          stepsGoal: _tracker.stepsGoal,
+          calories: cal,
+          caloriesGoal: calGoal,
+          activeMinutes: _tracker.activeMinutes,
+          activeMinutesGoal: _tracker.activeMinutesGoal,
+          isWalking: _tracker.isWalking,
+          isNight: SleepMode.isNightNow,
+        ),
+      ],
     );
   }
 

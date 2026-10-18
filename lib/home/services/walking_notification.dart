@@ -8,8 +8,9 @@ import 'package:helsa/home/services/step_tracker.dart';
 
 @pragma('vm:entry-point')
 void walkingNotificationBackground(NotificationResponse response) {
-  // در isolate بک‌گراند: فقط فلگ Hive را بنویس
-  _handleNotWalkingAction();
+  if (response.actionId == WalkingNotification.actionNotWalking) {
+    _handleNotWalkingAction();
+  }
 }
 
 Future<void> _handleNotWalkingAction() async {
@@ -27,14 +28,17 @@ class WalkingNotification {
   static final WalkingNotification instance = WalkingNotification._();
 
   static const int _notifId = 4201;
-  static const String _channelId = 'helsa_walking';
-  static const String _actionNotWalking = 'NOT_WALKING';
+  /// کانال جدید تا تنظیمات قدیمی کش‌شده خراب نکند
+  static const String _channelId = 'helsa_walking_v3';
+  static const String actionNotWalking = 'NOT_WALKING';
 
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
 
   bool _ready = false;
   bool _userCleared = false;
+  bool _lastPaused = false;
+  int _lastShownSteps = -1;
 
   bool get isSuppressed => StepsStore.isCountingPaused;
 
@@ -51,26 +55,27 @@ class WalkingNotification {
       'fa': {
         'title_suffix': 'قدم',
         'body': 'قدم زدن برای سلامتی عالیه، حتی کم',
-        'body_paused': 'شمارش ۱ ساعت متوقف شد — قدم جدید لحاظ نمی‌شود',
-        'not_walking': 'پیاده‌روی نمی‌کنی؟',
-        'channel': 'پیاده‌روی',
-        'channel_desc': 'شمارش زنده قدم',
+        'body_paused': 'شمارش ۱ ساعت متوقف شد',
+        // متن دکمه کوتاه تا مثل دکمه دیده شود نه جمله
+        'not_walking': 'متوقف',
+        'channel': 'پیاده‌روی Helsa',
+        'channel_desc': 'شمارش زنده قدم و دکمه توقف',
       },
       'en': {
         'title_suffix': 'steps',
         'body': 'A few steps each day keeps the doctor away',
-        'body_paused': 'Counting paused 1 hour — new steps ignored',
-        'not_walking': 'Not walking?',
-        'channel': 'Walking',
-        'channel_desc': 'Live step count',
+        'body_paused': 'Counting paused for 1 hour',
+        'not_walking': 'Pause',
+        'channel': 'Helsa Walking',
+        'channel_desc': 'Live steps and pause action',
       },
       'fr': {
         'title_suffix': 'pas',
         'body': 'Quelques pas chaque jour éloignent le médecin',
-        'body_paused': 'Comptage en pause 1 h — nouveaux pas ignorés',
-        'not_walking': 'Pas en train de marcher ?',
-        'channel': 'Marche',
-        'channel_desc': 'Compteur de pas en direct',
+        'body_paused': 'Comptage en pause 1 heure',
+        'not_walking': 'Pause',
+        'channel': 'Marche Helsa',
+        'channel_desc': 'Pas en direct et bouton pause',
       },
     };
     return m[_lang]?[key] ?? m['en']![key]!;
@@ -92,32 +97,34 @@ class WalkingNotification {
 
     await _plugin.initialize(
       const InitializationSettings(android: androidInit, iOS: iosInit),
-      onDidReceiveNotificationResponse: (response) {
-        handleAction(response);
-      },
+      onDidReceiveNotificationResponse: handleAction,
       onDidReceiveBackgroundNotificationResponse:
           walkingNotificationBackground,
     );
 
     final android = _plugin.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
+
+    // کانال جدا با اهمیت بالا — دکمه‌ها بهتر دیده می‌شوند
     await android?.createNotificationChannel(
-      const AndroidNotificationChannel(
+      AndroidNotificationChannel(
         _channelId,
-        'Walking',
-        description: 'Live step count',
+        _t('channel'),
+        description: _t('channel_desc'),
         importance: Importance.high,
+        playSound: false,
+        enableVibration: false,
+        showBadge: false,
       ),
     );
 
     await Permission.notification.request();
     _ready = true;
 
-    // اگر از قبل pause بود، همان وضعیت را نشان بده
     if (StepsStore.isCountingPaused) {
       StepTracker.instance.pauseWalkingDetection();
       final t = StepTracker.instance;
-      await _update(t.steps, t.stepsGoal, paused: true);
+      await _update(t.steps, t.stepsGoal, paused: true, force: true);
     }
 
     StepTracker.instance.addListener(_onTracker);
@@ -138,8 +145,36 @@ class WalkingNotification {
     }
   }
 
-  Future<void> _update(int steps, int goal, {required bool paused}) async {
+  Future<void> _update(
+    int steps,
+    int goal, {
+    required bool paused,
+    bool force = false,
+  }) async {
     if (!_ready) return;
+
+    // از آپدیت هر ثانیه بی‌خود جلوگیری کن مگر قدم/وضعیت عوض شده
+    if (!force &&
+        steps == _lastShownSteps &&
+        paused == _lastPaused) {
+      return;
+    }
+    _lastShownSteps = steps;
+    _lastPaused = paused;
+
+    // دکمه اکشن واقعی (نه متن body)
+    final actions = paused
+        ? <AndroidNotificationAction>[]
+        : <AndroidNotificationAction>[
+            AndroidNotificationAction(
+              actionNotWalking,
+              _t('not_walking'),
+              // false = اکشن در پس‌زمینه هندل شود، مثل دکمه سیستم
+              showsUserInterface: false,
+              cancelNotification: false,
+              // روی اندروید ۱۳+ بهتر به‌عنوان دکمه دیده می‌شود
+            ),
+          ];
 
     final android = AndroidNotificationDetails(
       _channelId,
@@ -147,21 +182,23 @@ class WalkingNotification {
       channelDescription: _t('channel_desc'),
       importance: Importance.high,
       priority: Priority.high,
-      ongoing: true,
+      // ongoing روی بعضی MIUI دکمه را قورت می‌دهد → فقط وقتی pause نیست
+      // از ongoing سبک استفاده می‌کنیم ولی autoCancel false
+      ongoing: !paused,
       autoCancel: false,
       onlyAlertOnce: true,
       showWhen: false,
-      category: AndroidNotificationCategory.workout,
-      actions: paused
-          ? <AndroidNotificationAction>[]
-          : <AndroidNotificationAction>[
-              AndroidNotificationAction(
-                _actionNotWalking,
-                _t('not_walking'),
-                showsUserInterface: true,
-                cancelNotification: false,
-              ),
-            ],
+      playSound: false,
+      enableVibration: false,
+      category: AndroidNotificationCategory.service,
+      visibility: NotificationVisibility.public,
+      // body جدا از دکمه
+      styleInformation: BigTextStyleInformation(
+        paused ? _t('body_paused') : _t('body'),
+        contentTitle: '$steps / $goal ${_t('title_suffix')}',
+        summaryText: paused ? null : _t('not_walking'),
+      ),
+      actions: actions,
     );
 
     await _plugin.show(
@@ -169,30 +206,40 @@ class WalkingNotification {
       '$steps / $goal ${_t('title_suffix')}',
       paused ? _t('body_paused') : _t('body'),
       NotificationDetails(android: android),
+      // payload کمکی اگر actionId نرسید
+      payload: paused ? 'paused' : 'active',
     );
   }
 
   void handleAction(NotificationResponse response) {
     final id = response.actionId;
-    // بعضی گوشی‌ها actionId خالی می‌فرستند اگر روی بدنه بزنند
-    if (id == _actionNotWalking ||
-        (id == null &&
-            response.notificationResponseType ==
-                NotificationResponseType.selectedNotificationAction)) {
+    final type = response.notificationResponseType;
+
+    // فقط اکشن دکمه — نه لمس خود نوتیف
+    final isAction = type == NotificationResponseType.selectedNotificationAction ||
+        (id != null && id.isNotEmpty && id == actionNotWalking);
+
+    if (id == actionNotWalking || isAction && id == actionNotWalking) {
       _applyPause();
       return;
     }
-    if (id == _actionNotWalking) {
+
+    // بعضی OEM فقط actionId می‌فرستند
+    if (id == actionNotWalking) {
       _applyPause();
     }
   }
 
   Future<void> _applyPause() async {
-    await StepsStore.open();
-    await StepsStore.setPauseForOneHour();
-    StepTracker.instance.pauseWalkingDetection();
+    try {
+      await StepsStore.open();
+      await StepsStore.setPauseForOneHour();
+    } catch (_) {}
+    try {
+      StepTracker.instance.pauseWalkingDetection();
+    } catch (_) {}
     final t = StepTracker.instance;
-    await _update(t.steps, t.stepsGoal, paused: true);
+    await _update(t.steps, t.stepsGoal, paused: true, force: true);
   }
 
   void onUserCleared() {
@@ -200,15 +247,20 @@ class WalkingNotification {
   }
 
   void onAppResumed() {
-    // با برگشت به اپ قبل از ۱ ساعت: شمارش دوباره فعال
-    if (StepsStore.isCountingPaused) {
-      StepsStore.clearPause();
-      StepTracker.instance.resumeWalkingDetection();
+    // توقف ۱ ساعته واقعی است — با باز کردن اپ لغو نمی‌شود
+    final paused = StepsStore.isCountingPaused;
+    if (paused) {
+      StepTracker.instance.pauseWalkingDetection();
+      final t = StepTracker.instance;
+      _update(t.steps, t.stepsGoal, paused: true, force: true);
+      return;
     }
+    // اگر ساعت تمام شده بود، resume
+    StepTracker.instance.resumeWalkingDetection(force: true);
     final t = StepTracker.instance;
     if (t.steps > 0 || t.isWalking) {
       _userCleared = false;
-      _update(t.steps, t.stepsGoal, paused: false);
+      _update(t.steps, t.stepsGoal, paused: false, force: true);
     }
   }
 
