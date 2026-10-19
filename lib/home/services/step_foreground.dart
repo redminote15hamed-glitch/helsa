@@ -1,6 +1,9 @@
 // lib/home/services/step_foreground.dart
+// تنها نوتیف پس‌زمینه — قدم زنده / هدف
+// آیکون: drawable/ic_notification + meta-data در AndroidManifest
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart' show Colors;
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:helsa/home/services/step_tracker.dart';
 import 'package:helsa/setting/storage/meta_store.dart';
@@ -16,13 +19,22 @@ class StepForeground {
 
   static const int _serviceId = 4202;
 
+  /// باید با meta-data داخل AndroidManifest یکی باشد
+  static const String _iconMeta =
+      'com.example.helsa.service.NOTIFICATION_ICON';
+
+  static const NotificationIcon _notifIcon = NotificationIcon(
+    metaDataName: _iconMeta,
+    backgroundColor: Colors.transparent,
+  );
+
   void init() {
     if (kIsWeb || !Platform.isAndroid) return;
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
-        channelId: 'helsa_step_service',
+        channelId: 'helsa_step_service_v2',
         channelName: 'Helsa Steps',
-        channelDescription: 'Background step counting',
+        channelDescription: 'Live step counting',
         channelImportance: NotificationChannelImportance.LOW,
         priority: NotificationPriority.LOW,
         onlyAlertOnce: true,
@@ -32,7 +44,7 @@ class StepForeground {
         playSound: false,
       ),
       foregroundTaskOptions: ForegroundTaskOptions(
-        eventAction: ForegroundTaskEventAction.repeat(15000),
+        eventAction: ForegroundTaskEventAction.repeat(2000),
         autoRunOnBoot: true,
         autoRunOnMyPackageReplaced: true,
         allowWakeLock: true,
@@ -43,24 +55,17 @@ class StepForeground {
 
   Future<bool> start() async {
     if (kIsWeb || !Platform.isAndroid) return false;
-    if (await FlutterForegroundTask.isRunningService) return true;
+    if (await FlutterForegroundTask.isRunningService) {
+      _pushUpdate();
+      return true;
+    }
 
-    final lang = _lang();
-    final title = lang == 'fa'
-        ? 'شمارش قدم Helsa'
-        : lang == 'fr'
-            ? 'Compteur de pas Helsa'
-            : 'Helsa step counting';
-    final text = lang == 'fa'
-        ? 'در حال ردیابی فعالیت…'
-        : lang == 'fr'
-            ? 'Suivi de l’activité…'
-            : 'Tracking activity…';
-
+    final t = StepTracker.instance;
     final result = await FlutterForegroundTask.startService(
       serviceId: _serviceId,
-      notificationTitle: title,
-      notificationText: text,
+      notificationTitle: _title(t.steps, t.stepsGoal),
+      notificationText: _body(),
+      notificationIcon: _notifIcon,
       callback: stepForegroundCallback,
     );
     return result is ServiceRequestSuccess;
@@ -73,6 +78,15 @@ class StepForeground {
     }
   }
 
+  void _pushUpdate() {
+    final t = StepTracker.instance;
+    FlutterForegroundTask.updateService(
+      notificationTitle: _title(t.steps, t.stepsGoal),
+      notificationText: _body(),
+      notificationIcon: _notifIcon,
+    );
+  }
+
   static String _lang() {
     try {
       return MetaStore.language;
@@ -80,42 +94,43 @@ class StepForeground {
       return 'en';
     }
   }
-}
 
-class StepTaskHandler extends TaskHandler {
-  @override
-  Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
-    await StepTracker.instance.init();
-  }
-
-  @override
-  void onRepeatEvent(DateTime timestamp) {
-    final t = StepTracker.instance;
-    final lang = StepForeground._lang();
+  static String _title(int steps, int goal) {
+    final lang = _lang();
     final suffix = lang == 'fa'
         ? 'قدم'
         : lang == 'fr'
             ? 'pas'
             : 'steps';
-    final body = t.isPaused
-        ? (lang == 'fa'
-            ? 'شمارش موقتاً متوقف است'
-            : lang == 'fr'
-                ? 'Comptage en pause'
-                : 'Counting paused')
-        : (lang == 'fa'
-            ? 'قدم زدن برای سلامتی عالیه، حتی کم'
-            : lang == 'fr'
-                ? 'Quelques pas chaque jour éloignent le médecin'
-                : 'A few steps each day keeps the doctor away');
+    return '$steps / $goal $suffix';
+  }
 
+  static String _body() {
+    final lang = _lang();
+    if (lang == 'fa') return 'قدم زدن برای سلامتی عالیه، حتی کم';
+    if (lang == 'fr') return 'Quelques pas chaque jour éloignent le médecin';
+    return 'A few steps each day keeps the doctor away';
+  }
+}
+
+class StepTaskHandler extends TaskHandler {
+  @override
+  Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
+    try {
+      await StepTracker.instance.init();
+    } catch (_) {}
+  }
+
+  @override
+  void onRepeatEvent(DateTime timestamp) {
+    final t = StepTracker.instance;
     FlutterForegroundTask.updateService(
-      notificationTitle: '${t.steps} / ${t.stepsGoal} $suffix',
-      notificationText: body,
+      notificationTitle: StepForeground._title(t.steps, t.stepsGoal),
+      notificationText: StepForeground._body(),
+      notificationIcon: StepForeground._notifIcon,
     );
   }
 
-  // API جدید پکیج: دو آرگومان
   @override
   Future<void> onDestroy(DateTime timestamp, bool isTimeout) async {}
 

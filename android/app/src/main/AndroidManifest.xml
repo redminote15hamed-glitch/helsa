@@ -54,6 +54,11 @@
             </intent-filter>
         </receiver>
 
+        <!-- آیکون سفید نوتیف: drawable/ic_notification.png -->
+        <meta-data
+            android:name="com.example.helsa.service.NOTIFICATION_ICON"
+            android:resource="@drawable/ic_notification" />
+
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />

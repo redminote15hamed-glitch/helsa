@@ -72,19 +72,27 @@ class _AppleActivityCardState extends State<AppleActivityCard>
     super.dispose();
   }
 
+  void _syncWaveSpeed() {
+    // پیاده‌روی: موج سریع‌تر و هم‌فاز برای هر سه سیب
+    final ms = widget.isWalking ? 900 : 2200;
+    if (_wave.duration?.inMilliseconds != ms) {
+      final v = _wave.value;
+      _wave.duration = Duration(milliseconds: ms);
+      _wave.forward(from: v);
+      _wave.repeat();
+    }
+  }
+
   void _triggerBurst() {
-    final ids = <String>[];
-    if (appleOverflow(widget.steps, widget.stepsGoal).cycles > 0) {
-      ids.add('steps');
-    }
-    if (appleOverflow(widget.calories, widget.caloriesGoal).cycles > 0) {
-      ids.add('calories');
-    }
-    if (appleOverflow(widget.activeMinutes, widget.activeMinutesGoal).cycles >
-        0) {
-      ids.add('active');
-    }
-    _burst.maybePlay(ids);
+    final s = appleOverflow(widget.steps, widget.stepsGoal);
+    final c = appleOverflow(widget.calories, widget.caloriesGoal);
+    final a = appleOverflow(widget.activeMinutes, widget.activeMinutesGoal);
+    // هر افزایش cycles → انفجار دوباره
+    _burst.checkCycles({
+      'steps': s.cycles,
+      'calories': c.cycles,
+      'active': a.cycles,
+    });
   }
 
   Future<void> _editGoal(_GoalKind kind, int currentGoal) async {
@@ -168,7 +176,11 @@ class _AppleActivityCardState extends State<AppleActivityCard>
         cycles: s.cycles,
         bonusLabel: s.cycles > 0 ? '+${s.cycles * widget.stepsGoal}' : null,
         percentLabel: '${(s.fill * 100).round()}%',
-        detailLabel: '${widget.steps} / ${widget.stepsGoal}',
+        // فقط دور فعلی سیب
+        detailLabel:
+            '${(s.fill * widget.stepsGoal).round()} / ${widget.stepsGoal}',
+        // مجموع کل بین اسم و سیب
+        totalLabel: '${widget.steps}',
         goalValue: widget.stepsGoal,
         valueKey: widget.steps,
       ),
@@ -185,7 +197,8 @@ class _AppleActivityCardState extends State<AppleActivityCard>
             : null,
         percentLabel: '${(c.fill * 100).round()}%',
         detailLabel:
-            '${widget.calories.toStringAsFixed(0)} / ${widget.caloriesGoal.toStringAsFixed(0)}',
+            '${(c.fill * widget.caloriesGoal).round()} / ${widget.caloriesGoal.round()}',
+        totalLabel: widget.calories.toStringAsFixed(0),
         goalValue: widget.caloriesGoal.round(),
         valueKey: widget.calories.round(),
       ),
@@ -201,7 +214,8 @@ class _AppleActivityCardState extends State<AppleActivityCard>
             a.cycles > 0 ? '+${a.cycles * widget.activeMinutesGoal}' : null,
         percentLabel: '${(a.fill * 100).round()}%',
         detailLabel:
-            '${widget.activeMinutes} / ${widget.activeMinutesGoal} ${HomeText.getString(widget.language, 'minutes')}',
+            '${(a.fill * widget.activeMinutesGoal).round()} / ${widget.activeMinutesGoal} ${HomeText.getString(widget.language, 'minutes')}',
+        totalLabel: '${widget.activeMinutes}',
         goalValue: widget.activeMinutesGoal,
         valueKey: widget.activeMinutes,
       ),
@@ -230,8 +244,7 @@ class _AppleActivityCardState extends State<AppleActivityCard>
                       spec: items[i],
                       wave: _wave,
                       burst: _burst.animation,
-                      playBurst: items[i].cycles > 0 &&
-                          _burst.hasPlayed(items[i].id),
+                      playBurst: _burst.isBursting(items[i].id),
                       unit: unit,
                     ),
                   ),
@@ -244,8 +257,6 @@ class _AppleActivityCardState extends State<AppleActivityCard>
       ),
     );
   }
-
-  void _syncWaveSpeed() {}
 }
 
 class _AppleSpec {
@@ -259,6 +270,7 @@ class _AppleSpec {
   final String? bonusLabel;
   final String percentLabel;
   final String detailLabel;
+  final String totalLabel;
   final int goalValue;
   final Object valueKey;
 
@@ -273,6 +285,7 @@ class _AppleSpec {
     required this.bonusLabel,
     required this.percentLabel,
     required this.detailLabel,
+    required this.totalLabel,
     required this.goalValue,
     required this.valueKey,
   });
@@ -303,7 +316,7 @@ class _AppleMetric extends StatelessWidget {
     final bodyH = unit * 0.90;
     final percentSize = (unit * 0.135).clamp(11.0, 16.0);
     final detailSize = (unit * 0.10).clamp(9.5, 12.5);
-    final topBlock = iconSize + gapIconName + nameSize + 4 + gapNameBody;
+    final topBlock = iconSize + gapIconName + nameSize + 4 + nameSize + gapNameBody;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -349,7 +362,22 @@ class _AppleMetric extends StatelessWidget {
                       ),
                     ),
                   ),
-                  SizedBox(height: gapNameBody),
+                  // مجموع کل (مثلاً ۳۸۰) بین اسم و سیب
+                  Text(
+                    spec.totalLabel,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    style: TextStyle(
+                      fontSize: (nameSize * 0.95).clamp(10.0, 13.0),
+                      fontWeight: FontWeight.w700,
+                      height: 1.2,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.7),
+                    ),
+                  ),
+                  SizedBox(height: gapNameBody * 0.7),
                   SizedBox(
                     width: unit,
                     height: bodyH,
@@ -441,38 +469,79 @@ class _ApplePainter extends CustomPainter {
     required this.emptyOpacity,
   });
 
-  Path _applePath(Size size) {
+  /// بدنه سیب کلاسیک (بدون چوب/برگ) — شبیه تصویر مرجع
+  Path _bodyPath(Size size) {
     double x(double n) => n * size.width;
     double y(double n) => n * size.height;
     final path = Path();
-    path.moveTo(x(0.50), y(0.14));
-    path.cubicTo(x(0.58), y(0.02), x(0.98), y(0.10), x(0.98), y(0.40));
-    path.cubicTo(x(0.98), y(0.62), x(0.82), y(0.88), x(0.62), y(0.96));
-    path.cubicTo(x(0.55), y(1.00), x(0.45), y(1.00), x(0.38), y(0.96));
-    path.cubicTo(x(0.18), y(0.88), x(0.02), y(0.62), x(0.02), y(0.40));
-    path.cubicTo(x(0.02), y(0.10), x(0.42), y(0.02), x(0.50), y(0.14));
+    // فرو رفتگی بالای سیب
+    path.moveTo(x(0.50), y(0.22));
+    // شانه راست
+    path.cubicTo(x(0.62), y(0.12), x(0.92), y(0.18), x(0.94), y(0.42));
+    // بدنه راست → پایین
+    path.cubicTo(x(0.96), y(0.62), x(0.82), y(0.86), x(0.62), y(0.94));
+    // نوک پایین
+    path.cubicTo(x(0.55), y(0.98), x(0.45), y(0.98), x(0.38), y(0.94));
+    // بدنه چپ
+    path.cubicTo(x(0.18), y(0.86), x(0.04), y(0.62), x(0.06), y(0.42));
+    // شانه چپ → فرو رفتگی
+    path.cubicTo(x(0.08), y(0.18), x(0.38), y(0.12), x(0.50), y(0.22));
+    path.close();
+    return path;
+  }
+
+  /// چوب (stem)
+  Path _stemPath(Size size) {
+    double x(double n) => n * size.width;
+    double y(double n) => n * size.height;
+    final path = Path();
+    path.moveTo(x(0.48), y(0.22));
+    path.quadraticBezierTo(x(0.46), y(0.12), x(0.50), y(0.04));
+    path.quadraticBezierTo(x(0.54), y(0.12), x(0.52), y(0.22));
+    path.close();
+    return path;
+  }
+
+  /// برگ کنار چوب
+  Path _leafPath(Size size) {
+    double x(double n) => n * size.width;
+    double y(double n) => n * size.height;
+    final path = Path();
+    path.moveTo(x(0.52), y(0.12));
+    path.cubicTo(x(0.62), y(0.02), x(0.78), y(0.06), x(0.80), y(0.16));
+    path.cubicTo(x(0.78), y(0.24), x(0.62), y(0.22), x(0.52), y(0.14));
     path.close();
     return path;
   }
 
   @override
   void paint(Canvas canvas, Size size) {
-    final apple = _applePath(size);
-    final strokeW = (size.width * 0.055).clamp(2.2, 5.0);
+    final body = _bodyPath(size);
+    final stem = _stemPath(size);
+    final leaf = _leafPath(size);
+    final strokeW = (size.width * 0.048).clamp(2.0, 4.5);
 
-    canvas.drawPath(
-      apple,
-      Paint()
-        ..color = color.withValues(alpha: emptyOpacity)
-        ..style = PaintingStyle.fill,
-    );
+    final stroke = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeW
+      ..strokeJoin = StrokeJoin.round
+      ..strokeCap = StrokeCap.round;
 
+    final fillEmpty = Paint()
+      ..color = color.withValues(alpha: emptyOpacity)
+      ..style = PaintingStyle.fill;
+
+    // بدنه خالی (۴۰٪)
+    canvas.drawPath(body, fillEmpty);
+
+    // پر شدن از پایین با موج
     if (progress > 0.001) {
       canvas.save();
-      canvas.clipPath(apple);
-      final b = apple.getBounds();
+      canvas.clipPath(body);
+      final b = body.getBounds();
       final fillTop = b.bottom - b.height * progress;
-      final amp = size.height * 0.018;
+      final amp = size.height * 0.016;
       final wave = Path()
         ..moveTo(b.left, b.bottom)
         ..lineTo(b.left, fillTop);
@@ -490,30 +559,39 @@ class _ApplePainter extends CustomPainter {
       canvas.restore();
     }
 
+    // خط دور بدنه
+    canvas.drawPath(body, stroke);
+
+    // چوب و برگ (فقط خط / کمی پر)
     canvas.drawPath(
-      apple,
+      stem,
       Paint()
         ..color = color
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeW
-        ..strokeJoin = StrokeJoin.round
-        ..strokeCap = StrokeCap.round,
+        ..style = PaintingStyle.fill,
     );
-
-    final dimple = Path()
-      ..moveTo(size.width * 0.36, size.height * 0.16)
+    canvas.drawPath(stem, stroke);
+    canvas.drawPath(
+      leaf,
+      Paint()
+        ..color = color.withValues(alpha: 0.85)
+        ..style = PaintingStyle.fill,
+    );
+    canvas.drawPath(leaf, stroke);
+    // رگبرگ ساده
+    final vein = Path()
+      ..moveTo(size.width * 0.54, size.height * 0.13)
       ..quadraticBezierTo(
-        size.width * 0.50,
-        size.height * 0.30,
         size.width * 0.64,
-        size.height * 0.16,
+        size.height * 0.10,
+        size.width * 0.74,
+        size.height * 0.14,
       );
     canvas.drawPath(
-      dimple,
+      vein,
       Paint()
         ..color = color
         ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeW * 0.85
+        ..strokeWidth = strokeW * 0.55
         ..strokeCap = StrokeCap.round,
     );
   }
@@ -525,3 +603,4 @@ class _ApplePainter extends CustomPainter {
       old.wavePhase != wavePhase ||
       old.emptyOpacity != emptyOpacity;
 }
+

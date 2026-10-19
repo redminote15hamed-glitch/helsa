@@ -1,9 +1,8 @@
 // lib/home/widgets/apple_burst.dart
-// انفجار / تشکیل دوباره + نشان +هدف — جدا از سیب
+// هر بار که یک دور هدف کامل شود → انفجار + تشکیل دوباره
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
-/// چند دور هدف کامل شده و باقی‌مانده برای پر شدن UI
 ({int cycles, double fill}) appleOverflow(num value, num goal) {
   if (goal <= 0) return (cycles: 0, fill: 0);
   final v = value.toDouble();
@@ -14,28 +13,55 @@ import 'package:flutter/material.dart';
   return (cycles: cycles, fill: (rem / g).clamp(0.0, 1.0));
 }
 
-/// کنترلر انفجار مشترک برای کارت سیب‌ها
 class AppleBurstController extends ChangeNotifier {
   final AnimationController controller;
-  final Set<String> _played = {};
+
+  /// آخرین cycles دیده‌شده برای هر متریک
+  final Map<String, int> _lastCycles = {};
+
+  /// الان کدام‌ها در حال انفجارند
+  final Set<String> _bursting = {};
 
   AppleBurstController(TickerProvider vsync)
       : controller = AnimationController(
           vsync: vsync,
           duration: const Duration(milliseconds: 1400),
-        );
+        ) {
+    controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _bursting.clear();
+        notifyListeners();
+      }
+    });
+  }
 
   Animation<double> get animation => controller;
 
-  bool hasPlayed(String id) => _played.contains(id);
+  bool isBursting(String id) => _bursting.contains(id);
 
-  void markPlayed(String id) => _played.add(id);
-
-  /// اگر متریک‌هایی با cycles>0 و هنوز پخش‌نشده باشند → انفجار
-  void maybePlay(List<String> idsNeedingBurst) {
-    final fresh = idsNeedingBurst.where((id) => !_played.contains(id)).toList();
-    if (fresh.isEmpty) return;
-    _played.addAll(fresh);
+  /// هر بار cycles نسبت به قبل بیشتر شد → دوباره انفجار
+  void checkCycles(Map<String, int> cyclesById) {
+    final toPlay = <String>[];
+    for (final e in cyclesById.entries) {
+      final prev = _lastCycles[e.key];
+      if (prev == null) {
+        // اولین بار در این session
+        _lastCycles[e.key] = e.value;
+        if (e.value > 0) toPlay.add(e.key);
+      } else if (e.value > prev) {
+        // دور جدید کامل شد (مثلاً ۱→۲ یا ۰→۱)
+        _lastCycles[e.key] = e.value;
+        toPlay.add(e.key);
+      }
+    }
+    if (toPlay.isEmpty) return;
+    if (controller.isAnimating) {
+      // اگر وسط انفجار قبلی است، باز از اول
+      controller.stop();
+    }
+    _bursting
+      ..clear()
+      ..addAll(toPlay);
     controller.forward(from: 0);
     notifyListeners();
   }
@@ -45,7 +71,6 @@ class AppleBurstController extends ChangeNotifier {
   }
 }
 
-/// نشان +100 کنار سیب
 class AppleBonusChip extends StatelessWidget {
   final String label;
   final Color color;
@@ -82,10 +107,9 @@ class AppleBonusChip extends StatelessWidget {
   }
 }
 
-/// ذرات انفجار
 class AppleBurstParticlesPainter extends CustomPainter {
   final Color color;
-  final double t; // 0..1
+  final double t;
 
   AppleBurstParticlesPainter({required this.color, required this.t});
 
@@ -113,7 +137,6 @@ class AppleBurstParticlesPainter extends CustomPainter {
   bool shouldRepaint(covariant AppleBurstParticlesPainter old) => old.t != t;
 }
 
-/// از مقدار انیمیشن: opacity / scale / particleT
 ({double opacity, double scale, double particleT}) appleBurstTransform(
   double b, {
   required bool play,
