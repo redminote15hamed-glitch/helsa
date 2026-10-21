@@ -25,16 +25,88 @@ class StepsStore {
         '${n.day.toString().padLeft(2, '0')}';
   }
 
+  /// قبل از ریست روز، خلاصهٔ روز قبلی را نگه می‌دارد (فقط آخرین روز)
   static void _ensureToday() {
     final today = _todayKey();
     final saved = _b.get('day')?.toString();
     if (saved != today) {
+      if (saved != null && saved.isNotEmpty) {
+        final prevSteps = _b.get('steps');
+        final prevMs = _b.get('activeMs');
+        final goal = _b.get('goal_steps');
+        _b.put('last_day', saved);
+        _b.put(
+          'last_day_steps',
+          prevSteps is num ? prevSteps.toInt() : 0,
+        );
+        _b.put(
+          'last_day_active_ms',
+          prevMs is num ? prevMs.toInt() : 0,
+        );
+        if (goal is num) {
+          _b.put('last_day_goal_steps', goal.toInt());
+        }
+        // گزارش فقط یک‌بار تا وقتی کاربر ببیند
+        _b.put('pending_recap', true);
+      }
       _b.put('day', today);
       _b.put('steps', 0);
       _b.put('activeMinutes', 0);
       _b.put('baseDeviceSteps', null);
       _b.put('activeMs', 0);
     }
+  }
+
+  /// اگر گزارش دیده نشده باشد برمی‌گرداند و flag را پاک می‌کند
+  static Map<String, dynamic>? consumePendingRecap() {
+    _ensureToday();
+    final pending = _b.get('pending_recap') == true;
+    if (!pending) return null;
+    final day = _b.get('last_day')?.toString();
+    if (day == null || day.isEmpty) {
+      _b.put('pending_recap', false);
+      return null;
+    }
+    final steps = _b.get('last_day_steps');
+    final ms = _b.get('last_day_active_ms');
+    final goal = _b.get('last_day_goal_steps');
+    _b.put('pending_recap', false);
+    return {
+      'day': day,
+      'steps': steps is num ? steps.toInt() : 0,
+      'activeMs': ms is num ? ms.toInt() : 0,
+      'goalSteps': goal is num ? goal.toInt() : null,
+    };
+  }
+
+  static bool get hasPendingRecap {
+    try {
+      _ensureToday();
+      return _b.get('pending_recap') == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// آمار آخرین روز آرشیو شده (بدون مصرف recap)
+  static int get lastDaySteps {
+    final v = _b.get('last_day_steps');
+    if (v is int) return v;
+    if (v is num) return v.toInt();
+    return 0;
+  }
+
+  static int? get lastDayGoalSteps {
+    final v = _b.get('last_day_goal_steps');
+    if (v is int) return v;
+    if (v is num) return v.toInt();
+    return null;
+  }
+
+  static String? get lastDayKey {
+    final v = _b.get('last_day')?.toString();
+    if (v == null || v.isEmpty) return null;
+    return v;
   }
 
   static int get steps {
@@ -82,7 +154,6 @@ class StepsStore {
     return null;
   }
 
-  /// pause تا این millis (epoch) — از نوتیف «پیاده‌روی نمی‌کنی؟»
   static DateTime? get pauseUntil {
     final v = _b.get('pause_until');
     if (v is int) return DateTime.fromMillisecondsSinceEpoch(v);

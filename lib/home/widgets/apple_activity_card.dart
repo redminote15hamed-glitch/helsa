@@ -7,6 +7,8 @@ import 'package:helsa/setting/color/color_palette.dart';
 import 'package:helsa/home/home_text.dart';
 import 'package:helsa/home/services/step_tracker.dart';
 import 'package:helsa/home/widgets/apple_burst.dart';
+import 'package:helsa/home/widgets/walk_aura.dart';
+import 'package:helsa/home/widgets/ghost_progress.dart';
 import 'package:helsa/home/widgets/metric_icon_pulse.dart';
 
 enum _GoalKind { steps, calories, active }
@@ -62,6 +64,7 @@ class _AppleActivityCardState extends State<AppleActivityCard>
     if (oldWidget.isWalking != widget.isWalking) {
       _syncWaveSpeed();
     }
+    // نبض قدم حذف شد — فقط موج مایع شیشه‌ای در painter
     _triggerBurst();
   }
 
@@ -240,13 +243,31 @@ class _AppleActivityCardState extends State<AppleActivityCard>
                     borderRadius: BorderRadius.circular(unit * 0.18),
                     onTap: () =>
                         _editGoal(items[i].kind, items[i].goalValue),
-                    child: _AppleMetric(
-                      spec: items[i],
-                      wave: _wave,
-                      burst: _burst.animation,
-                      playBurst: _burst.isBursting(items[i].id),
-                      unit: unit,
-                    ),
+                    child: items[i].id == 'steps'
+                        ? WalkAura(
+                            steps: widget.steps,
+                            isWalking: widget.isWalking,
+                            color: items[i].color,
+                            child: _AppleMetric(
+                              spec: items[i],
+                              wave: _wave,
+                              burst: _burst.animation,
+                              playBurst: _burst.isBursting(items[i].id),
+                              unit: unit,
+                              ghostProgress: GhostProgress.yesterdayStepsProgress(
+                                fallbackGoal: widget.stepsGoal,
+                              ),
+                              isWalking: widget.isWalking,
+                            ),
+                          )
+                        : _AppleMetric(
+                            spec: items[i],
+                            wave: _wave,
+                            burst: _burst.animation,
+                            playBurst: _burst.isBursting(items[i].id),
+                            unit: unit,
+                            isWalking: widget.isWalking,
+                          ),
                   ),
                 ),
               ),
@@ -297,6 +318,8 @@ class _AppleMetric extends StatelessWidget {
   final Animation<double> burst;
   final bool playBurst;
   final double unit;
+  final double ghostProgress;
+  final bool isWalking;
 
   const _AppleMetric({
     required this.spec,
@@ -304,6 +327,8 @@ class _AppleMetric extends StatelessWidget {
     required this.burst,
     required this.playBurst,
     required this.unit,
+    this.ghostProgress = 0,
+    this.isWalking = false,
   });
 
   @override
@@ -406,6 +431,8 @@ class _AppleMetric extends StatelessWidget {
                                   progress: spec.progress,
                                   wavePhase: wave.value * math.pi * 2,
                                   emptyOpacity: 0.40,
+                                  ghostProgress: ghostProgress,
+                                  isWalking: isWalking,
                                 ),
                               ),
                             ),
@@ -461,36 +488,32 @@ class _ApplePainter extends CustomPainter {
   final double progress;
   final double wavePhase;
   final double emptyOpacity;
+  final double ghostProgress;
+  final bool isWalking;
 
   _ApplePainter({
     required this.color,
     required this.progress,
     required this.wavePhase,
     required this.emptyOpacity,
+    this.ghostProgress = 0,
+    this.isWalking = false,
   });
 
-  /// بدنه سیب کلاسیک (بدون چوب/برگ) — شبیه تصویر مرجع
   Path _bodyPath(Size size) {
     double x(double n) => n * size.width;
     double y(double n) => n * size.height;
     final path = Path();
-    // فرو رفتگی بالای سیب
     path.moveTo(x(0.50), y(0.22));
-    // شانه راست
     path.cubicTo(x(0.62), y(0.12), x(0.92), y(0.18), x(0.94), y(0.42));
-    // بدنه راست → پایین
     path.cubicTo(x(0.96), y(0.62), x(0.82), y(0.86), x(0.62), y(0.94));
-    // نوک پایین
     path.cubicTo(x(0.55), y(0.98), x(0.45), y(0.98), x(0.38), y(0.94));
-    // بدنه چپ
     path.cubicTo(x(0.18), y(0.86), x(0.04), y(0.62), x(0.06), y(0.42));
-    // شانه چپ → فرو رفتگی
     path.cubicTo(x(0.08), y(0.18), x(0.38), y(0.12), x(0.50), y(0.22));
     path.close();
     return path;
   }
 
-  /// چوب (stem)
   Path _stemPath(Size size) {
     double x(double n) => n * size.width;
     double y(double n) => n * size.height;
@@ -502,7 +525,6 @@ class _ApplePainter extends CustomPainter {
     return path;
   }
 
-  /// برگ کنار چوب
   Path _leafPath(Size size) {
     double x(double n) => n * size.width;
     double y(double n) => n * size.height;
@@ -520,79 +542,217 @@ class _ApplePainter extends CustomPainter {
     final stem = _stemPath(size);
     final leaf = _leafPath(size);
     final strokeW = (size.width * 0.048).clamp(2.0, 4.5);
+    final b = body.getBounds();
 
-    final stroke = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeW
-      ..strokeJoin = StrokeJoin.round
-      ..strokeCap = StrokeCap.round;
+    // —— لایه شیشه: گرادیان خالی ——
+    final glassShader = LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        color.withValues(alpha: emptyOpacity * 0.55),
+        color.withValues(alpha: emptyOpacity),
+        color.withValues(alpha: emptyOpacity * 0.7),
+      ],
+      stops: const [0.0, 0.45, 1.0],
+    ).createShader(b);
+    canvas.drawPath(
+      body,
+      Paint()
+        ..shader = glassShader
+        ..style = PaintingStyle.fill,
+    );
 
-    final fillEmpty = Paint()
-      ..color = color.withValues(alpha: emptyOpacity)
-      ..style = PaintingStyle.fill;
-
-    // بدنه خالی (۴۰٪)
-    canvas.drawPath(body, fillEmpty);
-
-    // پر شدن از پایین با موج
-    if (progress > 0.001) {
+    // سایهٔ دیروز
+    if (ghostProgress > 0.01) {
       canvas.save();
       canvas.clipPath(body);
-      final b = body.getBounds();
-      final fillTop = b.bottom - b.height * progress;
-      final amp = size.height * 0.016;
-      final wave = Path()
-        ..moveTo(b.left, b.bottom)
-        ..lineTo(b.left, fillTop);
-      for (int i = 0; i <= 36; i++) {
-        final px = b.left + b.width * (i / 36);
-        final py = fillTop +
-            math.sin(wavePhase + i * 0.45) * amp +
-            math.sin(wavePhase * 1.4 + i * 0.75) * amp * 0.35;
-        wave.lineTo(px, py);
+      final top = b.bottom - b.height * ghostProgress.clamp(0.0, 1.0);
+      canvas.drawRect(
+        Rect.fromLTRB(b.left, top, b.right, b.bottom),
+        Paint()..color = color.withValues(alpha: 0.16),
+      );
+      final dash = Paint()
+        ..color = color.withValues(alpha: 0.32)
+        ..strokeWidth = 1.1
+        ..style = PaintingStyle.stroke;
+      final path = Path();
+      double x = b.left;
+      while (x < b.right) {
+        path.moveTo(x, top);
+        path.lineTo(math.min(x + 4, b.right), top);
+        x += 8;
       }
-      wave
-        ..lineTo(b.right, b.bottom)
-        ..close();
-      canvas.drawPath(wave, Paint()..color = color);
+      canvas.drawPath(path, dash);
       canvas.restore();
     }
 
-    // خط دور بدنه
-    canvas.drawPath(body, stroke);
+    // —— مایع داخل شیشه ——
+    if (progress > 0.001) {
+      canvas.save();
+      canvas.clipPath(body);
+      final fillH = b.height * progress.clamp(0.0, 1.0);
+      final fillTop = b.bottom - fillH;
+      // تکان مایع قوی‌تر وقتی راه می‌رود
+      final amp = size.height * (isWalking ? 0.028 : 0.014);
+      final wave = Path()
+        ..moveTo(b.left - 2, b.bottom + 2)
+        ..lineTo(b.left - 2, fillTop);
+      for (int i = 0; i <= 40; i++) {
+        final t = i / 40.0;
+        final px = b.left + b.width * t;
+        final py = fillTop +
+            math.sin(wavePhase + t * 6.2) * amp +
+            math.sin(wavePhase * 1.7 + t * 3.1) * amp * 0.4;
+        wave.lineTo(px, py);
+      }
+      wave
+        ..lineTo(b.right + 2, b.bottom + 2)
+        ..close();
 
-    // چوب و برگ (فقط خط / کمی پر)
+      // —— سه لایه مایع ——
+      final deep = Color.lerp(color, const Color(0xFF000000), 0.28)!;
+      final mid = color;
+      final bright = Color.lerp(color, const Color(0xFFFFFFFF), 0.28)!;
+
+      // لایه ۱: عمق تیره
+      canvas.drawPath(
+        wave,
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.bottomCenter,
+            end: Alignment.topCenter,
+            colors: [deep, mid.withValues(alpha: 0.95)],
+            stops: const [0.0, 1.0],
+          ).createShader(Rect.fromLTRB(b.left, fillTop - amp, b.right, b.bottom))
+          ..style = PaintingStyle.fill,
+      );
+
+      // لایه ۲: باند میانی درخشان (شیشه سه‌لایه)
+      final midBand = Path()
+        ..moveTo(b.left, b.bottom)
+        ..lineTo(b.left, fillTop + fillH * 0.35);
+      for (int i = 0; i <= 40; i++) {
+        final tt = i / 40.0;
+        final px = b.left + b.width * tt;
+        final py = fillTop +
+            fillH * 0.35 +
+            math.sin(wavePhase * 0.9 + tt * 5.0) * amp * 0.5;
+        midBand.lineTo(px, py);
+      }
+      midBand
+        ..lineTo(b.right, b.bottom)
+        ..close();
+      canvas.drawPath(
+        midBand,
+        Paint()
+          ..color = mid.withValues(alpha: 0.55)
+          ..style = PaintingStyle.fill
+          ..blendMode = BlendMode.softLight,
+      );
+
+      // لایه ۳: سطح روشن موج‌دار
+      final topBand = Path()
+        ..moveTo(b.left, fillTop + fillH * 0.15 + amp)
+        ..lineTo(b.left, fillTop);
+      for (int i = 0; i <= 40; i++) {
+        final tt = i / 40.0;
+        final px = b.left + b.width * tt;
+        final py = fillTop +
+            math.sin(wavePhase + tt * 6.2) * amp +
+            math.sin(wavePhase * 1.7 + tt * 3.1) * amp * 0.4;
+        topBand.lineTo(px, py);
+      }
+      topBand
+        ..lineTo(b.right, fillTop + fillH * 0.15 + amp)
+        ..close();
+      canvas.drawPath(
+        topBand,
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              bright.withValues(alpha: 0.55),
+              bright.withValues(alpha: 0.0),
+            ],
+          ).createShader(Rect.fromLTRB(b.left, fillTop - amp, b.right, fillTop + fillH * 0.25))
+          ..style = PaintingStyle.fill,
+      );
+
+      // خط سطح مایع
+      final surfaceY = fillTop + math.sin(wavePhase) * amp * 0.3;
+      canvas.drawLine(
+        Offset(b.left + b.width * 0.08, surfaceY),
+        Offset(b.right - b.width * 0.08, surfaceY),
+        Paint()
+          ..color = Colors.white.withValues(alpha: isWalking ? 0.50 : 0.30)
+          ..strokeWidth = 1.5
+          ..style = PaintingStyle.stroke,
+      );
+      canvas.restore();
+    }
+
+    // —— هایلایت شیشه (انعکاس) ——
+    canvas.save();
+    canvas.clipPath(body);
+    final highlight = Path()
+      ..moveTo(b.left + b.width * 0.12, b.top + b.height * 0.12)
+      ..quadraticBezierTo(
+        b.left + b.width * 0.28,
+        b.top + b.height * 0.08,
+        b.left + b.width * 0.38,
+        b.top + b.height * 0.22,
+      )
+      ..quadraticBezierTo(
+        b.left + b.width * 0.22,
+        b.top + b.height * 0.38,
+        b.left + b.width * 0.12,
+        b.top + b.height * 0.12,
+      )
+      ..close();
+    canvas.drawPath(
+      highlight,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withValues(alpha: 0.42),
+            Colors.white.withValues(alpha: 0.0),
+          ],
+        ).createShader(b)
+        ..style = PaintingStyle.fill,
+    );
+    // لبهٔ نرم پایین شیشه
+    canvas.drawPath(
+      body,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeW * 0.35
+        ..color = Colors.white.withValues(alpha: 0.12),
+    );
+    canvas.restore();
+
+    // stroke + stem + leaf
+    canvas.drawPath(
+      body,
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeW
+        ..strokeJoin = StrokeJoin.round,
+    );
     canvas.drawPath(
       stem,
       Paint()
         ..color = color
         ..style = PaintingStyle.fill,
     );
-    canvas.drawPath(stem, stroke);
     canvas.drawPath(
       leaf,
       Paint()
         ..color = color.withValues(alpha: 0.85)
         ..style = PaintingStyle.fill,
-    );
-    canvas.drawPath(leaf, stroke);
-    // رگبرگ ساده
-    final vein = Path()
-      ..moveTo(size.width * 0.54, size.height * 0.13)
-      ..quadraticBezierTo(
-        size.width * 0.64,
-        size.height * 0.10,
-        size.width * 0.74,
-        size.height * 0.14,
-      );
-    canvas.drawPath(
-      vein,
-      Paint()
-        ..color = color
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeW * 0.55
-        ..strokeCap = StrokeCap.round,
     );
   }
 
@@ -601,6 +761,7 @@ class _ApplePainter extends CustomPainter {
       old.color != color ||
       old.progress != progress ||
       old.wavePhase != wavePhase ||
-      old.emptyOpacity != emptyOpacity;
+      old.emptyOpacity != emptyOpacity ||
+      old.ghostProgress != ghostProgress ||
+      old.isWalking != isWalking;
 }
-

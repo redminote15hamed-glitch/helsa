@@ -1,6 +1,7 @@
 // lib/home/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:helsa/home/widgets/apple_activity_card.dart';
+import 'package:helsa/home/home_screen_widget/widget_promo_card.dart';
 import 'package:helsa/home/widgets/streak_badge.dart';
 import 'package:helsa/setting/storage/streak_store.dart';
 import 'package:helsa/home/services/sleep_mode.dart';
@@ -9,6 +10,8 @@ import 'package:helsa/home/services/step_tracker.dart';
 import 'package:helsa/home/services/walking_notification.dart';
 import 'package:helsa/home/services/health_permissions.dart';
 import 'package:helsa/home/services/step_foreground.dart';
+import 'package:helsa/home/home_screen_widget/home_widget_bridge.dart';
+import 'package:helsa/home/services/daily_recap.dart';
 import 'package:helsa/home/home_text.dart';
 import 'package:helsa/home/device/m_v.dart';
 import 'package:helsa/home/device/m_h.dart';
@@ -32,6 +35,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final StepTracker _tracker = StepTracker.instance;
+  int _lastNotifSteps = -1;
+  int _lastNotifGoal = -1;
 
   @override
   void initState() {
@@ -43,24 +48,45 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Future<void> _bootstrap() async {
     StepForeground.instance.init();
+    HomeWidgetBridge.instance.init();
     final perms = await HealthPermissions.requestAll();
     await _tracker.init();
     await WalkingNotification.instance.init();
     if (perms.readyForBackgroundNotify) {
       await StepForeground.instance.start();
+      await StepForeground.instance.refresh(force: true);
     }
     if (mounted) setState(() {});
+    // گزارش روز قبل — فقط وقتی روز عوض شده و هنوز ندیده
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowRecap());
   }
+
+  Future<void> _maybeShowRecap() async {
+    if (!mounted) return;
+    await DailyRecap.maybeShow(context, _lang);
+  }
+
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       WalkingNotification.instance.onAppResumed();
+      // اگر نوتیف بسته شده بود دوباره بیاید + عدد تازه
+      StepForeground.instance.ensureRunning();
     }
   }
 
   void _onUpdate() {
     _evalStreak();
+    // UI همیشه؛ نوتیف فقط وقتی قدم یا هدف عوض شد
+    final s = _tracker.steps;
+    final g = _tracker.stepsGoal;
+    if (s != _lastNotifSteps || g != _lastNotifGoal) {
+      _lastNotifSteps = s;
+      _lastNotifGoal = g;
+      StepForeground.instance.refresh(force: true);
+    }
+    HomeWidgetBridge.instance.push();
     if (mounted) setState(() {});
   }
 
@@ -138,6 +164,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           isWalking: _tracker.isWalking,
           isNight: SleepMode.isNightNow,
         ),
+        WidgetPromoCard(language: lang),
       ],
     );
   }

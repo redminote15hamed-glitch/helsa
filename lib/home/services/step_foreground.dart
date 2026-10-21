@@ -1,12 +1,12 @@
 // lib/home/services/step_foreground.dart
-// تنها نوتیف پس‌زمینه — قدم زنده / هدف
-// آیکون: drawable/ic_notification + meta-data در AndroidManifest
+// نوتیف از isolate اصلی آپدیت می‌شود (نه isolate سرویس)
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' show Colors;
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:helsa/home/services/step_tracker.dart';
 import 'package:helsa/setting/storage/meta_store.dart';
+import 'package:helsa/setting/storage/steps_store.dart';
 
 @pragma('vm:entry-point')
 void stepForegroundCallback() {
@@ -18,8 +18,6 @@ class StepForeground {
   static final StepForeground instance = StepForeground._();
 
   static const int _serviceId = 4202;
-
-  /// باید با meta-data داخل AndroidManifest یکی باشد
   static const String _iconMeta =
       'com.example.helsa.service.NOTIFICATION_ICON';
 
@@ -28,11 +26,15 @@ class StepForeground {
     backgroundColor: Colors.transparent,
   );
 
+  bool _listening = false;
+  int _lastSteps = -1;
+  int _lastGoal = -1;
+
   void init() {
     if (kIsWeb || !Platform.isAndroid) return;
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
-        channelId: 'helsa_step_service_v2',
+        channelId: 'helsa_step_service_v3',
         channelName: 'Helsa Steps',
         channelDescription: 'Live step counting',
         channelImportance: NotificationChannelImportance.LOW,
@@ -44,7 +46,7 @@ class StepForeground {
         playSound: false,
       ),
       foregroundTaskOptions: ForegroundTaskOptions(
-        eventAction: ForegroundTaskEventAction.repeat(2000),
+        eventAction: ForegroundTaskEventAction.repeat(3000),
         autoRunOnBoot: true,
         autoRunOnMyPackageReplaced: true,
         allowWakeLock: true,
@@ -53,10 +55,43 @@ class StepForeground {
     );
   }
 
+  /// وصل به StepTracker روی isolate اصلی
+  void attachTracker() {
+    if (_listening) return;
+    _listening = true;
+    StepTracker.instance.addListener(_onTrackerChanged);
+  }
+
+  void detachTracker() {
+    if (!_listening) return;
+    _listening = false;
+    StepTracker.instance.removeListener(_onTrackerChanged);
+  }
+
+  void _onTrackerChanged() {
+    final t = StepTracker.instance;
+    // هر تغییر قدم یا هدف → آپدیت نوتیف
+    if (t.steps != _lastSteps || t.stepsGoal != _lastGoal) {
+      refresh(force: true);
+    }
+  }
+
   Future<bool> start() async {
     if (kIsWeb || !Platform.isAndroid) return false;
+
+    // pause قدیمی (از نسخه قبل) را پاک کن تا قدم بشمرد
+    try {
+      await StepsStore.open();
+      if (StepsStore.isCountingPaused) {
+        await StepsStore.clearPause();
+        await StepTracker.instance.resumeWalkingDetection(force: true);
+      }
+    } catch (_) {}
+
+    attachTracker();
+
     if (await FlutterForegroundTask.isRunningService) {
-      _pushUpdate();
+      await refresh(force: true);
       return true;
     }
 
@@ -68,23 +103,60 @@ class StepForeground {
       notificationIcon: _notifIcon,
       callback: stepForegroundCallback,
     );
-    return result is ServiceRequestSuccess;
+    final ok = result is ServiceRequestSuccess;
+    if (ok) {
+      _lastSteps = t.steps;
+      _lastGoal = t.stepsGoal;
+    }
+    return ok;
+  }
+
+  /// اگر کاربر نوتیف را بسته → دوباره روشن کن
+  Future<void> ensureRunning() async {
+    if (kIsWeb || !Platform.isAndroid) return;
+    try {
+      if (!await FlutterForegroundTask.isRunningService) {
+        await start();
+      } else {
+        await refresh(force: true);
+      }
+    } catch (_) {
+      try {
+        await start();
+      } catch (_) {}
+    }
+  }
+
+  /// از UI بعد از تغییر هدف / قدم صدا بزن
+  Future<void> refresh({bool force = false}) async {
+    if (kIsWeb || !Platform.isAndroid) return;
+    final t = StepTracker.instance;
+    if (!force && t.steps == _lastSteps && t.stepsGoal == _lastGoal) {
+      return;
+    }
+    _lastSteps = t.steps;
+    _lastGoal = t.stepsGoal;
+
+    try {
+      if (!await FlutterForegroundTask.isRunningService) {
+        // نوتیف بسته شده بود → دوباره استارت
+        await start();
+        return;
+      }
+      await FlutterForegroundTask.updateService(
+        notificationTitle: _title(t.steps, t.stepsGoal),
+        notificationText: _body(),
+        notificationIcon: _notifIcon,
+      );
+    } catch (_) {}
   }
 
   Future<void> stop() async {
     if (kIsWeb || !Platform.isAndroid) return;
+    detachTracker();
     if (await FlutterForegroundTask.isRunningService) {
       await FlutterForegroundTask.stopService();
     }
-  }
-
-  void _pushUpdate() {
-    final t = StepTracker.instance;
-    FlutterForegroundTask.updateService(
-      notificationTitle: _title(t.steps, t.stepsGoal),
-      notificationText: _body(),
-      notificationIcon: _notifIcon,
-    );
   }
 
   static String _lang() {
@@ -116,19 +188,12 @@ class StepForeground {
 class StepTaskHandler extends TaskHandler {
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
-    try {
-      await StepTracker.instance.init();
-    } catch (_) {}
+    // isolate جدا — فقط برای زنده ماندن سرویس
   }
 
   @override
   void onRepeatEvent(DateTime timestamp) {
-    final t = StepTracker.instance;
-    FlutterForegroundTask.updateService(
-      notificationTitle: StepForeground._title(t.steps, t.stepsGoal),
-      notificationText: StepForeground._body(),
-      notificationIcon: StepForeground._notifIcon,
-    );
+    // آپدیت اصلی از isolate UI است؛ اینجا فقط heartbeat
   }
 
   @override

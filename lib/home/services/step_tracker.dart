@@ -24,6 +24,8 @@ class StepTracker extends ChangeNotifier {
   int _activeMs = 0;
   Timer? _tick;
   DateTime? _lastStepAt;
+  Timer? _saveTimer;
+  bool _dirty = false;
 
   int get steps => _steps;
   bool get isWalking => _isWalking && !isPaused;
@@ -92,7 +94,11 @@ class StepTracker extends ChangeNotifier {
       _steps = StepsStore.steps;
       _baseDevice = StepsStore.baseDeviceSteps;
       _activeMs = StepsStore.activeMs;
-      _paused = StepsStore.isCountingPaused;
+      // پاک کردن pause مانده از نسخه‌های قبلی تا شمارش دوباره کار کند
+      if (StepsStore.isCountingPaused) {
+        await StepsStore.clearPause();
+      }
+      _paused = false;
     } catch (_) {}
 
     if (kIsWeb) {
@@ -127,7 +133,7 @@ class StepTracker extends ChangeNotifier {
     }
 
     _tick?.cancel();
-    _tick = Timer.periodic(const Duration(seconds: 1), (_) => _onTick());
+    _tick = Timer.periodic(const Duration(milliseconds: 500), (_) => _onTick());
     notifyListeners();
   }
 
@@ -208,11 +214,12 @@ class StepTracker extends ChangeNotifier {
         _walkStartedAt = DateTime.now();
       }
       _steps = next;
-      StepsStore.saveSteps(_steps);
+      // UI فوری؛ Hive با تأخیر کوتاه تا لگ ندهد
+      _scheduleSave();
       notifyListeners();
     } else if (next != _steps) {
       _steps = next;
-      StepsStore.saveSteps(_steps);
+      _scheduleSave();
       notifyListeners();
     }
   }
@@ -288,11 +295,37 @@ class StepTracker extends ChangeNotifier {
     notifyListeners();
   }
 
+  void _scheduleSave() {
+    _dirty = true;
+    _saveTimer?.cancel();
+    _saveTimer = Timer(const Duration(milliseconds: 800), () {
+      if (!_dirty) return;
+      _dirty = false;
+      StepsStore.saveSteps(_steps);
+      if (_baseDevice != null) {
+        StepsStore.saveBaseDeviceSteps(_baseDevice!);
+      }
+    });
+  }
+
+  void _flushSave() {
+    _saveTimer?.cancel();
+    if (_dirty) {
+      _dirty = false;
+      StepsStore.saveSteps(_steps);
+      if (_baseDevice != null) {
+        StepsStore.saveBaseDeviceSteps(_baseDevice!);
+      }
+    }
+  }
+
   @override
   void dispose() {
+    _flushSave();
     _stepSub?.cancel();
     _statusSub?.cancel();
     _tick?.cancel();
+    _saveTimer?.cancel();
     super.dispose();
   }
 }
