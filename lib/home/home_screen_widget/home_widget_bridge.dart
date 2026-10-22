@@ -1,5 +1,5 @@
 // lib/home/home_screen_widget/home_widget_bridge.dart
-// ویجت صفحهٔ اصلی — آپدیت از اپ (لحظه‌ای) + سیستم (حداقل ۳۰ دقیقه)
+// Home screen widget — live update from app + system (min 30 min)
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:home_widget/home_widget.dart';
@@ -10,7 +10,8 @@ class HomeWidgetBridge {
   HomeWidgetBridge._();
   static final HomeWidgetBridge instance = HomeWidgetBridge._();
 
-  static const String _androidName = 'HelsaWidgetProvider';
+  /// Fully-qualified class name (required on MIUI / some OEMs)
+  static const String _androidName = 'com.example.helsa.HelsaWidgetProvider';
   bool _listening = false;
   int _lastSteps = -1;
   int _lastCal = -1;
@@ -38,7 +39,6 @@ class HomeWidgetBridge {
   }
 
   void _onTracker() {
-    // فقط وقتی عدد عوض شد — بدون فشار باتری
     push();
   }
 
