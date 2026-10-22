@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="widget_bg">#FF0C1210</color>
+    <color name="widget_steps">#FF10B981</color>
+    <color name="widget_cal">#FFFF8C42</color>
+    <color name="widget_time">#FF4C8DFF</color>
+    <color name="widget_label">#99FFFFFF</color>
+    <color name="widget_divider">#33FFFFFF</color>
+</resources>
