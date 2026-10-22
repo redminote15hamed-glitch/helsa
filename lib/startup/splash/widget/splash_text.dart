@@ -3,17 +3,17 @@ class SplashText {
     'en': {
       'title': 'HELSA',
       'subtitle': 'healthy after all',
-      'version': 'Ver 0.1',
+      'version': 'Ver 1.0',
     },
     'fa': {
       'title': 'هِلسا',
       'subtitle': 'بالاخره، سلامتی مانا',
-      'version': 'نسخه ۰.۱',
+      'version': 'نسخه ۱.۰',
     },
     'fr': {
       'title': 'HELSA',
       'subtitle': 'la santé après tout',
-      'version': 'Ver 0.1',
+      'version': 'Ver 1.0',
     },
   };
 

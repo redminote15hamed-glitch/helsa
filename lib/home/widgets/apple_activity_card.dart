@@ -679,16 +679,6 @@ class _ApplePainter extends CustomPainter {
           ..style = PaintingStyle.fill,
       );
 
-      // خط سطح مایع
-      final surfaceY = fillTop + math.sin(wavePhase) * amp * 0.3;
-      canvas.drawLine(
-        Offset(b.left + b.width * 0.08, surfaceY),
-        Offset(b.right - b.width * 0.08, surfaceY),
-        Paint()
-          ..color = Colors.white.withValues(alpha: isWalking ? 0.50 : 0.30)
-          ..strokeWidth = 1.5
-          ..style = PaintingStyle.stroke,
-      );
       canvas.restore();
     }
 

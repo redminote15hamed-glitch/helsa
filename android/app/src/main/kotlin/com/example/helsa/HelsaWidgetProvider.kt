@@ -14,22 +14,30 @@ class HelsaWidgetProvider : HomeWidgetProvider() {
         widgetData: SharedPreferences
     ) {
         for (id in appWidgetIds) {
-            val views = RemoteViews(context.packageName, R.layout.helsa_widget)
-            val steps = widgetData.getInt("steps", 0)
-            val cal = widgetData.getInt("cal", 0)
-            val mins = widgetData.getInt("mins", 0)
-            val stepsLabel = widgetData.getString("steps_label", "steps") ?: "steps"
-            val calLabel = widgetData.getString("cal_label", "kcal") ?: "kcal"
-            val timeLabel = widgetData.getString("time_label", "min") ?: "min"
+            try {
+                val views = RemoteViews(context.packageName, R.layout.helsa_widget)
+                val steps = widgetData.getInt("steps", 0)
+                val cal = widgetData.getInt("cal", 0)
+                val mins = widgetData.getInt("mins", 0)
+                val stepsLabel = widgetData.getString("steps_label", "steps") ?: "steps"
+                val calLabel = widgetData.getString("cal_label", "kcal") ?: "kcal"
+                val timeLabel = widgetData.getString("time_label", "min") ?: "min"
 
-            views.setTextViewText(R.id.tv_steps, steps.toString())
-            views.setTextViewText(R.id.tv_cal, cal.toString())
-            views.setTextViewText(R.id.tv_time, mins.toString())
-            views.setTextViewText(R.id.tv_steps_label, stepsLabel)
-            views.setTextViewText(R.id.tv_cal_label, calLabel)
-            views.setTextViewText(R.id.tv_time_label, timeLabel)
+                views.setTextViewText(R.id.tv_steps, steps.toString())
+                views.setTextViewText(R.id.tv_cal, cal.toString())
+                views.setTextViewText(R.id.tv_time, mins.toString())
+                views.setTextViewText(R.id.tv_steps_label, stepsLabel)
+                views.setTextViewText(R.id.tv_cal_label, calLabel)
+                views.setTextViewText(R.id.tv_time_label, timeLabel)
 
-            appWidgetManager.updateAppWidget(id, views)
+                appWidgetManager.updateAppWidget(id, views)
+            } catch (e: Exception) {
+                try {
+                    val fallback = RemoteViews(context.packageName, R.layout.helsa_widget)
+                    appWidgetManager.updateAppWidget(id, fallback)
+                } catch (_: Exception) {
+                }
+            }
         }
     }
 }
