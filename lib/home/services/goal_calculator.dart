@@ -1,7 +1,6 @@
 // lib/home/services/goal_calculator.dart
 // اهداف شروعِ روزانه با اعداد رُند و افزایش تدریجی.
 // این مقادیر تخمینی‌اند و جایگزین توصیه پزشکی یا ارزیابی فعالیت واقعی نیستند.
-import 'dart:math' as math;
 import 'package:helsa/setting/storage/age_store.dart';
 import 'package:helsa/setting/storage/body_store.dart';
 import 'package:helsa/setting/storage/gender_store.dart';
