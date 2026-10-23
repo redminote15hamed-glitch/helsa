@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:padding="10dp"
+    android:gravity="center_vertical"
+    android:background="@drawable/helsa_widget_bg">
+
+    <!-- Steps -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_widget_steps"
+            android:contentDescription="@null" />
+
+        <TextView
+            android:id="@+id/tv_steps"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="0"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:textColor="@color/widget_steps"
+            android:maxLines="1" />
+
+        <TextView
+            android:id="@+id/tv_steps_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="steps"
+            android:textSize="10sp"
+            android:textColor="@color/widget_label" />
+    </LinearLayout>
+
+    <!-- Divider: FrameLayout instead of View (View is not allowed in RemoteViews) -->
+    <FrameLayout
+        android:layout_width="1dp"
+        android:layout_height="36dp"
+        android:background="@color/widget_divider" />
+
+    <!-- Calories -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_widget_cal"
+            android:contentDescription="@null" />
+
+        <TextView
+            android:id="@+id/tv_cal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="0"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:textColor="@color/widget_cal"
+            android:maxLines="1" />
+
+        <TextView
+            android:id="@+id/tv_cal_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="kcal"
+            android:textSize="10sp"
+            android:textColor="@color/widget_label" />
+    </LinearLayout>
+
+    <!-- Divider: FrameLayout instead of View (View is not allowed in RemoteViews) -->
+    <FrameLayout
+        android:layout_width="1dp"
+        android:layout_height="36dp"
+        android:background="@color/widget_divider" />
+
+    <!-- Time -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_widget_time"
+            android:contentDescription="@null" />
+
+        <TextView
+            android:id="@+id/tv_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="0"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:textColor="@color/widget_time"
+            android:maxLines="1" />
+
+        <TextView
+            android:id="@+id/tv_time_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="min"
+            android:textSize="10sp"
+            android:textColor="@color/widget_label" />
+    </LinearLayout>
+
+</LinearLayout>
