@@ -1,17 +1,17 @@
 // lib/home/services/goal_calculator.dart
-// اهداف پیش‌فرض از پروفایل کاربر — فرمول‌های استاندارد
+// اهداف شروعِ روزانه با اعداد رُند و افزایش تدریجی.
+// این مقادیر تخمینی‌اند و جایگزین توصیه پزشکی یا ارزیابی فعالیت واقعی نیستند.
 import 'dart:math' as math;
 import 'package:helsa/setting/storage/age_store.dart';
 import 'package:helsa/setting/storage/body_store.dart';
 import 'package:helsa/setting/storage/gender_store.dart';
 import 'package:helsa/setting/storage/activity_store.dart';
 
-/// محاسبه هدف روزانه قدم / کالری / زمان حرکت از داده Hive کاربر.
+/// محاسبه هدف‌های شروع روزانه بر اساس اطلاعات پروفایل.
 ///
-/// کالری پایه (BMR): Mifflin–St Jeor
-/// TDEE: BMR × ضریب فعالیت
-/// هدف کالری «حرکت»: بخشی از هزینه فعالیت روزانه
-/// هدف قدم: بر اساس سطح فعالیت + تعدیل سن/جنسیت + هم‌خوانی با کالری
+/// نکته: سطح فعالیت انتخاب‌شده در شروع برنامه، اندازه‌گیری واقعی قدم‌های
+/// فعلی کاربر نیست. بنابراین هدف‌ها عمداً محافظه‌کارانه و رُند هستند؛
+/// بهتر است پس از جمع‌آوری چند هفته داده واقعی، هدف به‌تدریج تنظیم شود.
 class GoalCalculator {
   GoalCalculator._();
 
@@ -29,10 +29,10 @@ class GoalCalculator {
     return 170.0;
   }
 
-  /// 0..4 از استارت‌آپ
+  /// سطح فعالیت انتخاب‌شده در راه‌اندازی، از ۰ تا ۴.
   static int get _activityIndex {
     final a = ActivityStore.activityLevel;
-    if (a == null) return 1;
+    if (a == null) return 0;
     return a.clamp(0, 4);
   }
 
@@ -46,7 +46,8 @@ class GoalCalculator {
         g.startsWith('m');
   }
 
-  /// Mifflin–St Jeor BMR (kcal/day)
+  /// Mifflin–St Jeor برای بزرگسالان؛ تخمینی است و برای افراد زیر ۱۸ سال
+  /// نباید به‌عنوان نیاز کالری دقیق یا توصیه غذایی استفاده شود.
   /// مرد: 10w + 6.25h − 5a + 5
   /// زن:  10w + 6.25h − 5a − 161
   static double bmr() {
@@ -54,8 +55,7 @@ class GoalCalculator {
     return _isMale ? base + 5 : base - 161;
   }
 
-  /// ضرایب فعالیت استاندارد (TDEE = BMR × factor)
-  /// 0 نشسته … 4 خیلی فعال
+  /// ضریب تخمینی فعالیت برای محاسبه انرژی روزانه بزرگسالان.
   static double activityFactor() {
     const factors = [1.2, 1.375, 1.55, 1.725, 1.9];
     return factors[_activityIndex];
@@ -63,63 +63,52 @@ class GoalCalculator {
 
   static double tdee() => bmr() * activityFactor();
 
-  /// کالری هدف از «حرکت/قدم» در روز
-  /// ≈ ۲۰٪ تا ۳۵٪ از (TDEE − BMR) بسته به سطح فعالیت
-  /// کف و سقف معقول برای UI
-  static double caloriesGoal() {
-    final activityKcal = math.max(0.0, tdee() - bmr());
-    const shares = [0.20, 0.25, 0.30, 0.35, 0.40];
-    final target = activityKcal * shares[_activityIndex];
-    // اگر پروفایل ناقص باشد، حداقل بر اساس وزن
-    final fallback = _weight * 3.5; // ~kcal سبک روزانه
-    final goal = math.max(target, fallback);
-    return goal.clamp(120.0, 1200.0);
+  /// گرد کردن به نزدیک‌ترین مضرب مشخص، برای جلوگیری از اعداد بی‌دلیل دقیق.
+  static int _roundTo(int value, int step) {
+    if (step <= 0) return value;
+    return ((value / step).round()) * step;
   }
 
-  /// kcal تقریبی هر قدم (بر اساس وزن)
-  /// قاعده رایج: ~0.04 kcal/step در 70kg → مقیاس با وزن
+  /// هدف شروع قدم‌ها در روز.
+  ///
+  /// این مقادیر نسخه شروع هستند، نه حداقل یا حداکثر پزشکی:
+  /// کم‌تحرک ۳۰۰۰، فعالیت خیلی سبک ۴۰۰۰، سبک ۶۰۰۰،
+  /// متوسط ۸۰۰۰ و فعال ۱۰۰۰۰ قدم.
+  ///
+  /// عمداً ضریب اضافه بر اساس جنسیت یا جوان بودن اعمال نمی‌شود؛
+  /// این عوامل به‌تنهایی دلیل کافی برای بالا بردن هدف قدم نیستند.
+  static int stepsGoal() {
+    const goals = [3000, 4000, 6000, 8000, 10000];
+    return goals[_activityIndex];
+  }
+
+  /// کالری تقریبیِ مصرف‌شده از راه قدم‌زدن در هدف روزانه.
+  ///
+  /// برآورد کالری با وزن و تعداد قدم تغییر می‌کند و به‌دلیل تفاوت طول گام،
+  /// سرعت و شرایط بدنی، فقط تخمینی است. خروجی به مضرب ۵۰ گرد می‌شود.
+  /// این عدد «هدف دریافت کالری غذایی» نیست.
+  static double caloriesGoal() {
+    final estimated = stepsGoal() * kcalPerStep();
+    final rounded = _roundTo(estimated.round(), 50);
+    return rounded.clamp(50, 600).toDouble();
+  }
+
+  /// برآورد تقریبی انرژی هر قدم؛ مقدار واقعی می‌تواند متفاوت باشد.
   static double kcalPerStep() => 0.04 * (_weight / 70.0);
 
-  /// هدف قدم: از کالری هدف ÷ کالری هر قدم
-  /// + تعدیل سن (بالای ۵۰ کمی کمتر، زیر ۲۵ کمی بیشتر)
-  static int stepsGoal() {
-    final fromCal = (caloriesGoal() / kcalPerStep()).round();
-
-    // پایه جایگزین اگر محاسبه خیلی پرت بود
-    const activityBase = [5000, 7000, 9000, 11000, 13000];
-    final base = activityBase[_activityIndex];
-
-    var goal = ((fromCal * 0.7) + (base * 0.3)).round();
-
-    final age = _age;
-    if (age >= 65) {
-      goal = (goal * 0.85).round();
-    } else if (age >= 50) {
-      goal = (goal * 0.92).round();
-    } else if (age < 25) {
-      goal = (goal * 1.05).round();
-    }
-
-    // مردان حدود ۵٪ بیشتر (جرم عضلانی / عادت‌های مرجع)
-    if (_isMale) goal = (goal * 1.05).round();
-
-    return goal.clamp(3000, 20000);
-  }
-
-  /// دقایق فعال هدف — نزدیک توصیه WHO (~150 min/week متوسط)
-  /// + سطح فعالیت کاربر
+  /// هدف شروع دقایق فعالیت در روز، با افزایش تدریجی بر اساس سطح فعالیت.
+  ///
+  /// برای افراد زیر ۱۸ سال، هدف‌ها به‌صورت مرحله‌ای به ۶۰ دقیقه نزدیک
+  /// می‌شوند؛ توصیه عمومی برای این گروه سنی حدود ۶۰ دقیقه فعالیت متوسط
+  /// تا شدید در روز است، اما افزایش باید متناسب با توان و شرایط فرد باشد.
+  /// برای بزرگسالان این اعداد هدف شروع‌اند، نه جایگزین توصیه هفتگی WHO.
   static int activeMinutesGoal() {
-    // پایه هفتگی معادل روزانه
-    const dailyBase = [20, 25, 30, 40, 50];
-    var m = dailyBase[_activityIndex];
-
-    final age = _age;
-    if (age >= 65) {
-      m = (m * 0.9).round();
-    } else if (age < 25) {
-      m = (m * 1.05).round();
+    if (_age < 18) {
+      const youthGoals = [20, 30, 40, 50, 60];
+      return youthGoals[_activityIndex];
     }
 
-    return m.clamp(15, 90);
+    const adultGoals = [15, 20, 30, 40, 50];
+    return adultGoals[_activityIndex];
   }
 }
