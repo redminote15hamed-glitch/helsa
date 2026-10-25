@@ -112,16 +112,21 @@ class _ListViewButtonerState extends State<ListViewButtoner> {
     widget.onSelected(index);
   }
 
+  /// Tap must always select — even if this card is already centered.
+  /// (animateToPage on the same index does not fire onPageChanged.)
   void _onItemTap(int index) {
-    if (index == _currentPage) return;
-    if (_pageController.hasClients) {
+    final bool samePage = index == _currentPage;
+    _ignoreNextSelectedSync = true;
+    if (!samePage && _pageController.hasClients) {
+      setState(() => _currentPage = index);
       _pageController.animateToPage(
         index,
         duration: _pageAnimDuration,
         curve: _pageAnimCurve,
       );
+      widget.onSelected(index);
     } else {
-      _ignoreNextSelectedSync = true;
+      // Already on this page (or controller not ready): still select now.
       setState(() => _currentPage = index);
       widget.onSelected(index);
     }
@@ -133,7 +138,6 @@ class _ListViewButtonerState extends State<ListViewButtoner> {
     super.dispose();
   }
 
-  /// فقط روی پنجره خیلی کوچک جمع می‌شود
   double _densityScale({
     required BuildContext context,
     required double cardW,
@@ -152,9 +156,6 @@ class _ListViewButtonerState extends State<ListViewButtoner> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final double width = widget.itemWidth ?? context.hX5l;
-    // ارتفاع جمع‌وجور نسبت به عرض — نه vX5l که روی دسکتاپ غول می‌شود
-    // کارت کوتاه‌تر تا حاشیه خالی نماند
-    // کمی بلندتر تا حاشیه و متن جا شود، نه فشرده
     final double wantedHeight =
         widget.itemHeight ?? (width * 1.12).clamp(context.vX2l, context.vX3l);
 
@@ -242,10 +243,6 @@ class _ListViewButtonerState extends State<ListViewButtoner> {
   }
 }
 
-/// ساختار مرجع:
-/// [آیکون]
-/// [باکس توضیح]
-/// [عنوان]
 class _CardBody extends StatelessWidget {
   final Map<String, dynamic> item;
   final bool isSelected;
@@ -269,7 +266,6 @@ class _CardBody extends StatelessWidget {
         item['desc'] != null && item['desc'].toString().isNotEmpty;
 
     final double pad = context.s * density;
-    // کمی کوچک‌تر از قبل، هنوز خوانا
     final double fontBoost =
         context.shortestSide >= 600 ? 1.25 : 1.55;
     final double descSize = context.s * density * fontBoost;

@@ -51,7 +51,7 @@ class _SearchBarerState extends State<SearchBarer> {
     widget.onQueryCommitted(_ctrl.text.trim());
   }
 
-  void _onTrailingTap() {
+  void _onIconTap() {
     if (_hasText) {
       _ctrl.clear();
       widget.onQueryCommitted('');
@@ -65,7 +65,6 @@ class _SearchBarerState extends State<SearchBarer> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final bool rtl = Directionality.of(context) == TextDirection.rtl;
     final String hint = SetupText.getString(
       widget.currentLang,
       widget.hintKey ?? 'search_hint',
@@ -73,7 +72,7 @@ class _SearchBarerState extends State<SearchBarer> {
 
     final iconBtn = GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: _onTrailingTap,
+      onTap: _onIconTap,
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: context.hX2s),
         child: Iconer(
@@ -97,10 +96,11 @@ class _SearchBarerState extends State<SearchBarer> {
             width: context.baseScale * 0.06,
           ),
         ),
+        // Always LTR structure for field + icon placement:
+        // icon on the START (left in LTR, right visual when parent is RTL via Directionality)
+        // Text gets enough padding so it never sits under the icon.
         child: Row(
-          textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
           children: [
-            // leading side by language: search/clear
             iconBtn,
             Expanded(
               child: TextField(
@@ -112,20 +112,24 @@ class _SearchBarerState extends State<SearchBarer> {
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onPrimary,
                   fontSize: context.m,
+                  height: 1.2,
                 ),
                 cursorColor: theme.colorScheme.onPrimary,
                 decoration: InputDecoration(
                   isDense: true,
                   border: InputBorder.none,
+                  isCollapsed: true,
                   hintText: hint,
                   hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                    color:
-                        theme.colorScheme.onPrimary.withValues(alpha: 0.45),
+                    color: theme.colorScheme.onPrimary.withValues(alpha: 0.45),
                     fontSize: context.m,
+                    height: 1.2,
                   ),
-                  contentPadding: EdgeInsets.symmetric(
-                    vertical: context.vX2s,
-                    horizontal: context.hX3s,
+                  contentPadding: EdgeInsets.only(
+                    right: context.hX2s,
+                    left: context.hX3s,
+                    top: context.vX2s,
+                    bottom: context.vX2s,
                   ),
                 ),
               ),

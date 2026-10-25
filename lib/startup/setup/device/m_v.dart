@@ -30,6 +30,29 @@ class SetupMobileVertical extends StatelessWidget {
     required this.buildStepContent,
   });
 
+  /// Only the incoming child is laid out — prevents ghost overlap + height jump.
+  static Widget _switchLayout(Widget? currentChild, List<Widget> _) {
+    return currentChild ?? const SizedBox.shrink();
+  }
+
+  static Widget _switchTransition(Widget child, Animation<double> animation) {
+    final curved = CurvedAnimation(
+      parent: animation,
+      curve: Curves.easeOutCubic,
+      reverseCurve: Curves.easeInCubic,
+    );
+    return FadeTransition(
+      opacity: curved,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.03),
+          end: Offset.zero,
+        ).animate(curved),
+        child: child,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final double gapTop = context.vX3s;
@@ -50,7 +73,7 @@ class SetupMobileVertical extends StatelessWidget {
                   onBackPressed: onBackPressed,
                   currentStep: currentStep,
                   totalSteps: totalSteps,
-                  currentLang: currentLang, // زبان فعلی → متن ساپورت
+                  currentLang: currentLang,
                 ),
                 Expanded(
                   child: Padding(
@@ -75,7 +98,11 @@ class SetupMobileVertical extends StatelessWidget {
                               children: [
                                 SizedBox(height: gapTop),
                                 AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 500),
+                                  duration: const Duration(milliseconds: 280),
+                                  switchInCurve: Curves.easeOutCubic,
+                                  switchOutCurve: Curves.easeInCubic,
+                                  layoutBuilder: _switchLayout,
+                                  transitionBuilder: _switchTransition,
                                   child: TitleSetup(
                                     key: ValueKey('title_$currentStep'),
                                     currentLang: currentLang,
@@ -84,7 +111,11 @@ class SetupMobileVertical extends StatelessWidget {
                                 ),
                                 SizedBox(height: gapTitleContent),
                                 AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 500),
+                                  duration: const Duration(milliseconds: 280),
+                                  switchInCurve: Curves.easeOutCubic,
+                                  switchOutCurve: Curves.easeInCubic,
+                                  layoutBuilder: _switchLayout,
+                                  transitionBuilder: _switchTransition,
                                   child: KeyedSubtree(
                                     key: ValueKey('content_$currentStep'),
                                     child: buildStepContent(currentLang),

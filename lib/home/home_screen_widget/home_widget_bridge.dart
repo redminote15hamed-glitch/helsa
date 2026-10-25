@@ -10,8 +10,8 @@ class HomeWidgetBridge {
   HomeWidgetBridge._();
   static final HomeWidgetBridge instance = HomeWidgetBridge._();
 
-  /// Android provider class name. The plugin resolves this relative to the app package.
-  static const String _androidName = 'HelsaWidgetProvider';
+  /// Fully-qualified class name (required on MIUI / some OEMs)
+  static const String _androidName = 'com.example.helsa.HelsaWidgetProvider';
   bool _listening = false;
   int _lastSteps = -1;
   int _lastCal = -1;
@@ -49,6 +49,10 @@ class HomeWidgetBridge {
     final cal = t.calories.round();
     final mins = t.activeMinutes;
     if (steps == _lastSteps && cal == _lastCal && mins == _lastMins) return;
+    _lastSteps = steps;
+    _lastCal = cal;
+    _lastMins = mins;
+
     final lang = _lang();
     final stepsLabel = lang == 'fa' ? 'قدم' : lang == 'fr' ? 'pas' : 'steps';
     final calLabel = lang == 'fa' ? 'کالری' : 'kcal';
@@ -65,14 +69,7 @@ class HomeWidgetBridge {
         name: _androidName,
         androidName: _androidName,
       );
-      // Cache only after a successful update so failures can be retried.
-      _lastSteps = steps;
-      _lastCal = cal;
-      _lastMins = mins;
-    } catch (error, stackTrace) {
-      debugPrint('HelSa widget update failed: $error');
-      debugPrintStack(stackTrace: stackTrace);
-    }
+    } catch (_) {}
   }
 
   static String _lang() {

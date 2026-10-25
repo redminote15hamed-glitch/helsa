@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:helsa/home/home_text.dart';
 import 'package:helsa/setting/color/color_palette.dart';
+import 'package:helsa/setting/kit/snackbarer.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
 
 class WidgetPromoCard extends StatefulWidget {
@@ -29,7 +30,7 @@ class _WidgetPromoCardState extends State<WidgetPromoCard> {
   void initState() {
     super.initState();
     final r = math.Random();
-    _demoSteps = 400 + r.nextInt(4600); // 400..4999
+    _demoSteps = 400 + r.nextInt(4600);
     _demoCal = 80 + r.nextInt(320);
     _demoMin = 5 + r.nextInt(55);
   }
@@ -37,7 +38,10 @@ class _WidgetPromoCardState extends State<WidgetPromoCard> {
   Future<void> _addWidget() async {
     if (_busy) return;
     if (kIsWeb || !Platform.isAndroid) {
-      _toast(HomeText.getString(widget.language, 'widget_android_only'));
+      _banner(
+        HomeText.getString(widget.language, 'widget_android_only'),
+        error: true,
+      );
       return;
     }
     setState(() => _busy = true);
@@ -45,22 +49,36 @@ class _WidgetPromoCardState extends State<WidgetPromoCard> {
       final ok = await _channel.invokeMethod<bool>('pinWidget') ?? false;
       if (!mounted) return;
       if (ok) {
-        _toast(HomeText.getString(widget.language, 'widget_pin_ok'));
+        // درخواست پین ارسال شد — کاربر باید در لانچر تأیید کند
+        _banner(
+          HomeText.getString(widget.language, 'widget_pin_ok'),
+          error: false,
+        );
       } else {
-        _toast(HomeText.getString(widget.language, 'widget_pin_manual'));
+        _banner(
+          HomeText.getString(widget.language, 'widget_pin_manual'),
+          error: true,
+        );
       }
     } catch (_) {
       if (mounted) {
-        _toast(HomeText.getString(widget.language, 'widget_pin_manual'));
+        _banner(
+          HomeText.getString(widget.language, 'widget_pin_error'),
+          error: true,
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
-  void _toast(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating),
+  /// بنر سفارشی Helsa (بالای صفحه) — نه SnackBar سیستم اندروید
+  void _banner(String msg, {required bool error}) {
+    SnackBarer.show(
+      context,
+      message: msg,
+      template: error ? SnackbarTemplate.caution : SnackbarTemplate.neutral,
+      duration: const Duration(seconds: 4),
     );
   }
 
@@ -82,7 +100,6 @@ class _WidgetPromoCardState extends State<WidgetPromoCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // پیش‌نمایش ویجت
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
@@ -126,7 +143,6 @@ class _WidgetPromoCardState extends State<WidgetPromoCard> {
             ),
           ),
           SizedBox(height: context.vX2s),
-          // دکمه + اضافه کردن ویجت
           Material(
             color: Colors.transparent,
             child: InkWell(

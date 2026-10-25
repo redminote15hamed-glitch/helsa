@@ -403,14 +403,16 @@ class _TagChip extends StatelessWidget {
     final theme = Theme.of(context);
     final double radius = context.x2s;
 
+    // Selected → primary | Unselected → surface (inverted vs previous)
     final Color bg = selected
-        ? theme.colorScheme.onPrimary.withValues(alpha: 0.95)
-        : theme.colorScheme.onPrimary.withValues(alpha: 0.20);
-    final Color fg =
-        selected ? theme.colorScheme.primary : theme.colorScheme.onPrimary;
-    final Color borderColor = selected
+        ? theme.colorScheme.primary
+        : theme.colorScheme.surface;
+    final Color fg = selected
         ? theme.colorScheme.onPrimary
-        : theme.colorScheme.onPrimary.withValues(alpha: 0.40);
+        : theme.colorScheme.onSurface;
+    final Color borderColor = selected
+        ? theme.colorScheme.onPrimary.withValues(alpha: 0.55)
+        : theme.colorScheme.onSurface.withValues(alpha: 0.22);
 
     return Material(
       color: Colors.transparent,

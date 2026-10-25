@@ -25,8 +25,11 @@ class HomeText {
       'recap_ok': 'عالی، بزن بریم',
       'recap_empty': 'دیروز قدمی ثبت نشد — امروز فرصتته!',
       'widget_add': 'اضافه کردن ویجت',
-      'widget_pin_ok': 'ویجت را روی صفحهٔ اصلی تأیید کن',
-      'widget_pin_manual': 'از منوی ویجت‌های گوشی، Helsa را اضافه کن',
+      'widget_pin_ok': 'ویجت را روی صفحهٔ اصلی تأیید کنید',
+      'widget_pin_manual':
+          'افزودن خودکار ممکن نشد. از منوی ویجت‌های گوشی، Helsa را اضافه کنید',
+      'widget_pin_error':
+          'افزودن ویجت انجام نشد. لطفاً دوباره تلاش کنید یا دستی اضافه کنید',
       'widget_android_only': 'ویجت فقط روی اندروید فعال است',
     },
     'en': {
@@ -52,7 +55,10 @@ class HomeText {
       'recap_empty': 'No steps yesterday — today is a fresh start!',
       'widget_add': 'Add widget',
       'widget_pin_ok': 'Confirm the widget on your home screen',
-      'widget_pin_manual': 'Add Helsa from your phone widget menu',
+      'widget_pin_manual':
+          'Auto-add failed. Add Helsa from your phone widget menu',
+      'widget_pin_error':
+          'Could not add the widget. Try again or add it manually',
       'widget_android_only': 'Widget is only available on Android',
     },
     'fr': {
@@ -78,7 +84,10 @@ class HomeText {
       'recap_empty': 'Pas de pas hier — nouvelle chance aujourd\'hui !',
       'widget_add': 'Ajouter le widget',
       'widget_pin_ok': 'Confirmez le widget sur l\'écran d\'accueil',
-      'widget_pin_manual': 'Ajoutez Helsa depuis le menu widgets',
+      'widget_pin_manual':
+          'Ajout auto impossible. Ajoutez Helsa depuis le menu widgets',
+      'widget_pin_error':
+          'Impossible d\'ajouter le widget. Réessayez ou ajoutez-le manuellement',
       'widget_android_only': 'Widget disponible uniquement sur Android',
     },
   };
