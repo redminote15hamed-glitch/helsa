@@ -25,6 +25,9 @@ class HomeText {
       'recap_ok': 'عالی، بزن بریم',
       'recap_empty': 'دیروز قدمی ثبت نشد — امروز فرصتته!',
       'widget_add': 'اضافه کردن ویجت',
+      'widget_add_short': 'افزودن',
+      'widget_promo_msg':
+          'ویجت صفحهٔ اصلی را اضافه کنید تا سلامت‌تان همیشه نزدیک باشد',
       'widget_pin_ok': 'ویجت را روی صفحهٔ اصلی تأیید کنید',
       'widget_pin_manual':
           'افزودن خودکار ممکن نشد. از منوی ویجت‌های گوشی، Helsa را اضافه کنید',
@@ -54,6 +57,9 @@ class HomeText {
       'recap_ok': 'Let\'s go',
       'recap_empty': 'No steps yesterday — today is a fresh start!',
       'widget_add': 'Add widget',
+      'widget_add_short': 'Add',
+      'widget_promo_msg':
+          'Add the home screen widget to keep your health close at all times',
       'widget_pin_ok': 'Confirm the widget on your home screen',
       'widget_pin_manual':
           'Auto-add failed. Add Helsa from your phone widget menu',
@@ -83,6 +89,9 @@ class HomeText {
       'recap_ok': 'C\'est parti',
       'recap_empty': 'Pas de pas hier — nouvelle chance aujourd\'hui !',
       'widget_add': 'Ajouter le widget',
+      'widget_add_short': 'Ajouter',
+      'widget_promo_msg':
+          'Ajoutez le widget d\'accueil pour garder votre santé toujours à portée',
       'widget_pin_ok': 'Confirmez le widget sur l\'écran d\'accueil',
       'widget_pin_manual':
           'Ajout auto impossible. Ajoutez Helsa depuis le menu widgets',

@@ -39,5 +39,12 @@ class MetaStore {
 
   static String? get savedAt => _b.get('savedAt')?.toString();
 
+  /// User closed the home-screen widget promo banner — do not show again.
+  static bool get widgetPromoDismissed =>
+      _b.get('widgetPromoDismissed', defaultValue: false) == true;
+
+  static Future<void> setWidgetPromoDismissed(bool value) =>
+      _b.put('widgetPromoDismissed', value);
+
   static Future<void> clear() => _b.clear();
 }

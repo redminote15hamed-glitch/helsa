@@ -1,7 +1,8 @@
 // lib/home/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:helsa/home/widgets/apple_activity_card.dart';
-import 'package:helsa/home/home_screen_widget/widget_promo_card.dart';
+import 'package:helsa/home/widgets/home_menu_button.dart';
+import 'package:helsa/home/home_screen_widget/widget_promo_banner.dart';
 import 'package:helsa/home/widgets/streak_badge.dart';
 import 'package:helsa/setting/storage/streak_store.dart';
 import 'package:helsa/home/services/sleep_mode.dart';
@@ -57,7 +58,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       await StepForeground.instance.refresh(force: true);
     }
     if (mounted) setState(() {});
-    // گزارش روز قبل — فقط وقتی روز عوض شده و هنوز ندیده
     WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowRecap());
   }
 
@@ -66,19 +66,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     await DailyRecap.maybeShow(context, _lang);
   }
 
-
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       WalkingNotification.instance.onAppResumed();
-      // اگر نوتیف بسته شده بود دوباره بیاید + عدد تازه
       StepForeground.instance.ensureRunning();
     }
   }
 
   void _onUpdate() {
     _evalStreak();
-    // UI همیشه؛ نوتیف فقط وقتی قدم یا هدف عوض شد
     final s = _tracker.steps;
     final g = _tracker.stepsGoal;
     if (s != _lastNotifSteps || g != _lastNotifGoal) {
@@ -120,12 +117,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Widget _header(String name) {
-    return TextFielder(
-      text: name.isEmpty ? 'Helsa' : name,
-      template: TextTemplate.title,
+    // Menu sits on the *start* side: right in fa (RTL), left in en/fr (LTR)
+    return Row(
+      children: [
+        const HomeMenuButton(),
+        Expanded(
+          child: TextFielder(
+            text: name.isEmpty ? 'Helsa' : name,
+            template: TextTemplate.title,
+          ),
+        ),
+      ],
     );
   }
-
 
   Future<void> _evalStreak() async {
     try {
@@ -152,6 +156,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        // Promo banner ABOVE metrics — when dismissed, steps move up
+        WidgetPromoBanner(language: lang),
         StreakBadge(language: lang, streak: streak, isNight: SleepMode.isNightNow),
         AppleActivityCard(
           language: lang,
@@ -164,7 +170,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           isWalking: _tracker.isWalking,
           isNight: SleepMode.isNightNow,
         ),
-        WidgetPromoCard(language: lang),
       ],
     );
   }
