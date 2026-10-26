@@ -4,7 +4,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="horizontal"
-    android:padding="10dp"
+    android:paddingStart="10dp"
+    android:paddingEnd="10dp"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp"
     android:gravity="center_vertical"
     android:background="@drawable/helsa_widget_bg">
 
@@ -13,37 +16,42 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:orientation="vertical"
-        android:gravity="center">
-
+        android:gravity="center"
+        android:paddingStart="2dp"
+        android:paddingEnd="2dp">
         <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
             android:src="@drawable/ic_widget_steps"
             android:contentDescription="@null" />
-
         <TextView
             android:id="@+id/tv_steps"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="3dp"
             android:text="0"
             android:textStyle="bold"
-            android:textSize="18sp"
+            android:textSize="15sp"
             android:textColor="@color/widget_steps"
-            android:maxLines="1" />
-
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:includeFontPadding="false" />
         <TextView
             android:id="@+id/tv_steps_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="steps"
-            android:textSize="10sp"
-            android:textColor="@color/widget_label" />
+            android:layout_marginTop="1dp"
+            android:text="قدم"
+            android:textSize="9sp"
+            android:textColor="@color/widget_label"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:includeFontPadding="false" />
     </LinearLayout>
 
     <FrameLayout
         android:layout_width="1dp"
-        android:layout_height="36dp"
+        android:layout_height="28dp"
         android:background="@color/widget_divider" />
 
     <LinearLayout
@@ -51,37 +59,42 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:orientation="vertical"
-        android:gravity="center">
-
+        android:gravity="center"
+        android:paddingStart="2dp"
+        android:paddingEnd="2dp">
         <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
             android:src="@drawable/ic_widget_cal"
             android:contentDescription="@null" />
-
         <TextView
             android:id="@+id/tv_cal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="3dp"
             android:text="0"
             android:textStyle="bold"
-            android:textSize="18sp"
+            android:textSize="15sp"
             android:textColor="@color/widget_cal"
-            android:maxLines="1" />
-
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:includeFontPadding="false" />
         <TextView
             android:id="@+id/tv_cal_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="kcal"
-            android:textSize="10sp"
-            android:textColor="@color/widget_label" />
+            android:layout_marginTop="1dp"
+            android:text="کالری"
+            android:textSize="9sp"
+            android:textColor="@color/widget_label"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:includeFontPadding="false" />
     </LinearLayout>
 
     <FrameLayout
         android:layout_width="1dp"
-        android:layout_height="36dp"
+        android:layout_height="28dp"
         android:background="@color/widget_divider" />
 
     <LinearLayout
@@ -89,31 +102,36 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:orientation="vertical"
-        android:gravity="center">
-
+        android:gravity="center"
+        android:paddingStart="2dp"
+        android:paddingEnd="2dp">
         <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
             android:src="@drawable/ic_widget_time"
             android:contentDescription="@null" />
-
         <TextView
             android:id="@+id/tv_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="3dp"
             android:text="0"
             android:textStyle="bold"
-            android:textSize="18sp"
+            android:textSize="15sp"
             android:textColor="@color/widget_time"
-            android:maxLines="1" />
-
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:includeFontPadding="false" />
         <TextView
             android:id="@+id/tv_time_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="min"
-            android:textSize="10sp"
-            android:textColor="@color/widget_label" />
+            android:layout_marginTop="1dp"
+            android:text="دقیقه"
+            android:textSize="9sp"
+            android:textColor="@color/widget_label"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:includeFontPadding="false" />
     </LinearLayout>
 </LinearLayout>

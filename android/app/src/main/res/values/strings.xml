@@ -3,4 +3,6 @@
     <string name="app_name">helsa</string>
     <string name="widget_name">Helsa</string>
     <string name="widget_description">Helsa steps, calories and active time</string>
+    <string name="widget_steps_name">Helsa Steps</string>
+    <string name="widget_steps_description">Steps with progress capsule</string>
 </resources>

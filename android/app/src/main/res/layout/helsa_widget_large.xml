@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:padding="12dp"
+    android:gravity="center"
+    android:background="@drawable/helsa_widget_bg">
+
+    <!-- STEPS COLUMN -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp">
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_widget_steps"
+            android:contentDescription="@null" />
+        <TextView
+            android:id="@+id/tv_steps_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="قدم"
+            android:textSize="12sp"
+            android:textColor="@color/widget_label"
+            android:maxLines="1"
+            android:includeFontPadding="false" />
+        <ProgressBar
+            android:id="@+id/pb_steps"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="36dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:max="100"
+            android:progress="0"
+            android:indeterminate="false"
+            android:progressDrawable="@drawable/widget_bar_steps" />
+        <TextView
+            android:id="@+id/tv_steps"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:textColor="@color/widget_steps"
+            android:maxLines="1"
+            android:includeFontPadding="false" />
+        <TextView
+            android:id="@+id/tv_steps_frac"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="0 / 0"
+            android:textSize="10sp"
+            android:textColor="@color/widget_label"
+            android:maxLines="1"
+            android:includeFontPadding="false" />
+        <TextView
+            android:id="@+id/tv_steps_pct"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="0%"
+            android:textStyle="bold"
+            android:textSize="13sp"
+            android:textColor="@color/widget_steps"
+            android:maxLines="1"
+            android:includeFontPadding="false" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="1dp"
+        android:layout_height="match_parent"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
+        android:background="@color/widget_divider" />
+
+    <!-- CAL COLUMN -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp">
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_widget_cal"
+            android:contentDescription="@null" />
+        <TextView
+            android:id="@+id/tv_cal_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="کالری"
+            android:textSize="12sp"
+            android:textColor="@color/widget_label"
+            android:maxLines="1"
+            android:includeFontPadding="false" />
+        <ProgressBar
+            android:id="@+id/pb_cal"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="36dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:max="100"
+            android:progress="0"
+            android:indeterminate="false"
+            android:progressDrawable="@drawable/widget_bar_cal" />
+        <TextView
+            android:id="@+id/tv_cal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:textColor="@color/widget_cal"
+            android:maxLines="1"
+            android:includeFontPadding="false" />
+        <TextView
+            android:id="@+id/tv_cal_frac"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="0 / 0"
+            android:textSize="10sp"
+            android:textColor="@color/widget_label"
+            android:maxLines="1"
+            android:includeFontPadding="false" />
+        <TextView
+            android:id="@+id/tv_cal_pct"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="0%"
+            android:textStyle="bold"
+            android:textSize="13sp"
+            android:textColor="@color/widget_cal"
+            android:maxLines="1"
+            android:includeFontPadding="false" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="1dp"
+        android:layout_height="match_parent"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
+        android:background="@color/widget_divider" />
+
+    <!-- TIME COLUMN -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp">
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_widget_time"
+            android:contentDescription="@null" />
+        <TextView
+            android:id="@+id/tv_time_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="دقیقه"
+            android:textSize="12sp"
+            android:textColor="@color/widget_label"
+            android:maxLines="1"
+            android:includeFontPadding="false" />
+        <ProgressBar
+            android:id="@+id/pb_time"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="36dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:max="100"
+            android:progress="0"
+            android:indeterminate="false"
+            android:progressDrawable="@drawable/widget_bar_time" />
+        <TextView
+            android:id="@+id/tv_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:textColor="@color/widget_time"
+            android:maxLines="1"
+            android:includeFontPadding="false" />
+        <TextView
+            android:id="@+id/tv_time_frac"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="0 / 0"
+            android:textSize="10sp"
+            android:textColor="@color/widget_label"
+            android:maxLines="1"
+            android:includeFontPadding="false" />
+        <TextView
+            android:id="@+id/tv_time_pct"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="0%"
+            android:textStyle="bold"
+            android:textSize="13sp"
+            android:textColor="@color/widget_time"
+            android:maxLines="1"
+            android:includeFontPadding="false" />
+    </LinearLayout>
+</LinearLayout>
