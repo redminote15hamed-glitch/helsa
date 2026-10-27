@@ -27,7 +27,7 @@ class GenieEffect extends StatefulWidget {
     required this.child,
     required this.opening,
     this.duration = AS.slow,
-    this.curve = AC.easeInOutCubic,
+    this.curve = AC.easeOutCubic,
     this.edge = GenieEdge.start,
     this.stripCount = 28,
     this.onComplete,
