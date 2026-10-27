@@ -34,6 +34,19 @@ class HomeText {
       'widget_pin_error':
           'افزودن ویجت انجام نشد. لطفاً دوباره تلاش کنید یا دستی اضافه کنید',
       'widget_android_only': 'ویجت فقط روی اندروید فعال است',
+      'menu_today': 'امروز',
+      'menu_mood_done': 'هدف امروز کامل شد 🎉',
+      'menu_mood_good': 'امروز خوب پیش می‌ری',
+      'menu_mood_go': 'یه کم دیگه تا هدف',
+      'menu_mood_start': 'وقت حرکت است',
+      'menu_goals': 'هدف‌ها',
+      'menu_widget': 'ویجت',
+      'menu_support': 'پشتیبانی',
+      'menu_settings': 'تنظیمات',
+      'menu_profile': 'اطلاعات کاربری',
+      'menu_appearance': 'تنظیمات ظاهری',
+      'menu_title_male': 'آقای',
+      'menu_title_female': 'بانو',
     },
     'en': {
       'perm_activity':
@@ -66,6 +79,19 @@ class HomeText {
       'widget_pin_error':
           'Could not add the widget. Try again or add it manually',
       'widget_android_only': 'Widget is only available on Android',
+      'menu_today': 'Today',
+      'menu_mood_done': 'Today\'s goals complete 🎉',
+      'menu_mood_good': 'You\'re doing great today',
+      'menu_mood_go': 'A bit more to your goal',
+      'menu_mood_start': 'Time to move',
+      'menu_goals': 'Goals',
+      'menu_widget': 'Widget',
+      'menu_support': 'Support',
+      'menu_settings': 'Settings',
+      'menu_profile': 'Profile',
+      'menu_appearance': 'Appearance',
+      'menu_title_male': 'Mr.',
+      'menu_title_female': 'Ms.',
     },
     'fr': {
       'perm_activity':
@@ -98,6 +124,19 @@ class HomeText {
       'widget_pin_error':
           'Impossible d\'ajouter le widget. Réessayez ou ajoutez-le manuellement',
       'widget_android_only': 'Widget disponible uniquement sur Android',
+      'menu_today': 'Aujourd\'hui',
+      'menu_mood_done': 'Objectifs du jour atteints 🎉',
+      'menu_mood_good': 'Belle journée jusqu\'ici',
+      'menu_mood_go': 'Encore un peu pour l\'objectif',
+      'menu_mood_start': 'Il est temps de bouger',
+      'menu_goals': 'Objectifs',
+      'menu_widget': 'Widget',
+      'menu_support': 'Support',
+      'menu_settings': 'Réglages',
+      'menu_profile': 'Profil',
+      'menu_appearance': 'Apparence',
+      'menu_title_male': 'M.',
+      'menu_title_female': 'Mme',
     },
   };
 

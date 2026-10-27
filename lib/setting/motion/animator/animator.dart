@@ -1,17 +1,4 @@
 /// Animator system – single import entry point.
-///
-/// Usage:
-/// ```dart
-/// import 'package:your_app/animator/animator.dart';
-///
-/// await HardwareProfiler.init(); // once in main()
-///
-/// MyWidget().enFade()
-/// MyWidget().addPop()
-/// MyWidget().deleteDrop()
-/// MyWidget().toPress()
-/// ```
-
 library;
 
 export 'core/speeds.dart';
@@ -28,3 +15,5 @@ export 'extensions/delete.dart';
 export 'extensions/utility.dart';
 
 export 'presets/presets.dart';
+
+export 'effects/genie_effect.dart';
