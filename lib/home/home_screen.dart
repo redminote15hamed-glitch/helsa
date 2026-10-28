@@ -1,7 +1,7 @@
-// lib/home/home_screen.dart
+﻿// lib/home/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:helsa/home/widgets/apple_activity_card.dart';
-import 'package:helsa/home/widgets/home_menu_button.dart';
+import 'package:helsa/home/menu/home_menu_button.dart';
 import 'package:helsa/home/home_screen_widget/widget_promo_banner.dart';
 import 'package:helsa/home/widgets/streak_badge.dart';
 import 'package:helsa/setting/storage/streak_store.dart';
@@ -156,7 +156,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Promo banner ABOVE metrics — when dismissed, steps move up
+        // Promo banner ABOVE metrics â€” when dismissed, steps move up
         WidgetPromoBanner(language: lang),
         StreakBadge(language: lang, streak: streak, isNight: SleepMode.isNightNow),
         AppleActivityCard(
@@ -256,3 +256,4 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 }
+

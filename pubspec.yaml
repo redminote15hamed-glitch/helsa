@@ -1,8 +1,8 @@
-name: helsa
+﻿name: helsa
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.0.0+2
+version: 1.0.0+3
 
 environment:
   sdk: ^3.5.0
@@ -17,7 +17,7 @@ dependencies:
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   pedometer: ^4.2.0
-  # 12.0.1 → android 13.x (بدون v1 embedding و بدون API 37)
+  # 12.0.1 â†’ android 13.x (Ø¨Ø¯ÙˆÙ† v1 embedding Ùˆ Ø¨Ø¯ÙˆÙ† API 37)
   permission_handler: 12.0.1
   flutter_local_notifications: 19.4.2
   flutter_foreground_task: ^11.0.3
@@ -29,7 +29,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
 
-# اجبار نسخه میانی: نه 12.0.1 (v1) و نه 14.1.0 (SDK 37)
+# Ø§Ø¬Ø¨Ø§Ø± Ù†Ø³Ø®Ù‡ Ù…ÛŒØ§Ù†ÛŒ: Ù†Ù‡ 12.0.1 (v1) Ùˆ Ù†Ù‡ 14.1.0 (SDK 37)
 dependency_overrides:
   permission_handler_android: 13.0.1
 
@@ -83,3 +83,4 @@ flutter_launcher_icons:
   image_path: "assets/icon/helsa_icon.png"
   adaptive_icon_background: "#00BFA5"
   adaptive_icon_foreground: "assets/icon/helsa_icon.png"
+
