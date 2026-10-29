@@ -1,4 +1,4 @@
-﻿// Ù…Ø³ÛŒØ±: android/app/build.gradle.kts
+// مسیر: android/app/build.gradle.kts
 import java.util.Properties
 import java.io.FileInputStream
 
@@ -19,7 +19,6 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        // Ù„Ø§Ø²Ù… Ø¨Ø±Ø§ÛŒ flutter_local_notifications
         isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -47,14 +46,13 @@ android {
 
     buildTypes {
         release {
-            // Ø§Ú¯Ø± key.properties Ù†Ø¨ÙˆØ¯ØŒ Ù…ÙˆÙ‚ØªØ§Ù‹ debug (Ù„ÙˆÚ©Ø§Ù„ Ø¨Ø¯ÙˆÙ† keystore)
-            // Ø±ÙˆÛŒ CI Ø§Ú¯Ø± keystore Ø¯Ø§Ø±ÛŒ Ø§Ø² release Ø§Ø³ØªÙØ§Ø¯Ù‡ Ù…ÛŒâ€ŒØ´ÙˆØ¯
             signingConfig = if (keystorePropertiesFile.exists()) {
                 signingConfigs.getByName("release")
             } else {
                 signingConfigs.getByName("debug")
             }
-            isMinifyEnabled = falsern            isShrinkResources = false
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }
@@ -66,4 +64,3 @@ flutter {
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
-
