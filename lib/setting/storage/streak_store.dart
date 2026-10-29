@@ -1,5 +1,5 @@
-// lib/setting/storage/streak_store.dart
-// روزهایی که حداقل یک هدف (قدم/کالری/زمان) کامل شده
+﻿// lib/setting/storage/streak_store.dart
+// Ø±ÙˆØ²Ù‡Ø§ÛŒÛŒ Ú©Ù‡ Ø­Ø¯Ø§Ù‚Ù„ ÛŒÚ© Ù‡Ø¯Ù (Ù‚Ø¯Ù…/Ú©Ø§Ù„Ø±ÛŒ/Ø²Ù…Ø§Ù†) Ú©Ø§Ù…Ù„ Ø´Ø¯Ù‡
 import 'package:hive_flutter/hive_flutter.dart';
 
 class StreakStore {
@@ -26,12 +26,7 @@ class StreakStore {
 
   static String get _today => _dayKey(DateTime.now());
 
-  static String get _yesterday {
-    final y = DateTime.now().subtract(const Duration(days: 1));
-    return _dayKey(y);
-  }
-
-  /// امروز حداقل یک هدف زده شده؟
+  /// Ø§Ù…Ø±ÙˆØ² Ø­Ø¯Ø§Ù‚Ù„ ÛŒÚ© Ù‡Ø¯Ù Ø²Ø¯Ù‡ Ø´Ø¯Ù‡ØŸ
   static bool get todayDone => _b.get('done_$_today') == true;
 
   static Future<void> markTodayDone() async {
@@ -47,10 +42,10 @@ class StreakStore {
   }
 
   static Future<void> _recompute() async {
-    // از امروز عقب برو تا زنجیره پیوسته
+    // Ø§Ø² Ø§Ù…Ø±ÙˆØ² Ø¹Ù‚Ø¨ Ø¨Ø±Ùˆ ØªØ§ Ø²Ù†Ø¬ÛŒØ±Ù‡ Ù¾ÛŒÙˆØ³ØªÙ‡
     var count = 0;
     var day = DateTime.now();
-    // اگر امروز هنوز done نیست، از دیروز شروع کن (استریک زنده می‌ماند تا آخر روز)
+    // Ø§Ú¯Ø± Ø§Ù…Ø±ÙˆØ² Ù‡Ù†ÙˆØ² done Ù†ÛŒØ³ØªØŒ Ø§Ø² Ø¯ÛŒØ±ÙˆØ² Ø´Ø±ÙˆØ¹ Ú©Ù† (Ø§Ø³ØªØ±ÛŒÚ© Ø²Ù†Ø¯Ù‡ Ù…ÛŒâ€ŒÙ…Ø§Ù†Ø¯ ØªØ§ Ø¢Ø®Ø± Ø±ÙˆØ²)
     if (_b.get('done_${_dayKey(day)}') != true) {
       day = day.subtract(const Duration(days: 1));
     }
@@ -66,7 +61,7 @@ class StreakStore {
     await _b.put('streak', count);
   }
 
-  /// بعد از تغییر متریک‌ها صدا بزن
+  /// Ø¨Ø¹Ø¯ Ø§Ø² ØªØºÛŒÛŒØ± Ù…ØªØ±ÛŒÚ©â€ŒÙ‡Ø§ ØµØ¯Ø§ Ø¨Ø²Ù†
   static Future<void> evaluate({
     required int steps,
     required int stepsGoal,
@@ -81,8 +76,9 @@ class StreakStore {
     if (hit) {
       await markTodayDone();
     } else {
-      // فقط recomput برای نمایش؛ امروز را پاک نکن اگر قبلاً زده
+      // ÙÙ‚Ø· recomput Ø¨Ø±Ø§ÛŒ Ù†Ù…Ø§ÛŒØ´Ø› Ø§Ù…Ø±ÙˆØ² Ø±Ø§ Ù¾Ø§Ú© Ù†Ú©Ù† Ø§Ú¯Ø± Ù‚Ø¨Ù„Ø§Ù‹ Ø²Ø¯Ù‡
       await _recompute();
     }
   }
 }
+

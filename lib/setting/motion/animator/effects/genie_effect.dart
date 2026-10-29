@@ -1,7 +1,4 @@
 // lib/setting/motion/animator/effects/genie_effect.dart
-// Real Mac-like Genie: horizontal strip warp toward an edge.
-// Better smoothness via more strips + smoothstep curve.
-// Low-end devices fall back to soft scale slide (HardwareProfiler).
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
@@ -14,7 +11,7 @@ enum GenieEdge { start, end, top, bottom }
 
 class GenieEffect extends StatefulWidget {
   final Widget child;
-  final bool opening; // true = enter (expand from edge), false = exit
+  final bool opening;
   final Duration duration;
   final Curve curve;
   final GenieEdge edge;
@@ -55,20 +52,15 @@ class _GenieEffectState extends State<GenieEffect>
       widget.duration,
       ignoreHW: widget.ignoreHW,
     );
-    // Fewer strips + fallback on weak hardware
     _useFallback = !widget.ignoreHW && HardwareProfiler.isLowEndDevice();
-
     _c = AnimationController(vsync: this, duration: dur);
     _t = CurvedAnimation(parent: _c, curve: widget.curve);
     _c.addStatusListener((s) {
       if (s == AnimationStatus.completed) {
         widget.onComplete?.call();
-        if (!widget.opening && mounted) {
-          setState(() => _done = true);
-        }
+        if (!widget.opening && mounted) setState(() => _done = true);
       }
     });
-
     if (_useFallback) {
       _c.forward(from: 0);
     } else {
@@ -118,10 +110,8 @@ class _GenieEffectState extends State<GenieEffect>
   @override
   Widget build(BuildContext context) {
     if (_done) return const SizedBox.shrink();
-
     final isRtl = Directionality.of(context) == TextDirection.rtl;
     final edge = widget.edge;
-    // Resolve horizontal edge with RTL
     final GenieEdge resolved = switch (edge) {
       GenieEdge.start => isRtl ? GenieEdge.end : GenieEdge.start,
       GenieEdge.end => isRtl ? GenieEdge.start : GenieEdge.end,
@@ -129,12 +119,10 @@ class _GenieEffectState extends State<GenieEffect>
     };
 
     if (_useFallback || _snapshot == null) {
-      // Keep child visible for capture; during fallback animate transform
       return AnimatedBuilder(
         animation: _t,
         builder: (context, child) {
-          final raw = widget.opening ? _t.value : (1.0 - _t.value);
-          final p = raw;
+          final p = widget.opening ? _t.value : (1.0 - _t.value);
           final scaleX = 0.22 + 0.78 * p;
           final scaleY = 0.90 + 0.10 * p;
           final opacity = p.clamp(0.0, 1.0);
@@ -187,15 +175,11 @@ class _GenieEffectState extends State<GenieEffect>
             edge: resolved,
             strips: strips,
           ),
-          // Size from child snapshot
           size: Size(
             _snapshot!.width / MediaQuery.devicePixelRatioOf(context),
             _snapshot!.height / MediaQuery.devicePixelRatioOf(context),
           ),
-          child: Opacity(
-            opacity: 0,
-            child: widget.child,
-          ),
+          child: Opacity(opacity: 0, child: widget.child),
         );
       },
     );
@@ -204,7 +188,7 @@ class _GenieEffectState extends State<GenieEffect>
 
 class _GeniePainter extends CustomPainter {
   final ui.Image image;
-  final double progress; // 0 collapsed → 1 full
+  final double progress;
   final GenieEdge edge;
   final int strips;
 
@@ -215,7 +199,6 @@ class _GeniePainter extends CustomPainter {
     required this.strips,
   });
 
-  // Smoothstep
   double _s(double x) {
     x = x.clamp(0.0, 1.0);
     return x * x * (3 - 2 * x);
@@ -230,11 +213,9 @@ class _GeniePainter extends CustomPainter {
     final imgH = image.height.toDouble();
     final scaleX = size.width / imgW;
     final scaleY = size.height / imgH;
-
     final paint = Paint()
       ..isAntiAlias = true
       ..filterQuality = FilterQuality.medium;
-
     final horizontal = edge == GenieEdge.start || edge == GenieEdge.end;
     final n = strips;
 
@@ -243,34 +224,28 @@ class _GeniePainter extends CustomPainter {
       for (int i = 0; i < n; i++) {
         final v0 = i / n;
         final v1 = (i + 1) / n;
-        // Genie curve: middle lags, edges lead slightly — classic lamp funnel
         final mid = (v0 + v1) * 0.5;
-        final funnel = math.sin(mid * math.pi); // 0 at ends, 1 at center
-        // Width factor: collapsed narrow, expands with progress
-        // Center expands later than edges for organic feel
+        final funnel = math.sin(mid * math.pi);
         final lag = 0.15 * funnel;
         final localP = ((p - lag) / (1.0 - lag)).clamp(0.0, 1.0);
         final widthFactor = 0.06 + 0.94 * _s(localP);
-
         final srcTop = i * stripH;
         final src = Rect.fromLTWH(0, srcTop, imgW, stripH + 0.5);
-
-        double left;
-        double right;
+        late final double left;
+        late final double right;
         if (edge == GenieEdge.start) {
-          // Anchor left, squeeze toward left
           left = 0;
           right = size.width * widthFactor;
         } else {
           right = size.width;
           left = size.width * (1.0 - widthFactor);
         }
-
-        // Slight vertical pull toward anchor as it collapses
-        final yPull = (1.0 - p) * funnel * 6.0;
-        final dstTop = (srcTop * scaleY) + (edge == GenieEdge.start || edge == GenieEdge.end ? yPull * 0 : 0);
-        final dst = Rect.fromLTRB(left, srcTop * scaleY, right, (srcTop + stripH) * scaleY);
-
+        final dst = Rect.fromLTRB(
+          left,
+          srcTop * scaleY,
+          right,
+          (srcTop + stripH) * scaleY,
+        );
         canvas.drawImageRect(image, src, dst, paint);
       }
     } else {
@@ -282,12 +257,10 @@ class _GeniePainter extends CustomPainter {
         final lag = 0.15 * funnel;
         final localP = ((p - lag) / (1.0 - lag)).clamp(0.0, 1.0);
         final heightFactor = 0.06 + 0.94 * _s(localP);
-
         final srcLeft = i * stripW;
         final src = Rect.fromLTWH(srcLeft, 0, stripW + 0.5, imgH);
-
-        double top;
-        double bottom;
+        late final double top;
+        late final double bottom;
         if (edge == GenieEdge.top) {
           top = 0;
           bottom = size.height * heightFactor;
@@ -295,7 +268,6 @@ class _GeniePainter extends CustomPainter {
           bottom = size.height;
           top = size.height * (1.0 - heightFactor);
         }
-
         final dst = Rect.fromLTRB(
           srcLeft * scaleX,
           top,
@@ -305,11 +277,6 @@ class _GeniePainter extends CustomPainter {
         canvas.drawImageRect(image, src, dst, paint);
       }
     }
-
-    // Soft opacity overall when nearly collapsed
-    if (p < 0.2) {
-      // already narrow; nothing extra
-    }
   }
 
   @override
@@ -317,7 +284,6 @@ class _GeniePainter extends CustomPainter {
       old.progress != progress || old.image != image || old.edge != edge;
 }
 
-/// Convenience wrappers matching Animator style.
 extension AnimatorGenie on Widget {
   Widget enGenieReal(
     BuildContext context, {
