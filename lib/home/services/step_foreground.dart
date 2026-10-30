@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' show Colors;
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:helsa/home/home_screen_widget/home_widget_bridge.dart';
+import 'package:helsa/home/home_text.dart';
 import 'package:helsa/home/services/step_tracker.dart';
 import 'package:helsa/setting/storage/meta_store.dart';
 import 'package:helsa/setting/storage/steps_store.dart';
@@ -167,19 +168,12 @@ class StepForeground {
 
   static String _title(int steps, int goal) {
     final lang = _lang();
-    final suffix = lang == 'fa'
-        ? 'قدم'
-        : lang == 'fr'
-            ? 'pas'
-            : 'steps';
+    final suffix = HomeText.getString(lang, 'steps');
     return '$steps / $goal $suffix';
   }
 
   static String _body() {
-    final lang = _lang();
-    if (lang == 'fa') return 'قدم زدن برای سلامتی عالیه، حتی کم';
-    if (lang == 'fr') return 'Quelques pas chaque jour éloignent le médecin';
-    return 'A few steps each day keeps the doctor away';
+    return HomeText.getString(_lang(), 'notif_body');
   }
 }
 

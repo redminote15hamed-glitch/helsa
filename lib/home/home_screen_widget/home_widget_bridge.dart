@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:helsa/home/services/step_tracker.dart';
+import 'package:helsa/home/home_text.dart';
 import 'package:helsa/setting/storage/meta_store.dart';
 
 class HomeWidgetBridge {
@@ -81,9 +82,9 @@ class HomeWidgetBridge {
     if (!force && now.difference(_lastPush).inMilliseconds < 800) return;
 
     final lang = _lang();
-    final stepsLabel = lang == 'fa' ? 'قدم' : lang == 'fr' ? 'pas' : 'steps';
-    final calLabel = lang == 'fa' ? 'کالری' : 'kcal';
-    final timeLabel = lang == 'fa' ? 'دقیقه' : lang == 'fr' ? 'min' : 'min';
+    final stepsLabel = HomeText.getString(lang, 'steps');
+    final calLabel = HomeText.getString(lang, 'kcal');
+    final timeLabel = HomeText.getString(lang, 'minutes');
 
     try {
       await HomeWidget.saveWidgetData<int>('steps', steps);

@@ -1,4 +1,5 @@
 // lib/home/home_text.dart
+// Single source of truth for all Home-area user-facing strings.
 class HomeText {
   HomeText._();
 
@@ -9,6 +10,7 @@ class HomeText {
       'perm_grant': 'اجازه دسترسی',
       'steps': 'قدم',
       'calories': 'کالری',
+      'kcal': 'کالری',
       'active': 'زمان حرکت',
       'minutes': 'دقیقه',
       'goal_steps': 'تغییر هدف قدم',
@@ -47,6 +49,15 @@ class HomeText {
       'menu_appearance': 'تنظیمات ظاهری',
       'menu_title_male': 'آقای',
       'menu_title_female': 'بانو',
+      'menu_version': 'Helsa v{v}',
+      'app_name': 'Helsa',
+      'night_mode': 'حالت شب',
+      'streak_start': 'شروع استریک',
+      'streak_days': '{n} روز پیاپی',
+      'support_copy': 'کپی',
+      'support_copied': 'کپی شد',
+      'support_hint': 'ارسال مشکلات و پیشنهادات',
+      'notif_body': 'قدم زدن برای سلامتی عالیه، حتی کم',
     },
     'en': {
       'perm_activity':
@@ -54,6 +65,7 @@ class HomeText {
       'perm_grant': 'Allow access',
       'steps': 'Steps',
       'calories': 'Calories',
+      'kcal': 'kcal',
       'active': 'Active',
       'minutes': 'min',
       'goal_steps': 'Change steps goal',
@@ -62,12 +74,12 @@ class HomeText {
       'goal_hint': 'Enter goal value',
       'confirm': 'Confirm',
       'cancel': 'Cancel',
-      'recap_title': 'Yesterday\'s report',
+      'recap_title': "Yesterday's report",
       'recap_steps': 'Steps',
       'recap_cal': 'Approx. calories',
       'recap_active': 'Active minutes',
       'recap_goal': 'of steps goal',
-      'recap_ok': 'Let\'s go',
+      'recap_ok': "Let's go",
       'recap_empty': 'No steps yesterday — today is a fresh start!',
       'widget_add': 'Add widget',
       'widget_add_short': 'Add',
@@ -80,8 +92,8 @@ class HomeText {
           'Could not add the widget. Try again or add it manually',
       'widget_android_only': 'Widget is only available on Android',
       'menu_today': 'Today',
-      'menu_mood_done': 'Today\'s goals complete 🎉',
-      'menu_mood_good': 'You\'re doing great today',
+      'menu_mood_done': "Today's goals complete 🎉",
+      'menu_mood_good': "You're doing great today",
       'menu_mood_go': 'A bit more to your goal',
       'menu_mood_start': 'Time to move',
       'menu_goals': 'Goals',
@@ -92,42 +104,52 @@ class HomeText {
       'menu_appearance': 'Appearance',
       'menu_title_male': 'Mr.',
       'menu_title_female': 'Ms.',
+      'menu_version': 'Helsa v{v}',
+      'app_name': 'Helsa',
+      'night_mode': 'Night mode',
+      'streak_start': 'Start a streak',
+      'streak_days': '{n} day streak',
+      'support_copy': 'Copy',
+      'support_copied': 'Copied',
+      'support_hint': 'Send issues and suggestions',
+      'notif_body': 'A few steps each day keeps the doctor away',
     },
     'fr': {
       'perm_activity':
-          'Pour activer le compteur de pas, autorisez l\'accès à l\'activité physique.',
+          "Pour activer le compteur de pas, autorisez l'accès à l'activité physique.",
       'perm_grant': 'Autoriser',
       'steps': 'Pas',
       'calories': 'Calories',
+      'kcal': 'kcal',
       'active': 'Actif',
       'minutes': 'min',
-      'goal_steps': 'Modifier l\'objectif de pas',
-      'goal_calories': 'Modifier l\'objectif de calories',
-      'goal_active': 'Modifier l\'objectif de temps actif',
-      'goal_hint': 'Entrez l\'objectif',
+      'goal_steps': "Modifier l'objectif de pas",
+      'goal_calories': "Modifier l'objectif de calories",
+      'goal_active': "Modifier l'objectif de temps actif",
+      'goal_hint': "Entrez l'objectif",
       'confirm': 'Confirmer',
       'cancel': 'Annuler',
-      'recap_title': 'Rapport d\'hier',
+      'recap_title': "Rapport d'hier",
       'recap_steps': 'Pas',
       'recap_cal': 'Calories approx.',
       'recap_active': 'Minutes actives',
-      'recap_goal': 'de l\'objectif',
-      'recap_ok': 'C\'est parti',
-      'recap_empty': 'Pas de pas hier — nouvelle chance aujourd\'hui !',
+      'recap_goal': "de l'objectif",
+      'recap_ok': "C'est parti",
+      'recap_empty': "Pas de pas hier — nouvelle chance aujourd'hui !",
       'widget_add': 'Ajouter le widget',
       'widget_add_short': 'Ajouter',
       'widget_promo_msg':
-          'Ajoutez le widget d\'accueil pour garder votre santé toujours à portée',
-      'widget_pin_ok': 'Confirmez le widget sur l\'écran d\'accueil',
+          "Ajoutez le widget d'accueil pour garder votre santé toujours à portée",
+      'widget_pin_ok': "Confirmez le widget sur l'écran d'accueil",
       'widget_pin_manual':
           'Ajout auto impossible. Ajoutez Helsa depuis le menu widgets',
       'widget_pin_error':
-          'Impossible d\'ajouter le widget. Réessayez ou ajoutez-le manuellement',
+          "Impossible d'ajouter le widget. Réessayez ou ajoutez-le manuellement",
       'widget_android_only': 'Widget disponible uniquement sur Android',
-      'menu_today': 'Aujourd\'hui',
+      'menu_today': "Aujourd'hui",
       'menu_mood_done': 'Objectifs du jour atteints 🎉',
-      'menu_mood_good': 'Belle journée jusqu\'ici',
-      'menu_mood_go': 'Encore un peu pour l\'objectif',
+      'menu_mood_good': "Belle journée jusqu'ici",
+      'menu_mood_go': "Encore un peu pour l'objectif",
       'menu_mood_start': 'Il est temps de bouger',
       'menu_goals': 'Objectifs',
       'menu_widget': 'Widget',
@@ -137,16 +159,49 @@ class HomeText {
       'menu_appearance': 'Apparence',
       'menu_title_male': 'M.',
       'menu_title_female': 'Mme',
+      'menu_version': 'Helsa v{v}',
+      'app_name': 'Helsa',
+      'night_mode': 'Mode nuit',
+      'streak_start': 'Série à démarrer',
+      'streak_days': '{n} jours de série',
+      'support_copy': 'Copier',
+      'support_copied': 'Copié',
+      'support_hint': 'Envoyez problèmes et suggestions',
+      'notif_body': 'Quelques pas chaque jour éloignent le médecin',
     },
   };
 
-  static String getString(String languageCode, String key) {
+  static String _lang(String languageCode) {
     final code = languageCode.toLowerCase();
-    final lang = code.startsWith('fa')
-        ? 'fa'
-        : code.startsWith('fr')
-            ? 'fr'
-            : 'en';
+    if (code.startsWith('fa') || code.startsWith('per')) return 'fa';
+    if (code.startsWith('fr')) return 'fr';
+    return 'en';
+  }
+
+  static String getString(String languageCode, String key) {
+    final lang = _lang(languageCode);
     return _values[lang]?[key] ?? _values['en']![key] ?? key;
+  }
+
+  /// Replace `{name}` placeholders, e.g. format(lang, 'streak_days', {'n': '5'}).
+  static String format(
+    String languageCode,
+    String key,
+    Map<String, String> vars,
+  ) {
+    var s = getString(languageCode, key);
+    vars.forEach((k, v) {
+      s = s.replaceAll('{$k}', v);
+    });
+    return s;
+  }
+
+  static String streakLabel(String languageCode, int n) {
+    if (n <= 0) return getString(languageCode, 'streak_start');
+    return format(languageCode, 'streak_days', {'n': '$n'});
+  }
+
+  static String versionLabel(String languageCode, String version) {
+    return format(languageCode, 'menu_version', {'v': version});
   }
 }

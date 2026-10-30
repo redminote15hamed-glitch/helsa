@@ -7,7 +7,7 @@ import 'package:helsa/setting/kit/iconer.dart';
 import 'package:helsa/setting/kit/textfielder.dart';
 import 'package:helsa/setting/motion/animator/animator.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
-import 'package:helsa/startup/setup/widget/setup_text.dart';
+import 'package:helsa/home/home_text.dart';
 
 class MenuSupportSheet {
   MenuSupportSheet._();
@@ -232,7 +232,7 @@ class _SupportCard extends StatelessWidget {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                SetupText.getString(
+                                HomeText.getString(
                                   language,
                                   'support_copied',
                                 ),
@@ -258,7 +258,7 @@ class _SupportCard extends StatelessWidget {
                             ),
                             SizedBox(width: context.hX3s),
                             Text(
-                              SetupText.getString(language, 'support_copy'),
+                              HomeText.getString(language, 'support_copy'),
                               style: TextStyle(
                                 color: theme.colorScheme.onPrimary,
                                 fontWeight: FontWeight.w700,
@@ -275,7 +275,7 @@ class _SupportCard extends StatelessWidget {
             ),
             SizedBox(height: context.vX2s),
             TextFielder(
-              text: SetupText.getString(language, 'support_hint'),
+              text: HomeText.getString(language, 'support_hint'),
               languageCode: language,
               template: TextTemplate.caption,
               textAlign: TextAlign.center,

@@ -1,7 +1,9 @@
 // lib/home/widgets/ambient_background.dart
 // آسمان وضعیت: صبح / ظهر / عصر / شب + حرکت خیلی آرام
+// Status bar icons follow sky luminance (not only app theme).
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:helsa/setting/color/color_palette.dart';
 
 enum _SkyPhase { morning, noon, evening, night }
@@ -42,18 +44,23 @@ class _AmbientBackgroundState extends State<AmbientBackground>
     return _SkyPhase.night;
   }
 
+  /// True when top of screen is dark → status icons should be light.
+  bool _skyIsDark(bool themeDark, _SkyPhase phase) {
+    return themeDark || phase == _SkyPhase.night;
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final phase = _phase;
+    final skyDark = _skyIsDark(isDark, phase);
 
-    // پایه + ته‌رنگ آسمان بر اساس ساعت
     late Color base;
     late Color blobA;
     late Color blobB;
     late Color blobC;
 
-    if (isDark || phase == _SkyPhase.night) {
+    if (skyDark) {
       base = const Color(0xFF0A0E14);
       blobA = const Color(0xFF1A2740).withValues(alpha: 0.55);
       blobB = ColorPalette.skyBlue.withValues(alpha: 0.08);
@@ -87,57 +94,70 @@ class _AmbientBackgroundState extends State<AmbientBackground>
       }
     }
 
-    return AnimatedBuilder(
-      animation: _c,
-      builder: (context, _) {
-        final t = _c.value;
-        final dx = math.sin(t * math.pi) * 0.10;
-        final dy = math.cos(t * math.pi * 0.8) * 0.07;
+    final overlay = SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      // Android: light icons on dark sky, dark icons on pale sky
+      statusBarIconBrightness:
+          skyDark ? Brightness.light : Brightness.dark,
+      // iOS uses opposite meaning for statusBarBrightness
+      statusBarBrightness: skyDark ? Brightness.dark : Brightness.light,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+      systemNavigationBarIconBrightness:
+          skyDark ? Brightness.light : Brightness.dark,
+      systemNavigationBarContrastEnforced: false,
+    );
 
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            ColoredBox(color: base),
-            // آسمان بالا
-            DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    blobA,
-                    base.withValues(alpha: 0),
-                  ],
-                  stops: const [0.0, 0.55],
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: overlay,
+      child: AnimatedBuilder(
+        animation: _c,
+        builder: (context, _) {
+          final t = _c.value;
+          final dx = math.sin(t * math.pi) * 0.10;
+          final dy = math.cos(t * math.pi * 0.8) * 0.07;
+
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              ColoredBox(color: base),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      blobA,
+                      base.withValues(alpha: 0),
+                    ],
+                    stops: const [0.0, 0.55],
+                  ),
                 ),
               ),
-            ),
-            // لکه نرم شناور
-            DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment(-0.5 + dx, -0.55 + dy),
-                  radius: 1.1,
-                  colors: [blobB, base.withValues(alpha: 0)],
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment(-0.5 + dx, -0.55 + dy),
+                    radius: 1.1,
+                    colors: [blobB, base.withValues(alpha: 0)],
+                  ),
                 ),
               ),
-            ),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment(0.55 - dx, 0.5 - dy),
-                  radius: 1.0,
-                  colors: [blobC, base.withValues(alpha: 0)],
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment(0.55 - dx, 0.5 - dy),
+                    radius: 1.0,
+                    colors: [blobC, base.withValues(alpha: 0)],
+                  ),
                 ),
               ),
-            ),
-            // ستارهٔ خیلی کم‌نور فقط شب
-            if (phase == _SkyPhase.night || isDark)
-              CustomPaint(painter: _StarDustPainter(t: t)),
-            widget.child,
-          ],
-        );
-      },
+              if (skyDark) CustomPaint(painter: _StarDustPainter(t: t)),
+              widget.child,
+            ],
+          );
+        },
+      ),
     );
   }
 }
@@ -153,7 +173,8 @@ class _StarDustPainter extends CustomPainter {
     for (int i = 0; i < 18; i++) {
       final x = rnd.nextDouble() * size.width;
       final y = rnd.nextDouble() * size.height * 0.55;
-      final twinkle = 0.15 + 0.25 * (0.5 + 0.5 * math.sin(t * math.pi * 2 + i));
+      final twinkle =
+          0.15 + 0.25 * (0.5 + 0.5 * math.sin(t * math.pi * 2 + i));
       paint.color = Colors.white.withValues(alpha: twinkle);
       canvas.drawCircle(Offset(x, y), 1.1 + rnd.nextDouble(), paint);
     }

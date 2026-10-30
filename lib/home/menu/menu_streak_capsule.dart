@@ -1,6 +1,7 @@
 // lib/home/menu/menu_streak_capsule.dart
 // Compact streak capsule for the side menu only.
 import 'package:flutter/material.dart';
+import 'package:helsa/home/home_text.dart';
 import 'package:helsa/setting/color/color_palette.dart';
 import 'package:helsa/setting/kit/textfielder.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
@@ -40,17 +41,6 @@ class _MenuStreakCapsuleState extends State<MenuStreakCapsule>
     } catch (_) {
       return 0;
     }
-  }
-
-  String _label(int n) {
-    final code = widget.language.toLowerCase();
-    if (code.startsWith('fa')) return n <= 0 ? 'شروع استریک' : '$n روز پیاپی';
-    if (code.startsWith('fr')) {
-      if (n <= 0) return 'Série à démarrer';
-      return n <= 1 ? '$n jour de série' : '$n jours de série';
-    }
-    if (n <= 0) return 'Start a streak';
-    return n <= 1 ? '$n day streak' : '$n day streak';
   }
 
   @override
@@ -96,7 +86,7 @@ class _MenuStreakCapsuleState extends State<MenuStreakCapsule>
           SizedBox(width: context.hX3s),
           Flexible(
             child: TextFielder(
-              text: _label(n),
+              text: HomeText.streakLabel(widget.language, n),
               languageCode: widget.language,
               template: TextTemplate.caption,
               textAlign: TextAlign.center,

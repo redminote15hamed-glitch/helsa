@@ -41,7 +41,7 @@ class HomeMenuDrawerOverlay extends StatelessWidget {
     final top = MediaQuery.paddingOf(context).top;
     final bottom = MediaQuery.paddingOf(context).bottom;
 
-    final drawerW = (size.width * 0.35).clamp(140.0, 190.0);
+    final drawerW = (size.width * 0.42).clamp(160.0, 220.0);
     final drawerBg = isDark ? const Color(0xFF1A2332) : const Color(0xFFF7F9FC);
 
     return ValueListenableBuilder<bool>(
@@ -130,43 +130,65 @@ class HomeMenuDrawerOverlay extends StatelessWidget {
                 SizedBox(height: context.vS),
                 // Menu rows (top → bottom)
                 Expanded(
-                  child: ListView(
-                    padding: EdgeInsets.symmetric(horizontal: context.hX3s),
-                    children: [
-                      _MenuRow(
-                        icon: Icons.widgets_rounded,
-                        label: HomeText.getString(language, 'menu_widget'),
-                        language: language,
-                        onTap: () {}, // later
-                      ),
-                      _MenuRow(
-                        icon: Icons.settings_rounded,
-                        label: HomeText.getString(language, 'menu_settings'),
-                        language: language,
-                        onTap: () {}, // later
-                      ),
-                      _MenuRow(
-                        icon: Icons.format_paint_rounded,
-                        label: HomeText.getString(language, 'menu_appearance'),
-                        language: language,
-                        onTap: () {}, // later
-                      ),
-                      _MenuRow(
-                        icon: Icons.support_agent_rounded,
-                        label: HomeText.getString(language, 'menu_support'),
-                        language: language,
-                        onTap: () {
-                          MenuSupportSheet.show(context, language: language);
-                        },
-                      ),
-                    ],
+                  child: ListView.separated(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: context.hX3s,
+                      vertical: context.vX2s,
+                    ),
+                    itemCount: 5,
+                    separatorBuilder: (_, __) => SizedBox(height: context.vS),
+                    itemBuilder: (context, i) {
+                      switch (i) {
+                        case 0:
+                          return _MenuRow(
+                            icon: Icons.person_outline_rounded,
+                            label: HomeText.getString(language, 'menu_profile'),
+                            language: language,
+                            onTap: () {}, // later
+                          );
+                        case 1:
+                          return _MenuRow(
+                            icon: Icons.widgets_rounded,
+                            label: HomeText.getString(language, 'menu_widget'),
+                            language: language,
+                            onTap: () {}, // later
+                          );
+                        case 2:
+                          return _MenuRow(
+                            icon: Icons.settings_rounded,
+                            label: HomeText.getString(language, 'menu_settings'),
+                            language: language,
+                            onTap: () {}, // later
+                          );
+                        case 3:
+                          return _MenuRow(
+                            icon: Icons.format_paint_rounded,
+                            label:
+                                HomeText.getString(language, 'menu_appearance'),
+                            language: language,
+                            onTap: () {}, // later
+                          );
+                        default:
+                          return _MenuRow(
+                            icon: Icons.support_agent_rounded,
+                            label: HomeText.getString(language, 'menu_support'),
+                            language: language,
+                            onTap: () {
+                              MenuSupportSheet.show(
+                                context,
+                                language: language,
+                              );
+                            },
+                          );
+                      }
+                    },
                   ),
                 ),
                 // Version
                 Padding(
                   padding: EdgeInsets.only(bottom: bottom + context.vS),
                   child: TextFielder(
-                    text: 'Helsa v$appVersion',
+                    text: HomeText.versionLabel(language, appVersion),
                     languageCode: language,
                     template: TextTemplate.caption,
                     textAlign: TextAlign.center,
@@ -248,8 +270,8 @@ class _MenuRow extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: EdgeInsets.symmetric(
-            vertical: context.vX2s,
-            horizontal: context.hX3s,
+            vertical: context.vS,
+            horizontal: context.hX2s,
           ),
           child: Row(
             children: [

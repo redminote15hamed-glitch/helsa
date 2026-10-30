@@ -1,5 +1,6 @@
 // lib/home/menu/home_menu_button.dart
 // Hamburger that opens the side menu overlay.
+// High-contrast icon on light & dark ambient skies.
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:helsa/home/home_text.dart';
@@ -130,10 +131,17 @@ class _HomeMenuButtonState extends State<HomeMenuButton> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // Pale morning/noon sky needs dark ink; night needs light ink.
+    final Color iconColor = isDark
+        ? Colors.white.withValues(alpha: 0.92)
+        : const Color(0xFF1A2332).withValues(alpha: 0.90);
+
     return CircleInkWell(
       icon: _open ? Icons.close_rounded : Icons.menu_rounded,
       iconTemplate: IconTemplate.large,
       onTap: _toggle,
+      iconColor: iconColor,
     );
   }
 }

@@ -1,5 +1,6 @@
 // lib/home/widgets/streak_badge.dart
 import 'package:flutter/material.dart';
+import 'package:helsa/home/home_text.dart';
 import 'package:helsa/setting/color/color_palette.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
 
@@ -39,23 +40,14 @@ class _StreakBadgeState extends State<StreakBadge>
   }
 
   String _label() {
-    final n = widget.streak;
-    final code = widget.language.toLowerCase();
     if (widget.isNight) {
-      if (code.startsWith('fa')) return 'حالت شب';
-      if (code.startsWith('fr')) return 'Mode nuit';
-      return 'Night mode';
+      return HomeText.getString(widget.language, 'night_mode');
     }
-    if (code.startsWith('fa')) return '$n روز پیاپی';
-    if (code.startsWith('fr')) {
-      return n <= 1 ? '$n jour de série' : '$n jours de série';
-    }
-    return n <= 1 ? '$n day streak' : '$n day streak';
+    return HomeText.streakLabel(widget.language, widget.streak);
   }
 
   @override
   Widget build(BuildContext context) {
-    // شب: همیشه ماه؛ روز: فقط اگر streak > 0
     if (!widget.isNight && widget.streak <= 0) {
       return const SizedBox.shrink();
     }
@@ -94,7 +86,6 @@ class _StreakBadgeState extends State<StreakBadge>
               builder: (context, _) {
                 final t = _anim.value;
                 if (widget.isNight) {
-                  // ماه آرام
                   final glow = 0.7 + t * 0.3;
                   return Icon(
                     Icons.nightlight_round,
