@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' show Colors;
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:helsa/home/home_screen_widget/home_widget_bridge.dart';
 import 'package:helsa/home/services/step_tracker.dart';
 import 'package:helsa/setting/storage/meta_store.dart';
 import 'package:helsa/setting/storage/steps_store.dart';
@@ -55,7 +56,6 @@ class StepForeground {
     );
   }
 
-  /// وصل به StepTracker روی isolate اصلی
   void attachTracker() {
     if (_listening) return;
     _listening = true;
@@ -70,7 +70,6 @@ class StepForeground {
 
   void _onTrackerChanged() {
     final t = StepTracker.instance;
-    // هر تغییر قدم یا هدف → آپدیت نوتیف
     if (t.steps != _lastSteps || t.stepsGoal != _lastGoal) {
       refresh(force: true);
     }
@@ -79,7 +78,6 @@ class StepForeground {
   Future<bool> start() async {
     if (kIsWeb || !Platform.isAndroid) return false;
 
-    // pause قدیمی (از نسخه قبل) را پاک کن تا قدم بشمرد
     try {
       await StepsStore.open();
       if (StepsStore.isCountingPaused) {
@@ -107,11 +105,11 @@ class StepForeground {
     if (ok) {
       _lastSteps = t.steps;
       _lastGoal = t.stepsGoal;
+      await HomeWidgetBridge.instance.push(force: true);
     }
     return ok;
   }
 
-  /// اگر کاربر نوتیف را بسته → دوباره روشن کن
   Future<void> ensureRunning() async {
     if (kIsWeb || !Platform.isAndroid) return;
     try {
@@ -127,7 +125,6 @@ class StepForeground {
     }
   }
 
-  /// از UI بعد از تغییر هدف / قدم صدا بزن
   Future<void> refresh({bool force = false}) async {
     if (kIsWeb || !Platform.isAndroid) return;
     final t = StepTracker.instance;
@@ -139,7 +136,6 @@ class StepForeground {
 
     try {
       if (!await FlutterForegroundTask.isRunningService) {
-        // نوتیف بسته شده بود → دوباره استارت
         await start();
         return;
       }
@@ -148,6 +144,8 @@ class StepForeground {
         notificationText: _body(),
         notificationIcon: _notifIcon,
       );
+      // Keep home-screen widgets in sync with notification
+      await HomeWidgetBridge.instance.push(force: true);
     } catch (_) {}
   }
 
@@ -187,14 +185,10 @@ class StepForeground {
 
 class StepTaskHandler extends TaskHandler {
   @override
-  Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
-    // isolate جدا — فقط برای زنده ماندن سرویس
-  }
+  Future<void> onStart(DateTime timestamp, TaskStarter starter) async {}
 
   @override
-  void onRepeatEvent(DateTime timestamp) {
-    // آپدیت اصلی از isolate UI است؛ اینجا فقط heartbeat
-  }
+  void onRepeatEvent(DateTime timestamp) {}
 
   @override
   Future<void> onDestroy(DateTime timestamp, bool isTimeout) async {}

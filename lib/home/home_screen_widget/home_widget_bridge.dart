@@ -1,5 +1,6 @@
 // lib/home/home_screen_widget/home_widget_bridge.dart
-// Live update for main (3-metric) + steps-only widgets
+// Force live widget updates (MIUI-safe).
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:home_widget/home_widget.dart';
@@ -10,8 +11,10 @@ class HomeWidgetBridge {
   HomeWidgetBridge._();
   static final HomeWidgetBridge instance = HomeWidgetBridge._();
 
-  static const String _mainWidget = 'com.example.helsa.HelsaWidgetProvider';
-  static const String _stepsWidget = 'com.example.helsa.HelsaStepsWidgetProvider';
+  static const String _mainQualified = 'com.example.helsa.HelsaWidgetProvider';
+  static const String _stepsQualified = 'com.example.helsa.HelsaStepsWidgetProvider';
+  static const String _mainName = 'HelsaWidgetProvider';
+  static const String _stepsName = 'HelsaStepsWidgetProvider';
 
   bool _listening = false;
   int _lastSteps = -1;
@@ -20,6 +23,8 @@ class HomeWidgetBridge {
   int _lastStepsGoal = -1;
   int _lastCalGoal = -1;
   int _lastMinsGoal = -1;
+  DateTime _lastPush = DateTime.fromMillisecondsSinceEpoch(0);
+  Timer? _heartbeat;
 
   Future<void> init() async {
     if (kIsWeb || !Platform.isAndroid) return;
@@ -27,7 +32,12 @@ class HomeWidgetBridge {
       await HomeWidget.setAppGroupId('helsa_widget');
     } catch (_) {}
     attach();
-    await push();
+    await push(force: true);
+    // MIUI sometimes drops one-shot updates — heartbeat while app alive
+    _heartbeat?.cancel();
+    _heartbeat = Timer.periodic(const Duration(seconds: 15), (_) {
+      push(force: true);
+    });
   }
 
   void attach() {
@@ -40,13 +50,15 @@ class HomeWidgetBridge {
     if (!_listening) return;
     _listening = false;
     StepTracker.instance.removeListener(_onTracker);
+    _heartbeat?.cancel();
+    _heartbeat = null;
   }
 
   void _onTracker() {
     push();
   }
 
-  Future<void> push() async {
+  Future<void> push({bool force = false}) async {
     if (kIsWeb || !Platform.isAndroid) return;
     final t = StepTracker.instance;
     final steps = t.steps;
@@ -56,14 +68,17 @@ class HomeWidgetBridge {
     final calGoal = t.caloriesGoal.round();
     final minsGoal = t.activeMinutesGoal;
 
-    if (steps == _lastSteps &&
+    final unchanged = steps == _lastSteps &&
         cal == _lastCal &&
         mins == _lastMins &&
         stepsGoal == _lastStepsGoal &&
         calGoal == _lastCalGoal &&
-        minsGoal == _lastMinsGoal) {
-      return;
-    }
+        minsGoal == _lastMinsGoal;
+
+    final now = DateTime.now();
+    if (!force && unchanged) return;
+    // throttle spam (sensor can fire very often)
+    if (!force && now.difference(_lastPush).inMilliseconds < 800) return;
 
     final lang = _lang();
     final stepsLabel = lang == 'fa' ? 'قدم' : lang == 'fr' ? 'pas' : 'steps';
@@ -81,13 +96,16 @@ class HomeWidgetBridge {
       await HomeWidget.saveWidgetData<String>('cal_label', calLabel);
       await HomeWidget.saveWidgetData<String>('time_label', timeLabel);
 
+      // Call both name styles — some launchers only honor qualified name
       await HomeWidget.updateWidget(
-        name: _mainWidget,
-        androidName: _mainWidget,
+        name: _mainName,
+        androidName: _mainName,
+        qualifiedAndroidName: _mainQualified,
       );
       await HomeWidget.updateWidget(
-        name: _stepsWidget,
-        androidName: _stepsWidget,
+        name: _stepsName,
+        androidName: _stepsName,
+        qualifiedAndroidName: _stepsQualified,
       );
 
       _lastSteps = steps;
@@ -96,6 +114,7 @@ class HomeWidgetBridge {
       _lastStepsGoal = stepsGoal;
       _lastCalGoal = calGoal;
       _lastMinsGoal = minsGoal;
+      _lastPush = now;
     } catch (error, stackTrace) {
       debugPrint('HelSa widget update failed: $error');
       debugPrintStack(stackTrace: stackTrace);

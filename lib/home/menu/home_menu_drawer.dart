@@ -140,7 +140,7 @@ class HomeMenuDrawerOverlay extends StatelessWidget {
                         onTap: () {}, // later
                       ),
                       _MenuRow(
-                        icon: Icons.hexagon_outlined,
+                        icon: Icons.settings_rounded,
                         label: HomeText.getString(language, 'menu_settings'),
                         language: language,
                         onTap: () {}, // later
