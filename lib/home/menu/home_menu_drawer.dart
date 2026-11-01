@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:helsa/home/home_text.dart';
 import 'package:helsa/home/menu/menu_streak_capsule.dart';
 import 'package:helsa/home/menu/menu_support_sheet.dart';
+import 'package:helsa/home/menu/menu_profile_page.dart';
 import 'package:helsa/setting/color/color_palette.dart';
 import 'package:helsa/setting/kit/iconer.dart';
 import 'package:helsa/setting/kit/textfielder.dart';
@@ -140,7 +141,12 @@ class HomeMenuDrawerOverlay extends StatelessWidget {
                             icon: Icons.person_outline_rounded,
                             label: HomeText.getString(language, 'menu_profile'),
                             language: language,
-                            onTap: () {}, // later
+                            onTap: () {
+                              MenuProfilePage.show(
+                                context,
+                                language: language,
+                              );
+                            },
                           );
                         case 1:
                           return _MenuRow(
