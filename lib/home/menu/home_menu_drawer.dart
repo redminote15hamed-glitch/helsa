@@ -1,18 +1,23 @@
 // lib/home/menu/home_menu_drawer.dart
 // Full-height narrow side drawer: profile + streak + menu rows + version.
+// Soft "alive" icon pulse when returning from profile / widget / support.
+import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:helsa/home/home_text.dart';
 import 'package:helsa/home/menu/menu_streak_capsule.dart';
 import 'package:helsa/home/menu/menu_support_sheet.dart';
 import 'package:helsa/home/menu/menu_profile_page.dart';
+import 'package:helsa/home/menu/menu_widget_page.dart';
 import 'package:helsa/setting/color/color_palette.dart';
 import 'package:helsa/setting/kit/iconer.dart';
 import 'package:helsa/setting/kit/textfielder.dart';
 import 'package:helsa/setting/motion/animator/animator.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
 
-class HomeMenuDrawerOverlay extends StatelessWidget {
+enum _MenuPulse { none, profile, widget, support }
+
+class HomeMenuDrawerOverlay extends StatefulWidget {
   final String language;
   final String fullName;
   final String genderTitle;
@@ -34,7 +39,55 @@ class HomeMenuDrawerOverlay extends StatelessWidget {
   });
 
   @override
+  State<HomeMenuDrawerOverlay> createState() => _HomeMenuDrawerOverlayState();
+}
+
+class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse;
+  _MenuPulse _target = _MenuPulse.none;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 920),
+    )..addStatusListener((s) {
+        if (s == AnimationStatus.completed && mounted) {
+          setState(() => _target = _MenuPulse.none);
+        }
+      });
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  Future<void> _openThenPulse(
+    Future<void> Function() open,
+    _MenuPulse which,
+  ) async {
+    await open();
+    if (!mounted) return;
+    setState(() => _target = which);
+    _pulse
+      ..stop()
+      ..reset()
+      ..forward();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final language = widget.language;
+    final fullName = widget.fullName;
+    final genderTitle = widget.genderTitle;
+    final closingListenable = widget.closingListenable;
+    final onBarrierTap = widget.onBarrierTap;
+    final onExitDone = widget.onExitDone;
+
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isRtl = Directionality.of(context) == TextDirection.rtl;
@@ -61,7 +114,6 @@ class HomeMenuDrawerOverlay extends StatelessWidget {
             child: Column(
               children: [
                 SizedBox(height: top + context.vS),
-                // Small avatar
                 Stack(
                   clipBehavior: Clip.none,
                   alignment: Alignment.center,
@@ -124,7 +176,6 @@ class HomeMenuDrawerOverlay extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: context.vS),
-                // Menu rows — full-width primary dividers edge-to-edge
                 Expanded(
                   child: ListView.separated(
                     padding: EdgeInsets.only(top: context.vX2s),
@@ -139,12 +190,20 @@ class HomeMenuDrawerOverlay extends StatelessWidget {
                         case 0:
                           return _MenuRow(
                             icon: Icons.person_outline_rounded,
-                            label: HomeText.getString(language, 'menu_profile'),
+                            label:
+                                HomeText.getString(language, 'menu_profile'),
                             language: language,
+                            pulse: _pulse,
+                            pulseKind: _target == _MenuPulse.profile
+                                ? _PulseKind.profile
+                                : _PulseKind.none,
                             onTap: () {
-                              MenuProfilePage.show(
-                                context,
-                                language: language,
+                              _openThenPulse(
+                                () => MenuProfilePage.show(
+                                  context,
+                                  language: language,
+                                ),
+                                _MenuPulse.profile,
                               );
                             },
                           );
@@ -153,32 +212,57 @@ class HomeMenuDrawerOverlay extends StatelessWidget {
                             icon: Icons.widgets_rounded,
                             label: HomeText.getString(language, 'menu_widget'),
                             language: language,
-                            onTap: () {}, // later
+                            pulse: _pulse,
+                            pulseKind: _target == _MenuPulse.widget
+                                ? _PulseKind.widget
+                                : _PulseKind.none,
+                            onTap: () {
+                              _openThenPulse(
+                                () => MenuWidgetPage.show(
+                                  context,
+                                  language: language,
+                                ),
+                                _MenuPulse.widget,
+                              );
+                            },
                           );
                         case 2:
                           return _MenuRow(
                             icon: Icons.settings_rounded,
-                            label: HomeText.getString(language, 'menu_settings'),
+                            label:
+                                HomeText.getString(language, 'menu_settings'),
                             language: language,
-                            onTap: () {}, // later
+                            pulse: _pulse,
+                            pulseKind: _PulseKind.none,
+                            onTap: () {},
                           );
                         case 3:
                           return _MenuRow(
                             icon: Icons.format_paint_rounded,
-                            label:
-                                HomeText.getString(language, 'menu_appearance'),
+                            label: HomeText.getString(
+                                language, 'menu_appearance'),
                             language: language,
-                            onTap: () {}, // later
+                            pulse: _pulse,
+                            pulseKind: _PulseKind.none,
+                            onTap: () {},
                           );
                         default:
                           return _MenuRow(
                             icon: Icons.support_agent_rounded,
-                            label: HomeText.getString(language, 'menu_support'),
+                            label:
+                                HomeText.getString(language, 'menu_support'),
                             language: language,
+                            pulse: _pulse,
+                            pulseKind: _target == _MenuPulse.support
+                                ? _PulseKind.support
+                                : _PulseKind.none,
                             onTap: () {
-                              MenuSupportSheet.show(
-                                context,
-                                language: language,
+                              _openThenPulse(
+                                () => MenuSupportSheet.show(
+                                  context,
+                                  language: language,
+                                ),
+                                _MenuPulse.support,
                               );
                             },
                           );
@@ -186,7 +270,6 @@ class HomeMenuDrawerOverlay extends StatelessWidget {
                     },
                   ),
                 ),
-                // Streak above version (bottom of drawer)
                 Padding(
                   padding: EdgeInsets.fromLTRB(
                     context.hX2s,
@@ -196,11 +279,13 @@ class HomeMenuDrawerOverlay extends StatelessWidget {
                   ),
                   child: MenuStreakCapsule(language: language),
                 ),
-                // Version
                 Padding(
                   padding: EdgeInsets.only(bottom: bottom + context.vS),
                   child: TextFielder(
-                    text: HomeText.versionLabel(language, appVersion),
+                    text: HomeText.versionLabel(
+                      language,
+                      HomeMenuDrawerOverlay.appVersion,
+                    ),
                     languageCode: language,
                     template: TextTemplate.caption,
                     textAlign: TextAlign.center,
@@ -259,17 +344,23 @@ class HomeMenuDrawerOverlay extends StatelessWidget {
   }
 }
 
+enum _PulseKind { none, profile, widget, support }
+
 class _MenuRow extends StatelessWidget {
   final IconData icon;
   final String label;
   final String language;
   final VoidCallback onTap;
+  final Animation<double> pulse;
+  final _PulseKind pulseKind;
 
   const _MenuRow({
     required this.icon,
     required this.label,
     required this.language,
     required this.onTap,
+    required this.pulse,
+    required this.pulseKind,
   });
 
   @override
@@ -287,11 +378,11 @@ class _MenuRow extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Iconer(
+              _AliveIcon(
                 icon: icon,
-                template: IconTemplate.small,
-                customColor: cs.onSurface.withValues(alpha: 0.85),
-                useGradient: false,
+                color: cs.onSurface.withValues(alpha: 0.85),
+                pulse: pulse,
+                kind: pulseKind,
               ),
               SizedBox(width: context.hX2s),
               Expanded(
@@ -311,6 +402,84 @@ class _MenuRow extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Soft, natural motion — not a dry jolt.
+class _AliveIcon extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final Animation<double> pulse;
+  final _PulseKind kind;
+
+  const _AliveIcon({
+    required this.icon,
+    required this.color,
+    required this.pulse,
+    required this.kind,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: pulse,
+      builder: (context, child) {
+        if (kind == _PulseKind.none || pulse.value <= 0) {
+          return child!;
+        }
+        final t = pulse.value; // 0 → 1
+        // Envelope: rises mid-way, settles by the end (no hard stop).
+        final env = math.sin(t * math.pi); // 0→1→0 soft
+        final decay = 1.0 - Curves.easeIn.transform(t);
+
+        late double scale;
+        late double angle;
+        late double dy;
+
+        switch (kind) {
+          case _PulseKind.profile:
+            // Soft settle: slight lift then land.
+            scale = 1.0 + 0.10 * env * Curves.easeOut.transform(1 - t * 0.3);
+            angle = 0;
+            dy = -2.2 * env;
+            break;
+          case _PulseKind.widget:
+            // Tiny multi-shape wobble (like tiles settling).
+            scale = 1.0 + 0.08 * env;
+            angle = 0.10 * math.sin(t * math.pi * 2.2) * decay;
+            dy = -1.2 * env;
+            break;
+          case _PulseKind.support:
+            // Gentle headset nod / sway.
+            scale = 1.0 + 0.06 * env;
+            angle = 0.14 * math.sin(t * math.pi * 1.6) * decay;
+            dy = 0;
+            break;
+          case _PulseKind.none:
+            scale = 1;
+            angle = 0;
+            dy = 0;
+            break;
+        }
+
+        return Transform.translate(
+          offset: Offset(0, dy),
+          child: Transform.rotate(
+            angle: angle,
+            child: Transform.scale(
+              scale: scale,
+              child: child,
+            ),
+          ),
+        );
+      },
+      child: Iconer(
+        icon: icon,
+        template: IconTemplate.small,
+        customColor: color,
+        useGradient: false,
       ),
     );
   }
