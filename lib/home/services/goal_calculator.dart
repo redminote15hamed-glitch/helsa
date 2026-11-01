@@ -1,17 +1,16 @@
 // lib/home/services/goal_calculator.dart
-// اهداف پیش‌فرض از پروفایل کاربر — فرمول‌های استاندارد
+// Default daily goals from profile — conservative, evidence-aligned bands.
 import 'dart:math' as math;
 import 'package:helsa/setting/storage/age_store.dart';
 import 'package:helsa/setting/storage/body_store.dart';
 import 'package:helsa/setting/storage/gender_store.dart';
 import 'package:helsa/setting/storage/activity_store.dart';
 
-/// محاسبه هدف روزانه قدم / کالری / زمان حرکت از داده Hive کاربر.
+/// Goals from Hive profile.
 ///
-/// کالری پایه (BMR): Mifflin–St Jeor
-/// TDEE: BMR × ضریب فعالیت
-/// هدف کالری «حرکت»: بخشی از هزینه فعالیت روزانه
-/// هدف قدم: بر اساس سطح فعالیت + تعدیل سن/جنسیت + هم‌خوانی با کالری
+/// Steps: activity band (CDC / common coaching ranges), then age + BMI soft adjust.
+/// Calories (movement): steps × kcal/step, kept in the *hundreds* (≤ 900).
+/// Active minutes: ~WHO 150 min/week moderate, spread daily by activity.
 class GoalCalculator {
   GoalCalculator._();
 
@@ -20,16 +19,16 @@ class GoalCalculator {
   static double get _weight {
     final w = BodyStore.weight;
     if (w != null && w > 0) return w;
-    return 70.0;
+    return 65.0;
   }
 
   static double get _height {
     final h = BodyStore.height;
     if (h != null && h > 0) return h;
-    return 170.0;
+    return 165.0;
   }
 
-  /// 0..4 از استارت‌آپ
+  /// 0 sedentary … 4 very active (from setup)
   static int get _activityIndex {
     final a = ActivityStore.activityLevel;
     if (a == null) return 1;
@@ -37,25 +36,29 @@ class GoalCalculator {
   }
 
   static bool get _isMale {
-    final g = (GenderStore.gender ?? '').toLowerCase();
+    final g = (GenderStore.gender ?? '').toLowerCase().trim();
     return g == 'male' ||
         g == 'm' ||
         g == 'man' ||
         g == 'آقا' ||
         g == 'مرد' ||
-        g.startsWith('m');
+        g.contains('male') ||
+        g.contains('مرد') ||
+        g.contains('آقا');
   }
 
-  /// Mifflin–St Jeor BMR (kcal/day)
-  /// مرد: 10w + 6.25h − 5a + 5
-  /// زن:  10w + 6.25h − 5a − 161
+  static double get _bmi {
+    final m = _height / 100.0;
+    if (m <= 0) return 22.0;
+    return _weight / (m * m);
+  }
+
+  /// Mifflin–St Jeor (reference only; not shown as a goal by itself)
   static double bmr() {
     final base = 10 * _weight + 6.25 * _height - 5 * _age;
     return _isMale ? base + 5 : base - 161;
   }
 
-  /// ضرایب فعالیت استاندارد (TDEE = BMR × factor)
-  /// 0 نشسته … 4 خیلی فعال
   static double activityFactor() {
     const factors = [1.2, 1.375, 1.55, 1.725, 1.9];
     return factors[_activityIndex];
@@ -63,63 +66,87 @@ class GoalCalculator {
 
   static double tdee() => bmr() * activityFactor();
 
-  /// کالری هدف از «حرکت/قدم» در روز
-  /// ≈ ۲۰٪ تا ۳۵٪ از (TDEE − BMR) بسته به سطح فعالیت
-  /// کف و سقف معقول برای UI
-  static double caloriesGoal() {
-    final activityKcal = math.max(0.0, tdee() - bmr());
-    const shares = [0.20, 0.25, 0.30, 0.35, 0.40];
-    final target = activityKcal * shares[_activityIndex];
-    // اگر پروفایل ناقص باشد، حداقل بر اساس وزن
-    final fallback = _weight * 3.5; // ~kcal سبک روزانه
-    final goal = math.max(target, fallback);
-    return goal.clamp(120.0, 1200.0);
-  }
+  /// ~kcal burned per step (scales mildly with body weight).
+  static double kcalPerStep() => 0.04 * (_weight / 70.0).clamp(0.75, 1.35);
 
-  /// kcal تقریبی هر قدم (بر اساس وزن)
-  /// قاعده رایج: ~0.04 kcal/step در 70kg → مقیاس با وزن
-  static double kcalPerStep() => 0.04 * (_weight / 70.0);
-
-  /// هدف قدم: از کالری هدف ÷ کالری هر قدم
-  /// + تعدیل سن (بالای ۵۰ کمی کمتر، زیر ۲۵ کمی بیشتر)
+  /// Step goal — lower bands for weak/sedentary profiles.
+  ///
+  /// Bands (daily):
+  ///   0 sedentary ≈ 4 000 · 1 light ≈ 5 500 · 2 moderate ≈ 7 500
+  ///   3 active ≈ 9 500 · 4 very active ≈ 11 500
   static int stepsGoal() {
-    final fromCal = (caloriesGoal() / kcalPerStep()).round();
+    const band = [4000, 5500, 7500, 9500, 11500];
+    double goal = band[_activityIndex].toDouble();
 
-    // پایه جایگزین اگر محاسبه خیلی پرت بود
-    const activityBase = [5000, 7000, 9000, 11000, 13000];
-    final base = activityBase[_activityIndex];
-
-    var goal = ((fromCal * 0.7) + (base * 0.3)).round();
-
+    // Age: older adults start lower (safer progression)
     final age = _age;
     if (age >= 65) {
-      goal = (goal * 0.85).round();
-    } else if (age >= 50) {
-      goal = (goal * 0.92).round();
-    } else if (age < 25) {
-      goal = (goal * 1.05).round();
+      goal *= 0.78;
+    } else if (age >= 55) {
+      goal *= 0.85;
+    } else if (age >= 45) {
+      goal *= 0.92;
+    } else if (age < 18) {
+      goal *= 0.88;
     }
 
-    // مردان حدود ۵٪ بیشتر (جرم عضلانی / عادت‌های مرجع)
-    if (_isMale) goal = (goal * 1.05).round();
+    // BMI: higher weight → slightly lower initial step target
+    final bmi = _bmi;
+    if (bmi >= 35) {
+      goal *= 0.80;
+    } else if (bmi >= 30) {
+      goal *= 0.88;
+    } else if (bmi >= 25) {
+      goal *= 0.94;
+    }
 
-    return goal.clamp(3000, 20000);
+    // Very light body + sedentary stays gentle
+    if (_activityIndex == 0 && _weight < 55) {
+      goal *= 0.90;
+    }
+
+    // Sex: small offset only
+    if (_isMale) {
+      goal *= 1.03;
+    } else {
+      goal *= 0.97;
+    }
+
+    // Round to nearest 100 for clean UI
+    var out = ((goal / 100).round() * 100);
+    return out.clamp(2500, 15000);
   }
 
-  /// دقایق فعال هدف — نزدیک توصیه WHO (~150 min/week متوسط)
-  /// + سطح فعالیت کاربر
+  /// Movement-calorie goal for the day — **hundreds only** (max 900).
+  /// Derived from step goal × kcal/step, then rounded to 10s.
+  static double caloriesGoal() {
+    final fromSteps = stepsGoal() * kcalPerStep();
+
+    // Cap: stay in hundreds (not 1000+)
+    var goal = fromSteps.clamp(80.0, 900.0);
+
+    // Round to nearest 10
+    goal = (goal / 10).round() * 10.0;
+    if (goal < 80) goal = 80;
+    if (goal > 900) goal = 900;
+    return goal;
+  }
+
+  /// Active minutes — daily share of ~150 min moderate / week.
   static int activeMinutesGoal() {
-    // پایه هفتگی معادل روزانه
-    const dailyBase = [20, 25, 30, 40, 50];
-    var m = dailyBase[_activityIndex];
+    const daily = [18, 22, 30, 40, 50];
+    double m = daily[_activityIndex].toDouble();
 
     final age = _age;
     if (age >= 65) {
-      m = (m * 0.9).round();
-    } else if (age < 25) {
-      m = (m * 1.05).round();
+      m *= 0.85;
+    } else if (age >= 50) {
+      m *= 0.92;
     }
 
-    return m.clamp(15, 90);
+    final bmi = _bmi;
+    if (bmi >= 30) m *= 0.90;
+
+    return m.round().clamp(15, 75);
   }
 }
