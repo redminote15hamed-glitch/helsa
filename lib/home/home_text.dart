@@ -80,6 +80,7 @@ class HomeText {
       'widget_hub_main_desc': 'قدم، کالری و زمان حرکت کنار هم',
       'widget_hub_steps_title': 'ویجت قدم',
       'widget_hub_steps_desc': 'فقط شمارندهٔ قدم با نوار پیشرفت',
+      'profile_saved': 'تغییرات ذخیره شد',
       'widget_hub_hint': 'اگر افزودن خودکار کار نکرد، از منوی ویجت‌های گوشی Helsa را اضافه کنید',
       'profile_save_hint': 'پس از تغییر، تیک بالا را بزنید تا ذخیره شود',
 
@@ -161,6 +162,7 @@ class HomeText {
       'widget_hub_main_desc': 'Steps, calories and active time together',
       'widget_hub_steps_title': 'Steps widget',
       'widget_hub_steps_desc': 'Steps only with a progress bar',
+      'profile_saved': 'Changes saved',
       'widget_hub_hint': 'If auto-add fails, add Helsa from your phone widget picker',
       'profile_save_hint': 'After changes, tap the check mark to save',
 
@@ -242,6 +244,7 @@ class HomeText {
       'widget_hub_main_desc': 'Pas, calories et temps actif ensemble',
       'widget_hub_steps_title': 'Widget pas',
       'widget_hub_steps_desc': 'Compteur de pas avec barre de progression',
+      'profile_saved': 'Modifications enregistrées',
       'widget_hub_hint': "Si l'ajout auto échoue, ajoutez Helsa depuis le menu widgets",
       'profile_save_hint': 'Après modification, appuyez sur la coche pour enregistrer',
 

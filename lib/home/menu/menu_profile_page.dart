@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:helsa/home/home_text.dart';
 import 'package:helsa/setting/kit/textfielder.dart';
+import 'package:helsa/setting/kit/snackbarer.dart';
 import 'package:helsa/setting/motion/animator/animator.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
 import 'package:helsa/setting/storage/activity_store.dart';
@@ -273,6 +274,12 @@ class _ProfileEditorState extends State<_ProfileEditor> {
       wakeTime: _wake.text.trim().isEmpty ? null : _wake.text.trim(),
     );
     if (!mounted) return;
+    SnackBarer.show(
+      context,
+      message: HomeText.getString(_lang, 'profile_saved'),
+      template: SnackbarTemplate.neutral,
+      duration: const Duration(milliseconds: 1400),
+    );
     widget.onSaved();
   }
 

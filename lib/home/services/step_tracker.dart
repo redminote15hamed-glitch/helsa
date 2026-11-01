@@ -249,6 +249,9 @@ class StepTracker extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Call after profile body/activity/age changes so UI rereads GoalCalculator.
+  void profileChanged() => notifyListeners();
+
   Future<void> setStepsGoal(int value) async {
     await StepsStore.saveStepsGoal(value);
     notifyListeners();

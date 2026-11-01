@@ -14,6 +14,9 @@ import 'package:helsa/setting/kit/iconer.dart';
 import 'package:helsa/setting/kit/textfielder.dart';
 import 'package:helsa/setting/motion/animator/animator.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
+import 'package:helsa/setting/storage/gender_store.dart';
+import 'package:helsa/setting/storage/identity_store.dart';
+import 'package:helsa/home/services/step_tracker.dart';
 
 enum _MenuPulse { none, profile, widget, support }
 
@@ -47,9 +50,14 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
   late final AnimationController _pulse;
   _MenuPulse _target = _MenuPulse.none;
 
+  late String _fullName;
+  late String _genderTitle;
+
   @override
   void initState() {
     super.initState();
+    _fullName = widget.fullName;
+    _genderTitle = widget.genderTitle;
     _pulse = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 920),
@@ -58,6 +66,60 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
           setState(() => _target = _MenuPulse.none);
         }
       });
+  }
+
+  void _reloadHeader() {
+    String name = 'Helsa';
+    try {
+      final n = IdentityStore.fullName.trim();
+      if (n.isNotEmpty) name = n;
+    } catch (_) {}
+
+    String title = '';
+    try {
+      final raw = GenderStore.gender?.toLowerCase().trim() ?? '';
+      final female = raw.contains('woman') ||
+          raw.contains('female') ||
+          raw.contains('زن') ||
+          raw.contains('خانم') ||
+          raw.contains('femme') ||
+          raw == 'f';
+      final male = !female &&
+          (raw.contains('man') ||
+              raw.contains('male') ||
+              raw.contains('مرد') ||
+              raw.contains('آقا') ||
+              raw.contains('homme') ||
+              raw == 'm' ||
+              raw == 'male');
+      if (female) {
+        title = HomeText.getString(widget.language, 'menu_title_female');
+      } else if (male) {
+        title = HomeText.getString(widget.language, 'menu_title_male');
+      }
+    } catch (_) {}
+
+    if (!mounted) return;
+    setState(() {
+      _fullName = name;
+      _genderTitle = title;
+    });
+
+    // Goals depend on body/activity/age/gender — refresh listeners.
+    try {
+      StepTracker.instance.profileChanged();
+    } catch (_) {}
+  }
+
+  Future<void> _openProfile() {
+    return _openThenPulse(
+      () => MenuProfilePage.show(
+        context,
+        language: widget.language,
+        onSaved: _reloadHeader,
+      ),
+      _MenuPulse.profile,
+    );
   }
 
   @override
@@ -82,8 +144,8 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
   @override
   Widget build(BuildContext context) {
     final language = widget.language;
-    final fullName = widget.fullName;
-    final genderTitle = widget.genderTitle;
+    final fullName = _fullName;
+    final genderTitle = _genderTitle;
     final closingListenable = widget.closingListenable;
     final onBarrierTap = widget.onBarrierTap;
     final onExitDone = widget.onExitDone;
@@ -114,43 +176,47 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
             child: Column(
               children: [
                 SizedBox(height: top + context.vS),
-                Stack(
-                  clipBehavior: Clip.none,
-                  alignment: Alignment.center,
-                  children: [
-                    CircleAvatar(
-                      radius: 22,
-                      backgroundColor:
-                          ColorPalette.mintPrimary.withValues(alpha: 0.18),
-                      child: Icon(
-                        Icons.person_rounded,
-                        size: 26,
-                        color: ColorPalette.mintPrimary,
+                GestureDetector(
+                  onTap: _openProfile,
+                  behavior: HitTestBehavior.opaque,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    alignment: Alignment.center,
+                    children: [
+                      CircleAvatar(
+                        radius: 22,
+                        backgroundColor:
+                            ColorPalette.mintPrimary.withValues(alpha: 0.18),
+                        child: Icon(
+                          Icons.person_rounded,
+                          size: 26,
+                          color: ColorPalette.mintPrimary,
+                        ),
                       ),
-                    ),
-                    Positioned(
-                      bottom: -2,
-                      right: isRtl ? null : -2,
-                      left: isRtl ? -2 : null,
-                      child: Material(
-                        color: cs.surface,
-                        shape: const CircleBorder(),
-                        elevation: 2,
-                        child: InkWell(
-                          customBorder: const CircleBorder(),
-                          onTap: () {},
-                          child: Padding(
-                            padding: const EdgeInsets.all(4),
-                            child: Icon(
-                              Icons.edit_rounded,
-                              size: 11,
-                              color: cs.onSurface.withValues(alpha: 0.75),
+                      Positioned(
+                        bottom: -2,
+                        right: isRtl ? null : -2,
+                        left: isRtl ? -2 : null,
+                        child: Material(
+                          color: cs.surface,
+                          shape: const CircleBorder(),
+                          elevation: 2,
+                          child: InkWell(
+                            customBorder: const CircleBorder(),
+                            onTap: _openProfile,
+                            child: Padding(
+                              padding: const EdgeInsets.all(4),
+                              child: Icon(
+                                Icons.edit_rounded,
+                                size: 11,
+                                color: cs.onSurface.withValues(alpha: 0.75),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 SizedBox(height: context.vX2s),
                 if (genderTitle.isNotEmpty)
@@ -197,15 +263,7 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
                             pulseKind: _target == _MenuPulse.profile
                                 ? _PulseKind.profile
                                 : _PulseKind.none,
-                            onTap: () {
-                              _openThenPulse(
-                                () => MenuProfilePage.show(
-                                  context,
-                                  language: language,
-                                ),
-                                _MenuPulse.profile,
-                              );
-                            },
+                            onTap: _openProfile,
                           );
                         case 1:
                           return _MenuRow(
