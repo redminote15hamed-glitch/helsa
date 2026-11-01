@@ -8,7 +8,6 @@ import 'package:helsa/home/home_text.dart';
 import 'package:helsa/home/services/step_tracker.dart';
 import 'package:helsa/home/widgets/apple_burst.dart';
 import 'package:helsa/home/widgets/walk_aura.dart';
-import 'package:helsa/home/widgets/ghost_progress.dart';
 import 'package:helsa/home/widgets/metric_icon_pulse.dart';
 
 enum _GoalKind { steps, calories, active }
@@ -254,9 +253,7 @@ class _AppleActivityCardState extends State<AppleActivityCard>
                               burst: _burst.animation,
                               playBurst: _burst.isBursting(items[i].id),
                               unit: unit,
-                              ghostProgress: GhostProgress.yesterdayStepsProgress(
-                                fallbackGoal: widget.stepsGoal,
-                              ),
+                              ghostProgress: 0,
                               isWalking: widget.isWalking,
                             ),
                           )
@@ -562,29 +559,7 @@ class _ApplePainter extends CustomPainter {
         ..style = PaintingStyle.fill,
     );
 
-    // سایهٔ دیروز
-    if (ghostProgress > 0.01) {
-      canvas.save();
-      canvas.clipPath(body);
-      final top = b.bottom - b.height * ghostProgress.clamp(0.0, 1.0);
-      canvas.drawRect(
-        Rect.fromLTRB(b.left, top, b.right, b.bottom),
-        Paint()..color = color.withValues(alpha: 0.16),
-      );
-      final dash = Paint()
-        ..color = color.withValues(alpha: 0.32)
-        ..strokeWidth = 1.1
-        ..style = PaintingStyle.stroke;
-      final path = Path();
-      double x = b.left;
-      while (x < b.right) {
-        path.moveTo(x, top);
-        path.lineTo(math.min(x + 4, b.right), top);
-        x += 8;
-      }
-      canvas.drawPath(path, dash);
-      canvas.restore();
-    }
+
 
     // —— مایع داخل شیشه ——
     if (progress > 0.001) {

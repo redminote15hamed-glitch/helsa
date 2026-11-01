@@ -123,20 +123,16 @@ class HomeMenuDrawerOverlay extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: context.vS),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: context.hX2s),
-                  child: MenuStreakCapsule(language: language),
-                ),
-                SizedBox(height: context.vS),
-                // Menu rows (top → bottom)
+                // Menu rows — full-width primary dividers edge-to-edge
                 Expanded(
                   child: ListView.separated(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: context.hX3s,
-                      vertical: context.vX2s,
-                    ),
+                    padding: EdgeInsets.only(top: context.vX2s),
                     itemCount: 5,
-                    separatorBuilder: (_, __) => SizedBox(height: context.vS),
+                    separatorBuilder: (_, __) => Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: ColorPalette.mintPrimary.withValues(alpha: 0.55),
+                    ),
                     itemBuilder: (context, i) {
                       switch (i) {
                         case 0:
@@ -184,6 +180,16 @@ class HomeMenuDrawerOverlay extends StatelessWidget {
                     },
                   ),
                 ),
+                // Streak above version (bottom of drawer)
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    context.hX2s,
+                    context.vX2s,
+                    context.hX2s,
+                    context.vX2s,
+                  ),
+                  child: MenuStreakCapsule(language: language),
+                ),
                 // Version
                 Padding(
                   padding: EdgeInsets.only(bottom: bottom + context.vS),
@@ -206,14 +212,14 @@ class HomeMenuDrawerOverlay extends StatelessWidget {
         final animated = closing
             ? panel.exSlideEnd(
                 context,
-                s: AS.fast,
-                x: drawerW * 0.4,
+                s: AS.balanced,
+                x: drawerW * 0.35,
                 onComplete: onExitDone,
               )
             : panel.enSlideStart(
                 context,
-                s: AS.balanced,
-                x: drawerW * 0.4,
+                s: AS.slow,
+                x: drawerW * 0.35,
               );
 
         final barrier = closing

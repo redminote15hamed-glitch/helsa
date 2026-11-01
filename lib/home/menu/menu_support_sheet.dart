@@ -1,13 +1,14 @@
 // lib/home/menu/menu_support_sheet.dart
-// Support card: Genie in from menu edge, Genie out back into it. Sits lower, on top.
+// Support card in FRONT (root overlay). Genie expands from bottom near Support row,
+// not from behind the drawer / not a left slide.
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:helsa/home/home_text.dart';
 import 'package:helsa/setting/kit/iconer.dart';
 import 'package:helsa/setting/kit/textfielder.dart';
 import 'package:helsa/setting/motion/animator/animator.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
-import 'package:helsa/home/home_text.dart';
 
 class MenuSupportSheet {
   MenuSupportSheet._();
@@ -21,13 +22,9 @@ class MenuSupportSheet {
     return 'en';
   }
 
-  /// Opens above everything (including side menu). Genie from menu edge.
   static Future<void> show(BuildContext context, {required String language}) {
     final lang = _lang(language);
     final theme = Theme.of(context);
-    final isRtl = Directionality.of(context) == TextDirection.rtl;
-    // Menu is on the *start* side → genie expands from that edge.
-    const edge = GenieEdge.start;
 
     return showGeneralDialog<void>(
       context: context,
@@ -40,8 +37,6 @@ class MenuSupportSheet {
         return _SupportHost(
           language: lang,
           theme: theme,
-          isRtl: isRtl,
-          edge: edge,
         );
       },
     );
@@ -51,14 +46,10 @@ class MenuSupportSheet {
 class _SupportHost extends StatefulWidget {
   final String language;
   final ThemeData theme;
-  final bool isRtl;
-  final GenieEdge edge;
 
   const _SupportHost({
     required this.language,
     required this.theme,
-    required this.isRtl,
-    required this.edge,
   });
 
   @override
@@ -77,7 +68,7 @@ class _SupportHostState extends State<_SupportHost> {
       _genieKey++;
     });
     _forcePop?.cancel();
-    _forcePop = Timer(const Duration(milliseconds: 950), _onExitDone);
+    _forcePop = Timer(const Duration(milliseconds: 1000), _onExitDone);
   }
 
   void _onExitDone() {
@@ -96,6 +87,11 @@ class _SupportHostState extends State<_SupportHost> {
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
     final bottom = media.padding.bottom;
+
+    // Edge: bottom — expands upward from near Support item (lower menu),
+    // not a horizontal left-slide under the drawer.
+    const edge = GenieEdge.bottom;
+
     final card = _SupportCard(
       language: widget.language,
       theme: widget.theme,
@@ -107,15 +103,15 @@ class _SupportHostState extends State<_SupportHost> {
           ? card.exGenieReal(
               context,
               s: AS.balanced,
-              edge: widget.edge,
-              strips: 32,
+              edge: edge,
+              strips: 36,
               onComplete: _onExitDone,
             )
           : card.enGenieReal(
               context,
               s: AS.slow,
-              edge: widget.edge,
-              strips: 32,
+              edge: edge,
+              strips: 36,
             ),
     );
 
@@ -124,7 +120,6 @@ class _SupportHostState extends State<_SupportHost> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Tap outside → Genie close
           Positioned.fill(
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
@@ -132,20 +127,14 @@ class _SupportHostState extends State<_SupportHost> {
               child: const ColoredBox(color: Colors.transparent),
             ),
           ),
-          // Lower area, pinned to menu side (start) — “بیاد جلو پایین”
+          // Center-bottom of FULL screen → clearly in front of the menu
           Positioned(
-            left: widget.isRtl ? media.size.width * 0.06 : media.size.width * 0.04,
-            right: widget.isRtl ? media.size.width * 0.04 : media.size.width * 0.06,
-            bottom: bottom + 24,
+            left: media.size.width * 0.06,
+            right: media.size.width * 0.06,
+            bottom: bottom + 28,
             child: Align(
-              alignment:
-                  widget.isRtl ? Alignment.bottomRight : Alignment.bottomLeft,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: media.size.width * 0.88,
-                ),
-                child: genieChild,
-              ),
+              alignment: Alignment.bottomCenter,
+              child: genieChild,
             ),
           ),
         ],
@@ -167,8 +156,8 @@ class _SupportCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: theme.colorScheme.surface,
-      elevation: 12,
-      shadowColor: Colors.black45,
+      elevation: 18,
+      shadowColor: Colors.black54,
       borderRadius: BorderRadius.circular(context.m * 1.2),
       child: Padding(
         padding: EdgeInsets.fromLTRB(
@@ -232,10 +221,7 @@ class _SupportCard extends StatelessWidget {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                HomeText.getString(
-                                  language,
-                                  'support_copied',
-                                ),
+                                HomeText.getString(language, 'support_copied'),
                               ),
                               duration: const Duration(seconds: 2),
                             ),
