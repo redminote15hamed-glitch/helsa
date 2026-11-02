@@ -8,6 +8,8 @@ import 'package:helsa/home/home_text.dart';
 import 'package:helsa/home/menu/menu_streak_capsule.dart';
 import 'package:helsa/home/menu/menu_support_sheet.dart';
 import 'package:helsa/home/menu/menu_profile_page.dart';
+import 'package:helsa/home/menu/menu_avatar_picker.dart';
+import 'package:helsa/home/menu/helsa_avatar.dart';
 import 'package:helsa/home/menu/menu_widget_page.dart';
 import 'package:helsa/setting/color/color_palette.dart';
 import 'package:helsa/setting/kit/iconer.dart';
@@ -111,14 +113,45 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
     } catch (_) {}
   }
 
+  /// Close drawer first so it does not stay stacked over profile/widget/support.
+  Future<void> _closeDrawerThen(
+    Future<void> Function(BuildContext rootCtx, ThemeData theme) open,
+  ) async {
+    // Capture theme BEFORE closing overlay — otherwise dialog falls back to light.
+    final theme = Theme.of(context);
+    final rootCtx = Navigator.of(context, rootNavigator: true).context;
+    widget.onBarrierTap();
+    await Future<void>.delayed(const Duration(milliseconds: 280));
+    await open(rootCtx, theme);
+  }
+
   Future<void> _openProfile() {
-    return _openThenPulse(
-      () => MenuProfilePage.show(
-        context,
+    return _closeDrawerThen(
+      (rootCtx, theme) => MenuProfilePage.show(
+        rootCtx,
         language: widget.language,
-        onSaved: _reloadHeader,
+        theme: theme,
+        onSaved: () {},
       ),
-      _MenuPulse.profile,
+    );
+  }
+
+  Future<void> _openWidget() {
+    return _closeDrawerThen(
+      (rootCtx, theme) => MenuWidgetPage.show(
+        rootCtx,
+        language: widget.language,
+        theme: theme,
+      ),
+    );
+  }
+
+  Future<void> _openSupport() {
+    return _closeDrawerThen(
+      (rootCtx, theme) => MenuSupportSheet.show(
+        rootCtx,
+        language: widget.language,
+      ),
     );
   }
 
@@ -126,19 +159,6 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
   void dispose() {
     _pulse.dispose();
     super.dispose();
-  }
-
-  Future<void> _openThenPulse(
-    Future<void> Function() open,
-    _MenuPulse which,
-  ) async {
-    await open();
-    if (!mounted) return;
-    setState(() => _target = which);
-    _pulse
-      ..stop()
-      ..reset()
-      ..forward();
   }
 
   @override
@@ -177,22 +197,13 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
               children: [
                 SizedBox(height: top + context.vS),
                 GestureDetector(
-                  onTap: _openProfile,
+                  onTap: _openAvatar,
                   behavior: HitTestBehavior.opaque,
                   child: Stack(
                     clipBehavior: Clip.none,
                     alignment: Alignment.center,
                     children: [
-                      CircleAvatar(
-                        radius: 22,
-                        backgroundColor:
-                            ColorPalette.mintPrimary.withValues(alpha: 0.18),
-                        child: Icon(
-                          Icons.person_rounded,
-                          size: 26,
-                          color: ColorPalette.mintPrimary,
-                        ),
-                      ),
+                      HelsaAvatar.fromStore(radius: 24, showBorder: true),
                       Positioned(
                         bottom: -2,
                         right: isRtl ? null : -2,
@@ -203,7 +214,7 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
                           elevation: 2,
                           child: InkWell(
                             customBorder: const CircleBorder(),
-                            onTap: _openProfile,
+                            onTap: _openAvatar,
                             child: Padding(
                               padding: const EdgeInsets.all(4),
                               child: Icon(
@@ -274,15 +285,7 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
                             pulseKind: _target == _MenuPulse.widget
                                 ? _PulseKind.widget
                                 : _PulseKind.none,
-                            onTap: () {
-                              _openThenPulse(
-                                () => MenuWidgetPage.show(
-                                  context,
-                                  language: language,
-                                ),
-                                _MenuPulse.widget,
-                              );
-                            },
+                            onTap: _openWidget,
                           );
                         case 2:
                           return _MenuRow(
@@ -314,15 +317,7 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
                             pulseKind: _target == _MenuPulse.support
                                 ? _PulseKind.support
                                 : _PulseKind.none,
-                            onTap: () {
-                              _openThenPulse(
-                                () => MenuSupportSheet.show(
-                                  context,
-                                  language: language,
-                                ),
-                                _MenuPulse.support,
-                              );
-                            },
+                            onTap: _openSupport,
                           );
                       }
                     },

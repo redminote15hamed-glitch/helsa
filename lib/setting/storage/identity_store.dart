@@ -25,12 +25,35 @@ class IdentityStore {
     return n;
   }
 
+  /// preset id (e.g. "mint") or empty when custom file is used
+  static String get avatarPreset => _b.get('avatarPreset')?.toString() ?? 'mint';
+
+  /// absolute path to gallery image; empty if using preset
+  static String get avatarPath => _b.get('avatarPath')?.toString() ?? '';
+
+  static bool get hasCustomAvatar => avatarPath.isNotEmpty;
+
   static Future<void> save({
     required String firstName,
     required String lastName,
   }) async {
     await _b.put('firstName', firstName.trim());
     await _b.put('lastName', lastName.trim());
+  }
+
+  static Future<void> saveAvatarPreset(String presetId) async {
+    await _b.put('avatarPreset', presetId);
+    await _b.put('avatarPath', '');
+  }
+
+  static Future<void> saveAvatarFile(String absolutePath) async {
+    await _b.put('avatarPath', absolutePath);
+    await _b.put('avatarPreset', '');
+  }
+
+  static Future<void> clearAvatar() async {
+    await _b.put('avatarPath', '');
+    await _b.put('avatarPreset', 'mint');
   }
 
   static Future<void> clear() => _b.clear();

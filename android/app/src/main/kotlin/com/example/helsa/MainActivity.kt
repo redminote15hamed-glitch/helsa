@@ -13,18 +13,24 @@ class MainActivity : FlutterActivity() {
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "helsa/widget")
             .setMethodCallHandler { call, result ->
                 if (call.method == "pinWidget") {
-                    result.success(requestPinHelsaWidget())
+                    val stepsOnly = call.argument<Boolean>("stepsOnly") ?: false
+                    result.success(requestPinHelsaWidget(stepsOnly))
                 } else {
                     result.notImplemented()
                 }
             }
     }
 
-    private fun requestPinHelsaWidget(): Boolean {
+    private fun requestPinHelsaWidget(stepsOnly: Boolean): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false
         val mgr = getSystemService(AppWidgetManager::class.java) ?: return false
         if (!mgr.isRequestPinAppWidgetSupported) return false
-        val provider = ComponentName(this, HelsaWidgetProvider::class.java)
+        val clazz = if (stepsOnly) {
+            HelsaStepsWidgetProvider::class.java
+        } else {
+            HelsaWidgetProvider::class.java
+        }
+        val provider = ComponentName(this, clazz)
         return try {
             mgr.requestPinAppWidget(provider, null, null)
             true

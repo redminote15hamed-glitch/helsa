@@ -20,7 +20,9 @@ class MenuWidgetPage {
   static Future<void> show(
     BuildContext context, {
     required String language,
+    ThemeData? theme,
   }) {
+    final resolved = theme ?? Theme.of(context);
     return showGeneralDialog<void>(
       context: context,
       useRootNavigator: true,
@@ -29,9 +31,12 @@ class MenuWidgetPage {
       barrierColor: Colors.black54,
       transitionDuration: Duration.zero,
       pageBuilder: (ctx, a, b) {
-        return _WidgetHost(
-          language: language,
-          theme: Theme.of(context),
+        return Theme(
+          data: resolved,
+          child: _WidgetHost(
+            language: language,
+            theme: resolved,
+          ),
         );
       },
     );
@@ -273,9 +278,6 @@ class _WidgetEditorState extends State<_WidgetEditor> {
                     title: HomeText.getString(_lang, 'widget_hub_main_title'),
                     subtitle:
                         HomeText.getString(_lang, 'widget_hub_main_desc'),
-                    busy: _busyMain,
-                    addLabel: HomeText.getString(_lang, 'widget_add'),
-                    onAdd: () => _pin(stepsOnly: false),
                     child: _MainPreview(
                       language: _lang,
                       steps: t.steps,
@@ -285,20 +287,23 @@ class _WidgetEditorState extends State<_WidgetEditor> {
                       mins: t.activeMinutes,
                       minsGoal: t.activeMinutesGoal,
                     ),
+                    busy: _busyMain,
+                    addLabel: HomeText.getString(_lang, 'widget_add'),
+                    onAdd: () => _pin(stepsOnly: false),
                   ),
                   SizedBox(height: context.vS),
                   _PreviewCard(
                     title: HomeText.getString(_lang, 'widget_hub_steps_title'),
                     subtitle:
                         HomeText.getString(_lang, 'widget_hub_steps_desc'),
-                    busy: _busySteps,
-                    addLabel: HomeText.getString(_lang, 'widget_add'),
-                    onAdd: () => _pin(stepsOnly: true),
                     child: _StepsPreview(
                       language: _lang,
                       steps: t.steps,
                       stepsGoal: t.stepsGoal,
                     ),
+                    busy: _busySteps,
+                    addLabel: HomeText.getString(_lang, 'widget_add'),
+                    onAdd: () => _pin(stepsOnly: true),
                   ),
                   SizedBox(height: context.vS),
                   TextFielder(
@@ -493,73 +498,86 @@ class _StepsPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final pct =
-        stepsGoal <= 0 ? 0.0 : (steps / stepsGoal).clamp(0.0, 1.0);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF121820) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Icon(Icons.directions_walk_rounded,
-                  color: ColorPalette.mintPrimary, size: 22),
-              const SizedBox(width: 8),
-              Text(
-                HomeText.getString(language, 'steps'),
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: ColorPalette.mintPrimary,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                '$steps',
-                style: TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 20,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: pct,
-              minHeight: 10,
-              backgroundColor:
-                  ColorPalette.mintPrimary.withValues(alpha: 0.18),
-              color: ColorPalette.mintPrimary,
+    final pct = stepsGoal <= 0
+        ? 0.0
+        : (steps / stepsGoal).clamp(0.0, 1.0);
+    final pctLabel = '${(pct * 100).round()}%';
+    // Match real Android steps widget: tall card, big number, label, icon, capsule %.
+    return Center(
+      child: Container(
+        width: 168,
+        height: 200,
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0E1512),
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.18),
+              blurRadius: 14,
+              offset: const Offset(0, 5),
             ),
-          ),
-          const SizedBox(height: 6),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              '$steps / $stepsGoal',
+          ],
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: Center(
+                child: Text(
+                  '$steps',
+                  style: const TextStyle(
+                    color: Color(0xFF10B981),
+                    fontWeight: FontWeight.w800,
+                    fontSize: 40,
+                    height: 1,
+                  ),
+                ),
+              ),
+            ),
+            Text(
+              HomeText.getString(language, 'steps'),
               style: TextStyle(
-                fontSize: 11,
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.55),
+                color: Colors.white.withValues(alpha: 0.45),
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 8),
+            Icon(
+              Icons.directions_walk_rounded,
+              color: ColorPalette.mintPrimary,
+              size: 22,
+            ),
+            const SizedBox(height: 10),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: SizedBox(
+                height: 26,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    LinearProgressIndicator(
+                      value: pct,
+                      minHeight: 26,
+                      backgroundColor: const Color(0xFF0B3D32),
+                      color: const Color(0xFF0F7A5A),
+                    ),
+                    Center(
+                      child: Text(
+                        pctLabel,
+                        style: const TextStyle(
+                          color: Color(0xFFA7F3D0),
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
