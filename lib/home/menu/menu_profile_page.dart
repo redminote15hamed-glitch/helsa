@@ -2,6 +2,7 @@
 // Profile editor: Genie in/out, full scroll, no section overlap, keyboard-safe.
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:helsa/home/menu/menu_expand_host.dart';
 import 'package:flutter/services.dart';
 import 'package:helsa/home/home_text.dart';
 import 'package:helsa/setting/color/color_palette.dart';
@@ -33,10 +34,26 @@ class MenuProfilePage {
     required String language,
     VoidCallback? onSaved,
     ThemeData? theme,
+    Rect? origin,
   }) {
-    // Capture theme from caller (drawer/home) — NOT dialog context,
-    // which can fall back to light after overlay dispose.
     final resolved = theme ?? Theme.of(context);
+    final child = Theme(
+      data: resolved,
+      child: _ProfileHost(
+        language: language,
+        theme: resolved,
+        onSaved: onSaved,
+        skipGenie: origin != null,
+      ),
+    );
+    if (origin != null) {
+      return MenuExpandHost.open<void>(
+        context: context,
+        origin: origin,
+        theme: resolved,
+        builder: (_) => child,
+      );
+    }
     return showGeneralDialog<void>(
       context: context,
       useRootNavigator: true,
@@ -44,16 +61,7 @@ class MenuProfilePage {
       barrierLabel: 'profile',
       barrierColor: Colors.black54,
       transitionDuration: Duration.zero,
-      pageBuilder: (ctx, a, b) {
-        return Theme(
-          data: resolved,
-          child: _ProfileHost(
-            language: language,
-            theme: resolved,
-            onSaved: onSaved,
-          ),
-        );
-      },
+      pageBuilder: (ctx, a, b) => child,
     );
   }
 }
@@ -62,11 +70,13 @@ class _ProfileHost extends StatefulWidget {
   final String language;
   final ThemeData theme;
   final VoidCallback? onSaved;
+  final bool skipGenie;
 
   const _ProfileHost({
     required this.language,
     required this.theme,
     this.onSaved,
+    this.skipGenie = false,
   });
 
   @override
@@ -79,6 +89,10 @@ class _ProfileHostState extends State<_ProfileHost> {
   Timer? _forcePop;
 
   void _requestClose() {
+    if (widget.skipGenie) {
+      MenuExpandScope.close(context);
+      return;
+    }
     if (_closing) return;
     setState(() {
       _closing = true;
@@ -113,6 +127,13 @@ class _ProfileHostState extends State<_ProfileHost> {
         _requestClose();
       },
     );
+
+    if (widget.skipGenie) {
+      return Material(
+        type: MaterialType.transparency,
+        child: page,
+      );
+    }
 
     final genieChild = KeyedSubtree(
       key: ValueKey(_closing ? 'ex-$_genieKey' : 'en-$_genieKey'),

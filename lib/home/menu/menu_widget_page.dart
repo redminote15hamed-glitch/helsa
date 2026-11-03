@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:helsa/home/menu/menu_expand_host.dart';
 import 'package:flutter/services.dart';
 import 'package:helsa/home/home_text.dart';
 import 'package:helsa/home/home_screen_widget/home_widget_bridge.dart';
@@ -21,8 +22,25 @@ class MenuWidgetPage {
     BuildContext context, {
     required String language,
     ThemeData? theme,
+    Rect? origin,
   }) {
     final resolved = theme ?? Theme.of(context);
+    final child = Theme(
+      data: resolved,
+      child: _WidgetHost(
+        language: language,
+        theme: resolved,
+        skipGenie: origin != null,
+      ),
+    );
+    if (origin != null) {
+      return MenuExpandHost.open<void>(
+        context: context,
+        origin: origin,
+        theme: resolved,
+        builder: (_) => child,
+      );
+    }
     return showGeneralDialog<void>(
       context: context,
       useRootNavigator: true,
@@ -30,15 +48,7 @@ class MenuWidgetPage {
       barrierLabel: 'widgets',
       barrierColor: Colors.black54,
       transitionDuration: Duration.zero,
-      pageBuilder: (ctx, a, b) {
-        return Theme(
-          data: resolved,
-          child: _WidgetHost(
-            language: language,
-            theme: resolved,
-          ),
-        );
-      },
+      pageBuilder: (ctx, a, b) => child,
     );
   }
 }
@@ -46,8 +56,13 @@ class MenuWidgetPage {
 class _WidgetHost extends StatefulWidget {
   final String language;
   final ThemeData theme;
+  final bool skipGenie;
 
-  const _WidgetHost({required this.language, required this.theme});
+  const _WidgetHost({
+    required this.language,
+    required this.theme,
+    this.skipGenie = false,
+  });
 
   @override
   State<_WidgetHost> createState() => _WidgetHostState();
@@ -89,6 +104,10 @@ class _WidgetHostState extends State<_WidgetHost> {
       theme: widget.theme,
       onRequestClose: _requestClose,
     );
+
+    if (widget.skipGenie) {
+      return Material(type: MaterialType.transparency, child: page);
+    }
 
     final genieChild = KeyedSubtree(
       key: ValueKey(_closing ? 'ex-$_genieKey' : 'en-$_genieKey'),

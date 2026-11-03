@@ -3,6 +3,7 @@
 // not from behind the drawer / not a left slide.
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:helsa/home/menu/menu_expand_host.dart';
 import 'package:flutter/services.dart';
 import 'package:helsa/home/home_text.dart';
 import 'package:helsa/setting/kit/iconer.dart';
@@ -22,10 +23,26 @@ class MenuSupportSheet {
     return 'en';
   }
 
-  static Future<void> show(BuildContext context, {required String language}) {
+  static Future<void> show(
+    BuildContext context, {
+    required String language,
+    Rect? origin,
+  }) {
     final lang = _lang(language);
     final theme = Theme.of(context);
-
+    final child = _SupportHost(
+      language: lang,
+      theme: theme,
+      skipGenie: origin != null,
+    );
+    if (origin != null) {
+      return MenuExpandHost.open<void>(
+        context: context,
+        origin: origin,
+        theme: theme,
+        builder: (_) => child,
+      );
+    }
     return showGeneralDialog<void>(
       context: context,
       useRootNavigator: true,
@@ -33,12 +50,7 @@ class MenuSupportSheet {
       barrierLabel: 'support',
       barrierColor: Colors.black54,
       transitionDuration: Duration.zero,
-      pageBuilder: (ctx, a, b) {
-        return _SupportHost(
-          language: lang,
-          theme: theme,
-        );
-      },
+      pageBuilder: (ctx, a, b) => child,
     );
   }
 }
@@ -46,10 +58,12 @@ class MenuSupportSheet {
 class _SupportHost extends StatefulWidget {
   final String language;
   final ThemeData theme;
+  final bool skipGenie;
 
   const _SupportHost({
     required this.language,
     required this.theme,
+    this.skipGenie = false,
   });
 
   @override
@@ -62,6 +76,10 @@ class _SupportHostState extends State<_SupportHost> {
   Timer? _forcePop;
 
   void _requestClose() {
+    if (widget.skipGenie) {
+      MenuExpandScope.close(context);
+      return;
+    }
     if (_closing) return;
     setState(() {
       _closing = true;
@@ -96,6 +114,10 @@ class _SupportHostState extends State<_SupportHost> {
       language: widget.language,
       theme: widget.theme,
     );
+
+    if (widget.skipGenie) {
+      return Material(type: MaterialType.transparency, child: card);
+    }
 
     final genieChild = KeyedSubtree(
       key: ValueKey(_closing ? 'ex-$_genieKey' : 'en-$_genieKey'),

@@ -11,6 +11,8 @@ import 'package:helsa/home/menu/menu_profile_page.dart';
 import 'package:helsa/home/menu/menu_avatar_picker.dart';
 import 'package:helsa/home/menu/helsa_avatar.dart';
 import 'package:helsa/home/menu/menu_widget_page.dart';
+import 'package:helsa/home/menu/menu_expand_host.dart';
+import 'package:helsa/home/menu/menu_coming_soon_page.dart';
 import 'package:helsa/setting/color/color_palette.dart';
 import 'package:helsa/setting/kit/iconer.dart';
 import 'package:helsa/setting/kit/textfielder.dart';
@@ -113,19 +115,7 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
     } catch (_) {}
   }
 
-  /// Close drawer first so it does not stay stacked over profile/widget/support.
-  Future<void> _closeDrawerThen(
-    Future<void> Function(BuildContext rootCtx, ThemeData theme) open,
-  ) async {
-    // Capture before any await (theme + navigator).
-    final theme = Theme.of(context);
-    final nav = Navigator.of(context, rootNavigator: true);
-    widget.onBarrierTap();
-    await Future<void>.delayed(const Duration(milliseconds: 280));
-    if (!mounted) return;
-    await open(nav.context, theme);
-  }
-
+  /// Avatar stays floating (not fullscreen expand).
   Future<void> _openAvatar() async {
     final theme = Theme.of(context);
     final lang = widget.language;
@@ -140,35 +130,56 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
     }
   }
 
-  Future<void> _openProfile() {
-    return _closeDrawerThen(
-      (rootCtx, theme) => MenuProfilePage.show(
-        rootCtx,
-        language: widget.language,
-        theme: theme,
-        onSaved: () {
-          // Header refresh when user returns later is optional;
-          // drawer is already closed here.
-        },
-      ),
+  /// Two-phase expand from the tapped row. Drawer stays open.
+  Future<void> _openFromRow(
+    BuildContext rowContext, {
+    required WidgetBuilder builder,
+  }) {
+    final origin = MenuExpandHost.rectOf(rowContext);
+    final theme = Theme.of(context);
+    return MenuExpandHost.open<void>(
+      context: context,
+      origin: origin,
+      theme: theme,
+      builder: builder,
     );
   }
 
-  Future<void> _openWidget() {
-    return _closeDrawerThen(
-      (rootCtx, theme) => MenuWidgetPage.show(
-        rootCtx,
-        language: widget.language,
-        theme: theme,
-      ),
+  Future<void> _openProfile(BuildContext rowCtx) {
+    final theme = Theme.of(context);
+    return MenuProfilePage.show(
+      context,
+      language: widget.language,
+      theme: theme,
+      origin: MenuExpandHost.rectOf(rowCtx),
+      onSaved: () {},
     );
   }
 
-  Future<void> _openSupport() {
-    return _closeDrawerThen(
-      (rootCtx, theme) => MenuSupportSheet.show(
-        rootCtx,
+  Future<void> _openWidget(BuildContext rowCtx) {
+    final theme = Theme.of(context);
+    return MenuWidgetPage.show(
+      context,
+      language: widget.language,
+      theme: theme,
+      origin: MenuExpandHost.rectOf(rowCtx),
+    );
+  }
+
+  Future<void> _openSupport(BuildContext rowCtx) {
+    return MenuSupportSheet.show(
+      context,
+      language: widget.language,
+      origin: MenuExpandHost.rectOf(rowCtx),
+    );
+  }
+
+  Future<void> _openComingSoon(BuildContext rowCtx, String titleKey) {
+    return _openFromRow(
+      rowCtx,
+      builder: (ctx) => MenuComingSoonPage(
         language: widget.language,
+        titleKey: titleKey,
       ),
     );
   }
@@ -313,7 +324,8 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
                             language: language,
                             pulse: _pulse,
                             pulseKind: _PulseKind.none,
-                            onTap: () {},
+                            onTap: (rowCtx) =>
+                                _openComingSoon(rowCtx, 'menu_settings'),
                           );
                         case 3:
                           return _MenuRow(
@@ -323,7 +335,8 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
                             language: language,
                             pulse: _pulse,
                             pulseKind: _PulseKind.none,
-                            onTap: () {},
+                            onTap: (rowCtx) =>
+                                _openComingSoon(rowCtx, 'menu_appearance'),
                           );
                         default:
                           return _MenuRow(
@@ -421,7 +434,7 @@ class _MenuRow extends StatelessWidget {
   final IconData icon;
   final String label;
   final String language;
-  final VoidCallback onTap;
+  final void Function(BuildContext rowContext) onTap;
   final Animation<double> pulse;
   final _PulseKind pulseKind;
 
@@ -440,7 +453,7 @@ class _MenuRow extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: onTap,
+        onTap: () => onTap(context),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: EdgeInsets.symmetric(
