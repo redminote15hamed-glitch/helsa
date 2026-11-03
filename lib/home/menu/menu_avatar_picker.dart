@@ -97,11 +97,11 @@ class _AvatarSheetState extends State<_AvatarSheet> {
         return;
       }
       final dir = await getApplicationDocumentsDirectory();
-      final folder = Directory(dir.path + Platform.pathSeparator + 'avatars');
+      final folder = Directory('${dir.path}${Platform.pathSeparator}avatars');
       if (!await folder.exists()) {
         await folder.create(recursive: true);
       }
-      final dest = folder.path + Platform.pathSeparator + 'avatar.jpg';
+      final dest = '${folder.path}${Platform.pathSeparator}avatar.jpg';
       await File(x.path).copy(dest);
       if (!mounted) return;
       setState(() {

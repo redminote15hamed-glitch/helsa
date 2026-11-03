@@ -1,6 +1,5 @@
 // lib/home/services/goal_calculator.dart
 // Default daily goals from profile — conservative, evidence-aligned bands.
-import 'dart:math' as math;
 import 'package:helsa/setting/storage/age_store.dart';
 import 'package:helsa/setting/storage/body_store.dart';
 import 'package:helsa/setting/storage/gender_store.dart';

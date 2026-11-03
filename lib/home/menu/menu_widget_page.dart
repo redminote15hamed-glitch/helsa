@@ -146,14 +146,39 @@ class _WidgetEditorState extends State<_WidgetEditor> {
   static const _channel = MethodChannel('helsa/widget');
   bool _busyMain = false;
   bool _busySteps = false;
+  Completer<bool>? _pinAccepted;
+  bool _handlerReady = false;
 
   String get _lang => widget.language;
+
+  void _ensurePinHandler() {
+    if (_handlerReady) return;
+    _handlerReady = true;
+    _channel.setMethodCallHandler((call) async {
+      if (call.method == 'widgetPinned') {
+        final c = _pinAccepted;
+        if (c != null && !c.isCompleted) {
+          c.complete(true);
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    if (_handlerReady) {
+      _channel.setMethodCallHandler(null);
+      _handlerReady = false;
+    }
+    super.dispose();
+  }
 
   Future<void> _pin({required bool stepsOnly}) async {
     if (kIsWeb || !Platform.isAndroid) {
       _toast(HomeText.getString(_lang, 'widget_android_only'), error: true);
       return;
     }
+    _ensurePinHandler();
     setState(() {
       if (stepsOnly) {
         _busySteps = true;
@@ -163,36 +188,35 @@ class _WidgetEditorState extends State<_WidgetEditor> {
     });
     try {
       await HomeWidgetBridge.instance.push(force: true);
-      final ok = await _channel.invokeMethod<bool>(
+      _pinAccepted = Completer<bool>();
+      final shown = await _channel.invokeMethod<bool>(
             'pinWidget',
             <String, dynamic>{'stepsOnly': stepsOnly},
           ) ??
           false;
       if (!mounted) return;
-      if (ok) {
+      if (!shown) {
+        _toast(HomeText.getString(_lang, 'widget_pin_manual'), error: true);
+        return;
+      }
+      _toast(HomeText.getString(_lang, 'widget_pin_waiting'), error: false);
+      // Wait until user accepts system pin dialog (callback) or gives up.
+      final accepted = await _pinAccepted!.future.timeout(
+        const Duration(seconds: 90),
+        onTimeout: () => false,
+      );
+      if (!mounted) return;
+      if (accepted) {
         _toast(HomeText.getString(_lang, 'widget_pin_ok'), error: false);
       } else {
-        _toast(HomeText.getString(_lang, 'widget_pin_manual'), error: true);
+        _toast(HomeText.getString(_lang, 'widget_pin_cancelled'), error: true);
       }
     } catch (_) {
       if (mounted) {
-        try {
-          final ok = await _channel.invokeMethod<bool>('pinWidget') ?? false;
-          if (!mounted) return;
-          _toast(
-            HomeText.getString(
-              _lang,
-              ok ? 'widget_pin_ok' : 'widget_pin_manual',
-            ),
-            error: !ok,
-          );
-        } catch (_) {
-          if (mounted) {
-            _toast(HomeText.getString(_lang, 'widget_pin_error'), error: true);
-          }
-        }
+        _toast(HomeText.getString(_lang, 'widget_pin_error'), error: true);
       }
     } finally {
+      _pinAccepted = null;
       if (mounted) {
         setState(() {
           _busyMain = false;
@@ -278,6 +302,9 @@ class _WidgetEditorState extends State<_WidgetEditor> {
                     title: HomeText.getString(_lang, 'widget_hub_main_title'),
                     subtitle:
                         HomeText.getString(_lang, 'widget_hub_main_desc'),
+                    busy: _busyMain,
+                    addLabel: HomeText.getString(_lang, 'widget_add'),
+                    onAdd: () => _pin(stepsOnly: false),
                     child: _MainPreview(
                       language: _lang,
                       steps: t.steps,
@@ -287,23 +314,20 @@ class _WidgetEditorState extends State<_WidgetEditor> {
                       mins: t.activeMinutes,
                       minsGoal: t.activeMinutesGoal,
                     ),
-                    busy: _busyMain,
-                    addLabel: HomeText.getString(_lang, 'widget_add'),
-                    onAdd: () => _pin(stepsOnly: false),
                   ),
                   SizedBox(height: context.vS),
                   _PreviewCard(
                     title: HomeText.getString(_lang, 'widget_hub_steps_title'),
                     subtitle:
                         HomeText.getString(_lang, 'widget_hub_steps_desc'),
+                    busy: _busySteps,
+                    addLabel: HomeText.getString(_lang, 'widget_add'),
+                    onAdd: () => _pin(stepsOnly: true),
                     child: _StepsPreview(
                       language: _lang,
                       steps: t.steps,
                       stepsGoal: t.stepsGoal,
                     ),
-                    busy: _busySteps,
-                    addLabel: HomeText.getString(_lang, 'widget_add'),
-                    onAdd: () => _pin(stepsOnly: true),
                   ),
                   SizedBox(height: context.vS),
                   TextFielder(

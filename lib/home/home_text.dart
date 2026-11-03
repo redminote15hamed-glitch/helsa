@@ -35,7 +35,9 @@ class HomeText {
       'widget_add_short': 'افزودن',
       'widget_promo_msg':
           'ویجت صفحهٔ اصلی را اضافه کنید تا سلامت‌تان همیشه نزدیک باشد',
-      'widget_pin_ok': 'ویجت را روی صفحهٔ اصلی تأیید کنید',
+      'widget_pin_ok': 'ویجت با موفقیت اضافه شد',
+      'widget_pin_cancelled': 'اضافه کردن ویجت موفق نبود',
+      'widget_pin_waiting': 'منتظر تأیید روی صفحهٔ اصلی…',
       'widget_pin_manual':
           'افزودن خودکار ممکن نشد. از منوی ویجت‌های گوشی، Helsa را اضافه کنید',
       'widget_pin_error':
@@ -125,7 +127,9 @@ class HomeText {
       'widget_add_short': 'Add',
       'widget_promo_msg':
           'Add the home screen widget to keep your health close at all times',
-      'widget_pin_ok': 'Confirm the widget on your home screen',
+      'widget_pin_ok': 'Widget added successfully',
+      'widget_pin_cancelled': 'Widget was not added',
+      'widget_pin_waiting': 'Waiting for home screen confirmation…',
       'widget_pin_manual':
           'Auto-add failed. Add Helsa from your phone widget menu',
       'widget_pin_error':
@@ -215,7 +219,9 @@ class HomeText {
       'widget_add_short': 'Ajouter',
       'widget_promo_msg':
           "Ajoutez le widget d'accueil pour garder votre santé toujours à portée",
-      'widget_pin_ok': "Confirmez le widget sur l'écran d'accueil",
+      'widget_pin_ok': 'Widget ajouté avec succès',
+      'widget_pin_cancelled': "L'ajout du widget a échoué",
+      'widget_pin_waiting': "En attente de confirmation sur l'écran d'accueil…",
       'widget_pin_manual':
           'Ajout auto impossible. Ajoutez Helsa depuis le menu widgets',
       'widget_pin_error':

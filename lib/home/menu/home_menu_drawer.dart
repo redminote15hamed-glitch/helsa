@@ -117,12 +117,27 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
   Future<void> _closeDrawerThen(
     Future<void> Function(BuildContext rootCtx, ThemeData theme) open,
   ) async {
-    // Capture theme BEFORE closing overlay — otherwise dialog falls back to light.
+    // Capture before any await (theme + navigator).
     final theme = Theme.of(context);
-    final rootCtx = Navigator.of(context, rootNavigator: true).context;
+    final nav = Navigator.of(context, rootNavigator: true);
     widget.onBarrierTap();
     await Future<void>.delayed(const Duration(milliseconds: 280));
-    await open(rootCtx, theme);
+    if (!mounted) return;
+    await open(nav.context, theme);
+  }
+
+  Future<void> _openAvatar() async {
+    final theme = Theme.of(context);
+    final lang = widget.language;
+    final changed = await MenuAvatarPicker.show(
+      context,
+      language: lang,
+      theme: theme,
+    );
+    if (!context.mounted) return;
+    if (changed) {
+      _reloadHeader();
+    }
   }
 
   Future<void> _openProfile() {
@@ -131,7 +146,10 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
         rootCtx,
         language: widget.language,
         theme: theme,
-        onSaved: () {},
+        onSaved: () {
+          // Header refresh when user returns later is optional;
+          // drawer is already closed here.
+        },
       ),
     );
   }

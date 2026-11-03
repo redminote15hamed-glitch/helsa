@@ -5,8 +5,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:helsa/home/home_text.dart';
 import 'package:helsa/home/menu/home_menu_drawer.dart';
-import 'package:helsa/setting/kit/circle_inkwell.dart';
-import 'package:helsa/setting/kit/iconer.dart';
 import 'package:helsa/setting/storage/gender_store.dart';
 import 'package:helsa/setting/storage/identity_store.dart';
 import 'package:helsa/setting/storage/meta_store.dart';
@@ -137,11 +135,21 @@ class _HomeMenuButtonState extends State<HomeMenuButton> {
         ? Colors.white.withValues(alpha: 0.92)
         : const Color(0xFF1A2332).withValues(alpha: 0.90);
 
-    return CircleInkWell(
-      icon: _open ? Icons.close_rounded : Icons.menu_rounded,
-      iconTemplate: IconTemplate.large,
-      onTap: _toggle,
-      iconColor: iconColor,
+    return Material(
+      color: Colors.transparent,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: _toggle,
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Icon(
+            _open ? Icons.close_rounded : Icons.menu_rounded,
+            size: 28,
+            color: iconColor,
+          ),
+        ),
+      ),
     );
   }
 }
