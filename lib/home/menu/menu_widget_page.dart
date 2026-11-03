@@ -74,6 +74,10 @@ class _WidgetHostState extends State<_WidgetHost> {
   Timer? _forcePop;
 
   void _requestClose() {
+    if (widget.skipGenie) {
+      MenuExpandScope.close(context);
+      return;
+    }
     if (_closing) return;
     setState(() {
       _closing = true;
@@ -161,14 +165,23 @@ class _WidgetEditor extends StatefulWidget {
   State<_WidgetEditor> createState() => _WidgetEditorState();
 }
 
-class _WidgetEditorState extends State<_WidgetEditor> {
+class _WidgetEditorState extends State<_WidgetEditor>
+    with WidgetsBindingObserver {
   static const _channel = MethodChannel('helsa/widget');
   bool _busyMain = false;
   bool _busySteps = false;
   Completer<bool>? _pinAccepted;
+  Completer<void>? _resumed;
   bool _handlerReady = false;
+  bool _pinInFlight = false;
 
   String get _lang => widget.language;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
 
   void _ensurePinHandler() {
     if (_handlerReady) return;
@@ -179,12 +192,28 @@ class _WidgetEditorState extends State<_WidgetEditor> {
         if (c != null && !c.isCompleted) {
           c.complete(true);
         }
+      } else if (call.method == 'appResumed') {
+        final r = _resumed;
+        if (r != null && !r.isCompleted) {
+          r.complete();
+        }
       }
     });
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      final r = _resumed;
+      if (r != null && !r.isCompleted) {
+        r.complete();
+      }
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     if (_handlerReady) {
       _channel.setMethodCallHandler(null);
       _handlerReady = false;
@@ -192,11 +221,26 @@ class _WidgetEditorState extends State<_WidgetEditor> {
     super.dispose();
   }
 
+  Future<Map<String, int>> _widgetCounts() async {
+    try {
+      final raw = await _channel.invokeMethod<dynamic>('getWidgetCount');
+      if (raw is Map) {
+        return {
+          'main': (raw['main'] as num?)?.toInt() ?? 0,
+          'steps': (raw['steps'] as num?)?.toInt() ?? 0,
+        };
+      }
+    } catch (_) {}
+    return {'main': 0, 'steps': 0};
+  }
+
   Future<void> _pin({required bool stepsOnly}) async {
     if (kIsWeb || !Platform.isAndroid) {
       _toast(HomeText.getString(_lang, 'widget_android_only'), error: true);
       return;
     }
+    if (_pinInFlight) return;
+    _pinInFlight = true;
     _ensurePinHandler();
     setState(() {
       if (stepsOnly) {
@@ -207,7 +251,10 @@ class _WidgetEditorState extends State<_WidgetEditor> {
     });
     try {
       await HomeWidgetBridge.instance.push(force: true);
+      final before = await _widgetCounts();
       _pinAccepted = Completer<bool>();
+      _resumed = Completer<void>();
+
       final shown = await _channel.invokeMethod<bool>(
             'pinWidget',
             <String, dynamic>{'stepsOnly': stepsOnly},
@@ -218,12 +265,41 @@ class _WidgetEditorState extends State<_WidgetEditor> {
         _toast(HomeText.getString(_lang, 'widget_pin_manual'), error: true);
         return;
       }
+
+      // Optional soft hint — may not be visible under system dialog.
       _toast(HomeText.getString(_lang, 'widget_pin_waiting'), error: false);
-      // Wait until user accepts system pin dialog (callback) or gives up.
-      final accepted = await _pinAccepted!.future.timeout(
-        const Duration(seconds: 90),
-        onTimeout: () => false,
-      );
+
+      // Prefer OEM callback; also detect by counting widgets after user returns.
+      var accepted = false;
+      try {
+        accepted = await _pinAccepted!.future.timeout(
+          const Duration(seconds: 120),
+          onTimeout: () => false,
+        );
+      } catch (_) {
+        accepted = false;
+      }
+
+      if (!accepted) {
+        // Wait until app is foreground again, then compare widget ids.
+        try {
+          await (_resumed?.future ?? Future<void>.value()).timeout(
+            const Duration(seconds: 120),
+            onTimeout: () {},
+          );
+        } catch (_) {}
+        await Future<void>.delayed(const Duration(milliseconds: 450));
+        final after = await _widgetCounts();
+        if (stepsOnly) {
+          accepted = (after['steps'] ?? 0) > (before['steps'] ?? 0);
+        } else {
+          accepted = (after['main'] ?? 0) > (before['main'] ?? 0);
+        }
+      }
+
+      if (!mounted) return;
+      // Small delay so SnackBar is not eaten by resume transition.
+      await Future<void>.delayed(const Duration(milliseconds: 200));
       if (!mounted) return;
       if (accepted) {
         _toast(HomeText.getString(_lang, 'widget_pin_ok'), error: false);
@@ -236,6 +312,8 @@ class _WidgetEditorState extends State<_WidgetEditor> {
       }
     } finally {
       _pinAccepted = null;
+      _resumed = null;
+      _pinInFlight = false;
       if (mounted) {
         setState(() {
           _busyMain = false;

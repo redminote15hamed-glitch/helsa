@@ -33,16 +33,8 @@ class MenuSupportSheet {
     final child = _SupportHost(
       language: lang,
       theme: theme,
-      skipGenie: origin != null,
+      skipGenie: false,
     );
-    if (origin != null) {
-      return MenuExpandHost.open<void>(
-        context: context,
-        origin: origin,
-        theme: theme,
-        builder: (_) => child,
-      );
-    }
     return showGeneralDialog<void>(
       context: context,
       useRootNavigator: true,

@@ -24,10 +24,12 @@ class MainActivity : FlutterActivity() {
                     val stepsOnly = call.argument<Boolean>("stepsOnly") ?: false
                     result.success(requestPinHelsaWidget(stepsOnly))
                 }
+                "getWidgetCount" -> {
+                    result.success(widgetCounts())
+                }
                 else -> result.notImplemented()
             }
         }
-        // In case activity was recreated with pin callback intent.
         handlePinCallback(intent)
     }
 
@@ -35,6 +37,28 @@ class MainActivity : FlutterActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         handlePinCallback(intent)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        handlePinCallback(intent)
+        // Tell Flutter we are foreground again (for pin result polling).
+        widgetChannel?.invokeMethod("appResumed", null)
+    }
+
+    private fun widgetCounts(): Map<String, Int> {
+        return try {
+            val mgr = AppWidgetManager.getInstance(this)
+            val main = mgr.getAppWidgetIds(
+                ComponentName(this, HelsaWidgetProvider::class.java),
+            ).size
+            val steps = mgr.getAppWidgetIds(
+                ComponentName(this, HelsaStepsWidgetProvider::class.java),
+            ).size
+            mapOf("main" to main, "steps" to steps)
+        } catch (_: Exception) {
+            mapOf("main" to 0, "steps" to 0)
+        }
     }
 
     private fun handlePinCallback(intent: Intent?) {
@@ -47,7 +71,6 @@ class MainActivity : FlutterActivity() {
                 "stepsOnly" to stepsOnly,
             ),
         )
-        // Prevent double-handling on next resume.
         intent.action = null
     }
 
@@ -66,7 +89,7 @@ class MainActivity : FlutterActivity() {
         val callbackIntent = Intent(this, MainActivity::class.java).apply {
             action = ACTION_WIDGET_PINNED
             putExtra(EXTRA_STEPS_ONLY, stepsOnly)
-            addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         }
         val flags = PendingIntent.FLAG_UPDATE_CURRENT or
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
