@@ -1,6 +1,6 @@
 // lib/home/widgets/ambient_background.dart
-// آسمان وضعیت: صبح / ظهر / عصر / شب + حرکت خیلی آرام
-// Status bar icons follow sky luminance (not only app theme).
+// Sky follows APP theme brightness first. Time-of-day only tints within that mode.
+// Never force dark home + light drawer (or the reverse).
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -44,67 +44,68 @@ class _AmbientBackgroundState extends State<AmbientBackground>
     return _SkyPhase.night;
   }
 
-  /// True when top of screen is dark → status icons should be light.
-  bool _skyIsDark(bool themeDark, _SkyPhase phase) {
-    return themeDark || phase == _SkyPhase.night;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final phase = _phase;
-    final skyDark = _skyIsDark(isDark, phase);
+    final cs = theme.colorScheme;
 
+    // Base ALWAYS matches theme brightness (root contrast fix).
     late Color base;
     late Color blobA;
     late Color blobB;
     late Color blobC;
 
-    if (skyDark) {
-      base = const Color(0xFF0A0E14);
-      blobA = const Color(0xFF1A2740).withValues(alpha: 0.55);
-      blobB = ColorPalette.skyBlue.withValues(alpha: 0.08);
-      blobC = const Color(0xFF2A1F4A).withValues(alpha: 0.12);
+    if (isDark) {
+      base = cs.surface.withValues(alpha: 1.0);
+      // Prefer deep surface; fallback if surface is mid-tone
+      base = Color.alphaBlend(const Color(0xFF0A0E14).withValues(alpha: 0.92), cs.surface);
+      blobA = cs.primary.withValues(alpha: 0.10);
+      blobB = const Color(0xFF1A2740).withValues(alpha: 0.45);
+      blobC = cs.secondary.withValues(alpha: 0.08);
+      // slight phase tint only
+      if (phase == _SkyPhase.evening) {
+        blobC = const Color(0xFF2A1F4A).withValues(alpha: 0.14);
+      }
     } else {
       switch (phase) {
         case _SkyPhase.morning:
           base = const Color(0xFFF7F3EC);
           blobA = const Color(0xFFFFE0B2).withValues(alpha: 0.35);
-          blobB = ColorPalette.mintPrimary.withValues(alpha: 0.08);
+          blobB = cs.primary.withValues(alpha: 0.08);
           blobC = const Color(0xFFFFCC80).withValues(alpha: 0.12);
           break;
         case _SkyPhase.noon:
-          base = const Color(0xFFF3F8F6);
-          blobA = ColorPalette.mintPrimary.withValues(alpha: 0.10);
+          base = Color.alphaBlend(const Color(0xFFF3F8F6), cs.surface);
+          blobA = cs.primary.withValues(alpha: 0.10);
           blobB = ColorPalette.skyBlue.withValues(alpha: 0.10);
-          blobC = ColorPalette.mintAccent.withValues(alpha: 0.07);
+          blobC = cs.secondary.withValues(alpha: 0.07);
           break;
         case _SkyPhase.evening:
           base = const Color(0xFFF8F0EB);
           blobA = const Color(0xFFFFAB91).withValues(alpha: 0.22);
           blobB = const Color(0xFFCE93D8).withValues(alpha: 0.10);
-          blobC = ColorPalette.mintPrimary.withValues(alpha: 0.06);
+          blobC = cs.primary.withValues(alpha: 0.06);
           break;
         case _SkyPhase.night:
-          base = const Color(0xFF0A0E14);
-          blobA = const Color(0xFF1A2740).withValues(alpha: 0.55);
-          blobB = ColorPalette.skyBlue.withValues(alpha: 0.08);
-          blobC = const Color(0xFF2A1F4A).withValues(alpha: 0.12);
+          // Still LIGHT theme: soft cool grey, NOT pure black
+          base = const Color(0xFFEEF2F6);
+          blobA = cs.primary.withValues(alpha: 0.07);
+          blobB = const Color(0xFF94A3B8).withValues(alpha: 0.10);
+          blobC = ColorPalette.skyBlue.withValues(alpha: 0.06);
           break;
       }
     }
 
     final overlay = SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      // Android: light icons on dark sky, dark icons on pale sky
-      statusBarIconBrightness:
-          skyDark ? Brightness.light : Brightness.dark,
-      // iOS uses opposite meaning for statusBarBrightness
-      statusBarBrightness: skyDark ? Brightness.dark : Brightness.light,
+      statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+      statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
       systemNavigationBarColor: Colors.transparent,
       systemNavigationBarDividerColor: Colors.transparent,
       systemNavigationBarIconBrightness:
-          skyDark ? Brightness.light : Brightness.dark,
+          isDark ? Brightness.light : Brightness.dark,
       systemNavigationBarContrastEnforced: false,
     );
 
@@ -121,38 +122,18 @@ class _AmbientBackgroundState extends State<AmbientBackground>
             fit: StackFit.expand,
             children: [
               ColoredBox(color: base),
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      blobA,
-                      base.withValues(alpha: 0),
-                    ],
-                    stops: const [0.0, 0.55],
-                  ),
-                ),
+              Align(
+                alignment: Alignment(dx - 0.6, dy - 0.7),
+                child: _blob(blobA, 320),
               ),
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: Alignment(-0.5 + dx, -0.55 + dy),
-                    radius: 1.1,
-                    colors: [blobB, base.withValues(alpha: 0)],
-                  ),
-                ),
+              Align(
+                alignment: Alignment(-dx + 0.5, -dy + 0.4),
+                child: _blob(blobB, 280),
               ),
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: Alignment(0.55 - dx, 0.5 - dy),
-                    radius: 1.0,
-                    colors: [blobC, base.withValues(alpha: 0)],
-                  ),
-                ),
+              Align(
+                alignment: Alignment(dx * 0.5, 0.8),
+                child: _blob(blobC, 260),
               ),
-              if (skyDark) CustomPaint(painter: _StarDustPainter(t: t)),
               widget.child,
             ],
           );
@@ -160,26 +141,19 @@ class _AmbientBackgroundState extends State<AmbientBackground>
       ),
     );
   }
-}
 
-class _StarDustPainter extends CustomPainter {
-  final double t;
-  _StarDustPainter({required this.t});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rnd = math.Random(42);
-    final paint = Paint()..style = PaintingStyle.fill;
-    for (int i = 0; i < 18; i++) {
-      final x = rnd.nextDouble() * size.width;
-      final y = rnd.nextDouble() * size.height * 0.55;
-      final twinkle =
-          0.15 + 0.25 * (0.5 + 0.5 * math.sin(t * math.pi * 2 + i));
-      paint.color = Colors.white.withValues(alpha: twinkle);
-      canvas.drawCircle(Offset(x, y), 1.1 + rnd.nextDouble(), paint);
-    }
+  Widget _blob(Color color, double size) {
+    return IgnorePointer(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(
+            colors: [color, color.withValues(alpha: 0)],
+          ),
+        ),
+      ),
+    );
   }
-
-  @override
-  bool shouldRepaint(covariant _StarDustPainter old) => old.t != t;
 }

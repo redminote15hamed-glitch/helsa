@@ -27,14 +27,17 @@ class MyApp extends StatelessWidget {
     return ValueListenableBuilder<int>(
       valueListenable: ThemeStore.revision,
       builder: (context, _, __) {
-        final theme = ThemeStore.themeData();
+        final data = ThemeStore.themeData();
+        final night = ThemeStore.night.value;
         return MaterialApp(
           scrollBehavior: MyCustomScrollBehavior(),
           title: 'Helsa',
           debugShowCheckedModeBanner: false,
-          theme: theme,
-          darkTheme: theme,
-          themeMode: ThemeMode.light, // scheme already encodes night/day
+          theme: data,
+          darkTheme: data,
+          // Brightness is already baked into [data]; keep mode in sync
+          // so Theme.of(context).brightness matches everywhere.
+          themeMode: night ? ThemeMode.dark : ThemeMode.light,
           builder: (context, child) {
             return EdgeToEdgeWrapper(child: child!);
           },

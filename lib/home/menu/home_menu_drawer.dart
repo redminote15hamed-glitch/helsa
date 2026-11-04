@@ -12,6 +12,7 @@ import 'package:helsa/home/menu/helsa_avatar.dart';
 import 'package:helsa/home/menu/menu_widget_page.dart';
 import 'package:helsa/home/menu/menu_expand_host.dart';
 import 'package:helsa/home/menu/menu_coming_soon_page.dart';
+import 'package:helsa/home/menu/menu_appearance_page.dart';
 import 'package:helsa/setting/color/color_palette.dart';
 import 'package:helsa/setting/kit/textfielder.dart';
 import 'package:helsa/setting/motion/animator/animator.dart';
@@ -150,11 +151,14 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
   }
 
   /// Support stays a floating bottom sheet with single-phase Genie.
+  /// Close the drawer first so the sheet is not covered by the open menu.
   Future<void> _openSupport(BuildContext rowCtx) async {
+    widget.onBarrierTap(); // auto-close drawer (same as avatar / barrier)
+    await Future<void>.delayed(const Duration(milliseconds: 280));
+    if (!mounted) return;
     await MenuSupportSheet.show(
       context,
       language: widget.language,
-      // no origin → not fullscreen expand host
     );
     if (mounted) _pulseTarget(_MenuPulse.support);
   }
@@ -166,6 +170,13 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
         language: widget.language,
         titleKey: titleKey,
       ),
+    );
+  }
+
+  Future<void> _openAppearance(BuildContext rowCtx) {
+    return _openFromRow(
+      rowCtx,
+      builder: (ctx) => MenuAppearancePage(language: widget.language),
     );
   }
 
@@ -217,17 +228,17 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: isDark
-                          ? const [
-                              Color(0xFF1B2738),
-                              Color(0xFF141C28),
-                              Color(0xFF10161F),
-                            ]
-                          : const [
-                              Color(0xFFF5F8FC),
-                              Color(0xFFEEF2F7),
-                              Color(0xFFE8EEF5),
-                            ],
+                      colors: [
+                        Color.alphaBlend(
+                          cs.primary.withValues(alpha: isDark ? 0.08 : 0.04),
+                          cs.surface,
+                        ),
+                        cs.surface,
+                        Color.alphaBlend(
+                          cs.onSurface.withValues(alpha: isDark ? 0.06 : 0.03),
+                          cs.surface,
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -309,9 +320,7 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
                                     padding: const EdgeInsets.all(2),
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: isDark
-                                          ? const Color(0xFF1B2738)
-                                          : const Color(0xFFF5F8FC),
+                                      color: cs.surface,
                                     ),
                                     child: HelsaAvatar.fromStore(
                                       radius: context.s * 1.7,
@@ -439,8 +448,7 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
                                 tint: const Color(0xFF9B7BFF),
                                 pulse: _pulse,
                                 pulseKind: _PulseKind.none,
-                                onTap: (ctx) =>
-                                    _openComingSoon(ctx, 'menu_appearance'),
+                                onTap: (ctx) => _openAppearance(ctx),
                               ),
                             ],
                           ),
