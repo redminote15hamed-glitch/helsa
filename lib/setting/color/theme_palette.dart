@@ -1,0 +1,267 @@
+// lib/setting/color/theme_palette.dart
+import 'package:flutter/material.dart';
+
+/// One Helsa color identity with dedicated day + night schemes.
+class HelsaPalette {
+  final String id;
+  final IconData icon;
+  /// Swatch shown as heart on the morph dock.
+  final Color swatch;
+  final ColorScheme light;
+  final ColorScheme dark;
+  /// Metric accents (steps / calories / active) — day
+  final Color stepsL, calL, timeL;
+  /// Metric accents — night
+  final Color stepsD, calD, timeD;
+
+  const HelsaPalette({
+    required this.id,
+    required this.icon,
+    required this.swatch,
+    required this.light,
+    required this.dark,
+    required this.stepsL,
+    required this.calL,
+    required this.timeL,
+    required this.stepsD,
+    required this.calD,
+    required this.timeD,
+  });
+
+  ColorScheme scheme(bool night) => night ? dark : light;
+  Color steps(bool night) => night ? stepsD : stepsL;
+  Color cal(bool night) => night ? calD : calL;
+  Color time(bool night) => night ? timeD : timeL;
+
+  static HelsaPalette byId(String id) {
+    for (final p in all) {
+      if (p.id == id) return p;
+    }
+    return all.first;
+  }
+
+  static const List<HelsaPalette> all = [
+    HelsaPalette(
+      id: 'mint',
+      icon: Icons.eco_rounded,
+      swatch: Color(0xFF10B981),
+      stepsL: Color(0xFF10B981),
+      calL: Color(0xFFFF8C42),
+      timeL: Color(0xFF4C8DFF),
+      stepsD: Color(0xFF34D399),
+      calD: Color(0xFFFB923C),
+      timeD: Color(0xFF60A5FA),
+      light: ColorScheme.light(
+        primary: Color(0xFF10B981),
+        onPrimary: Colors.white,
+        secondary: Color(0xFF7DDFC3),
+        onSecondary: Color(0xFF0F172A),
+        tertiary: Color(0xFFFF8C42),
+        onTertiary: Colors.white,
+        surface: Color(0xFFFFFFFF),
+        onSurface: Color(0xFF0F172A),
+        error: Color(0xFFEF4444),
+        onError: Colors.white,
+        outline: Color(0xFFE2E8F0),
+      ),
+      dark: ColorScheme.dark(
+        primary: Color(0xFF34D399),
+        onPrimary: Color(0xFF0B1320),
+        secondary: Color(0xFF7DDFC3),
+        onSecondary: Color(0xFF0B1320),
+        tertiary: Color(0xFFFB923C),
+        onTertiary: Colors.white,
+        surface: Color(0xFF152238),
+        onSurface: Color(0xFFF8FAFC),
+        error: Color(0xFFEF4444),
+        onError: Colors.white,
+        outline: Color(0xFF1E293B),
+      ),
+    ),
+    HelsaPalette(
+      id: 'ocean',
+      icon: Icons.water_drop_rounded,
+      swatch: Color(0xFF0EA5E9),
+      stepsL: Color(0xFF0EA5E9),
+      calL: Color(0xFF06B6D4),
+      timeL: Color(0xFF6366F1),
+      stepsD: Color(0xFF38BDF8),
+      calD: Color(0xFF22D3EE),
+      timeD: Color(0xFF818CF8),
+      light: ColorScheme.light(
+        primary: Color(0xFF0EA5E9),
+        onPrimary: Colors.white,
+        secondary: Color(0xFF38BDF8),
+        onSecondary: Color(0xFF0F172A),
+        tertiary: Color(0xFF6366F1),
+        onTertiary: Colors.white,
+        surface: Color(0xFFF0F9FF),
+        onSurface: Color(0xFF0C4A6E),
+        error: Color(0xFFEF4444),
+        onError: Colors.white,
+        outline: Color(0xFFBAE6FD),
+      ),
+      dark: ColorScheme.dark(
+        primary: Color(0xFF38BDF8),
+        onPrimary: Color(0xFF082F49),
+        secondary: Color(0xFF22D3EE),
+        onSecondary: Color(0xFF082F49),
+        tertiary: Color(0xFF818CF8),
+        onTertiary: Colors.white,
+        surface: Color(0xFF0B1C2C),
+        onSurface: Color(0xFFE0F2FE),
+        error: Color(0xFFEF4444),
+        onError: Colors.white,
+        outline: Color(0xFF1E3A4C),
+      ),
+    ),
+    HelsaPalette(
+      id: 'forest',
+      icon: Icons.park_rounded,
+      swatch: Color(0xFF16A34A),
+      stepsL: Color(0xFF16A34A),
+      calL: Color(0xFFCA8A04),
+      timeL: Color(0xFF0D9488),
+      stepsD: Color(0xFF4ADE80),
+      calD: Color(0xFFEAB308),
+      timeD: Color(0xFF2DD4BF),
+      light: ColorScheme.light(
+        primary: Color(0xFF16A34A),
+        onPrimary: Colors.white,
+        secondary: Color(0xFF86EFAC),
+        onSecondary: Color(0xFF14532D),
+        tertiary: Color(0xFFCA8A04),
+        onTertiary: Colors.white,
+        surface: Color(0xFFF0FDF4),
+        onSurface: Color(0xFF14532D),
+        error: Color(0xFFEF4444),
+        onError: Colors.white,
+        outline: Color(0xFFBBF7D0),
+      ),
+      dark: ColorScheme.dark(
+        primary: Color(0xFF4ADE80),
+        onPrimary: Color(0xFF052E16),
+        secondary: Color(0xFF86EFAC),
+        onSecondary: Color(0xFF052E16),
+        tertiary: Color(0xFFEAB308),
+        onTertiary: Color(0xFF052E16),
+        surface: Color(0xFF0C1F14),
+        onSurface: Color(0xFFDCFCE7),
+        error: Color(0xFFEF4444),
+        onError: Colors.white,
+        outline: Color(0xFF1A3A28),
+      ),
+    ),
+    HelsaPalette(
+      id: 'sunrise',
+      icon: Icons.wb_twilight_rounded,
+      swatch: Color(0xFFF97316),
+      stepsL: Color(0xFFEA580C),
+      calL: Color(0xFFEF4444),
+      timeL: Color(0xFFF59E0B),
+      stepsD: Color(0xFFFB923C),
+      calD: Color(0xFFF87171),
+      timeD: Color(0xFFFBBF24),
+      light: ColorScheme.light(
+        primary: Color(0xFFF97316),
+        onPrimary: Colors.white,
+        secondary: Color(0xFFFDBA74),
+        onSecondary: Color(0xFF7C2D12),
+        tertiary: Color(0xFFEF4444),
+        onTertiary: Colors.white,
+        surface: Color(0xFFFFF7ED),
+        onSurface: Color(0xFF7C2D12),
+        error: Color(0xFFDC2626),
+        onError: Colors.white,
+        outline: Color(0xFFFED7AA),
+      ),
+      dark: ColorScheme.dark(
+        primary: Color(0xFFFB923C),
+        onPrimary: Color(0xFF431407),
+        secondary: Color(0xFFFDBA74),
+        onSecondary: Color(0xFF431407),
+        tertiary: Color(0xFFF87171),
+        onTertiary: Color(0xFF431407),
+        surface: Color(0xFF1C1209),
+        onSurface: Color(0xFFFFF7ED),
+        error: Color(0xFFF87171),
+        onError: Colors.white,
+        outline: Color(0xFF3D2A1A),
+      ),
+    ),
+    HelsaPalette(
+      id: 'lavender',
+      icon: Icons.spa_rounded,
+      swatch: Color(0xFF8B5CF6),
+      stepsL: Color(0xFF8B5CF6),
+      calL: Color(0xFFEC4899),
+      timeL: Color(0xFF6366F1),
+      stepsD: Color(0xFFA78BFA),
+      calD: Color(0xFFF472B6),
+      timeD: Color(0xFF818CF8),
+      light: ColorScheme.light(
+        primary: Color(0xFF8B5CF6),
+        onPrimary: Colors.white,
+        secondary: Color(0xFFC4B5FD),
+        onSecondary: Color(0xFF4C1D95),
+        tertiary: Color(0xFFEC4899),
+        onTertiary: Colors.white,
+        surface: Color(0xFFFAF5FF),
+        onSurface: Color(0xFF4C1D95),
+        error: Color(0xFFEF4444),
+        onError: Colors.white,
+        outline: Color(0xFFE9D5FF),
+      ),
+      dark: ColorScheme.dark(
+        primary: Color(0xFFA78BFA),
+        onPrimary: Color(0xFF2E1065),
+        secondary: Color(0xFFC4B5FD),
+        onSecondary: Color(0xFF2E1065),
+        tertiary: Color(0xFFF472B6),
+        onTertiary: Color(0xFF2E1065),
+        surface: Color(0xFF1A1025),
+        onSurface: Color(0xFFF3E8FF),
+        error: Color(0xFFF87171),
+        onError: Colors.white,
+        outline: Color(0xFF3B2A55),
+      ),
+    ),
+    HelsaPalette(
+      id: 'slate',
+      icon: Icons.waves_rounded,
+      swatch: Color(0xFF64748B),
+      stepsL: Color(0xFF0F766E),
+      calL: Color(0xFFB45309),
+      timeL: Color(0xFF1D4ED8),
+      stepsD: Color(0xFF2DD4BF),
+      calD: Color(0xFFFBBF24),
+      timeD: Color(0xFF60A5FA),
+      light: ColorScheme.light(
+        primary: Color(0xFF475569),
+        onPrimary: Colors.white,
+        secondary: Color(0xFF94A3B8),
+        onSecondary: Color(0xFF0F172A),
+        tertiary: Color(0xFF0F766E),
+        onTertiary: Colors.white,
+        surface: Color(0xFFF8FAFC),
+        onSurface: Color(0xFF0F172A),
+        error: Color(0xFFEF4444),
+        onError: Colors.white,
+        outline: Color(0xFFE2E8F0),
+      ),
+      dark: ColorScheme.dark(
+        primary: Color(0xFF94A3B8),
+        onPrimary: Color(0xFF0B1220),
+        secondary: Color(0xFF64748B),
+        onSecondary: Color(0xFFF8FAFC),
+        tertiary: Color(0xFF2DD4BF),
+        onTertiary: Color(0xFF0B1220),
+        surface: Color(0xFF0F172A),
+        onSurface: Color(0xFFF1F5F9),
+        error: Color(0xFFF87171),
+        onError: Colors.white,
+        outline: Color(0xFF1E293B),
+      ),
+    ),
+  ];
+}

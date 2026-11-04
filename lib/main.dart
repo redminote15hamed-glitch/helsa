@@ -3,51 +3,46 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/gestures.dart';
 import 'package:helsa/startup/splash/splash_screen.dart';
-import 'package:helsa/setting/color/theme_color.dart';
 import 'package:helsa/setting/color/edge_to_edge.dart';
 import 'package:helsa/setting/storage/profile_store.dart';
+import 'package:helsa/setting/storage/theme_store.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
-  // Hive — قبل از runApp
   await ProfileStore.init();
+  try {
+    await ThemeStore.open();
+  } catch (_) {}
 
   runApp(const MyApp());
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  ThemeData? _customTheme;
-
-  void _updateTheme(ThemeData newTheme) {
-    setState(() {
-      _customTheme = newTheme;
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final effectiveTheme = _customTheme ?? AppTheme.getTheme(context);
-
-    return MaterialApp(
-      scrollBehavior: MyCustomScrollBehavior(),
-      title: 'Helsa',
-      debugShowCheckedModeBanner: false,
-      theme: effectiveTheme,
-      builder: (context, child) {
-        return EdgeToEdgeWrapper(child: child!);
+    return ValueListenableBuilder<int>(
+      valueListenable: ThemeStore.revision,
+      builder: (context, _, __) {
+        final theme = ThemeStore.themeData();
+        return MaterialApp(
+          scrollBehavior: MyCustomScrollBehavior(),
+          title: 'Helsa',
+          debugShowCheckedModeBanner: false,
+          theme: theme,
+          darkTheme: theme,
+          themeMode: ThemeMode.light, // scheme already encodes night/day
+          builder: (context, child) {
+            return EdgeToEdgeWrapper(child: child!);
+          },
+          home: SplashScreen(
+            onThemeChanged: (_) {},
+          ),
+        );
       },
-      // بعد از اسپلش، خود SplashScreen باید چک کند:
-      // ProfileStore.isSetupDone ? Home : Setup
-      home: SplashScreen(onThemeChanged: _updateTheme),
     );
   }
 }

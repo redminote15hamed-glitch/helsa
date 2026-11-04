@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'color_palette.dart';
+import 'theme_palette.dart';
 
 class AppTheme {
   static final ThemeData lightTheme = ThemeData(
@@ -166,4 +167,56 @@ class AppTheme {
         ? darkTheme
         : lightTheme;
   }
+
+
+  /// Build ThemeData from a Helsa palette + day/night flag.
+  static ThemeData fromPalette(HelsaPalette palette, {required bool night}) {
+    final cs = palette.scheme(night);
+    final onSurf = cs.onSurface;
+    final sub = onSurf.withValues(alpha: 0.65);
+    return ThemeData(
+      useMaterial3: true,
+      brightness: night ? Brightness.dark : Brightness.light,
+      colorScheme: cs,
+      scaffoldBackgroundColor: night
+          ? (cs.surface.withValues(alpha: 1.0) == cs.surface
+              ? cs.surface
+              : cs.surface)
+          : cs.surface,
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.transparent,
+        foregroundColor: onSurf,
+        elevation: 0,
+        centerTitle: true,
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness:
+              night ? Brightness.light : Brightness.dark,
+          statusBarBrightness: night ? Brightness.dark : Brightness.light,
+        ),
+      ),
+      cardTheme: CardThemeData(
+        color: cs.surface,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: cs.outline, width: 1),
+        ),
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: cs.primary,
+        foregroundColor: cs.onPrimary,
+        elevation: 4,
+      ),
+      textTheme: TextTheme(
+        titleLarge: TextStyle(
+            color: onSurf, fontWeight: FontWeight.bold, fontSize: 20),
+        titleMedium:
+            TextStyle(color: onSurf, fontWeight: FontWeight.w600, fontSize: 16),
+        bodyLarge: TextStyle(color: onSurf, fontSize: 15),
+        bodyMedium: TextStyle(color: sub, fontSize: 14),
+      ),
+    );
+  }
+
 }
