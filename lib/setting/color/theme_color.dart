@@ -5,11 +5,11 @@ import 'theme_palette.dart';
 class AppTheme {
   /// Default light theme (mint palette). Prefer [fromPalette] / ThemeStore.
   static ThemeData get lightTheme =>
-      fromPalette(HelsaPalette.mint, night: false);
+      fromPalette(HelsaPalette.byId('mint'), night: false);
 
   /// Default dark theme (mint palette). Prefer [fromPalette] / ThemeStore.
   static ThemeData get darkTheme =>
-      fromPalette(HelsaPalette.mint, night: true);
+      fromPalette(HelsaPalette.byId('mint'), night: true);
 
   static ThemeData of(BuildContext context) {
     return Theme.of(context).brightness == Brightness.dark

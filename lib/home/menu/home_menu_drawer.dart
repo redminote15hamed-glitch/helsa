@@ -13,7 +13,6 @@ import 'package:helsa/home/menu/menu_widget_page.dart';
 import 'package:helsa/home/menu/menu_expand_host.dart';
 import 'package:helsa/home/menu/menu_coming_soon_page.dart';
 import 'package:helsa/home/menu/menu_appearance_page.dart';
-import 'package:helsa/setting/color/color_palette.dart';
 import 'package:helsa/setting/color/metric_colors.dart';
 import 'package:helsa/setting/kit/textfielder.dart';
 import 'package:helsa/setting/motion/animator/animator.dart';

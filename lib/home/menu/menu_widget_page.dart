@@ -9,7 +9,6 @@ import 'package:flutter/services.dart';
 import 'package:helsa/home/home_text.dart';
 import 'package:helsa/home/home_screen_widget/home_widget_bridge.dart';
 import 'package:helsa/home/services/step_tracker.dart';
-import 'package:helsa/setting/color/color_palette.dart';
 import 'package:helsa/setting/color/metric_colors.dart';
 import 'package:helsa/setting/kit/snackbarer.dart';
 import 'package:helsa/setting/kit/textfielder.dart';
@@ -647,7 +646,7 @@ class _StepsPreview extends StatelessWidget {
               child: Center(
                 child: Text(
                   '$steps',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: MetricColors.current.steps,
                     fontWeight: FontWeight.w800,
                     fontSize: 40,
