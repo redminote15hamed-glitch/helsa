@@ -2,7 +2,6 @@
 // Compact streak capsule for the side menu only.
 import 'package:flutter/material.dart';
 import 'package:helsa/home/home_text.dart';
-import 'package:helsa/setting/color/color_palette.dart';
 import 'package:helsa/setting/kit/textfielder.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
 import 'package:helsa/setting/storage/streak_store.dart';
@@ -46,7 +45,7 @@ class _MenuStreakCapsuleState extends State<MenuStreakCapsule>
   @override
   Widget build(BuildContext context) {
     final n = _streak;
-    final border = ColorPalette.calorieBurn;
+    final border = Theme.of(context).colorScheme.tertiary;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = border.withValues(alpha: isDark ? 0.16 : 0.10);
 

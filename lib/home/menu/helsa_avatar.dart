@@ -1,7 +1,6 @@
 // lib/home/menu/helsa_avatar.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:helsa/setting/color/color_palette.dart';
 import 'package:helsa/setting/storage/identity_store.dart';
 
 class AvatarPreset {
@@ -115,7 +114,7 @@ class HelsaAvatar extends StatelessWidget {
     if (hasFile) {
       core = CircleAvatar(
         radius: radius,
-        backgroundColor: ColorPalette.mintPrimary.withValues(alpha: 0.15),
+        backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
         backgroundImage: FileImage(File(path)),
       );
     } else {
@@ -135,7 +134,7 @@ class HelsaAvatar extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: ColorPalette.mintPrimary.withValues(alpha: 0.55),
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.55),
           width: 2,
         ),
       ),

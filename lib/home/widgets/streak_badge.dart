@@ -1,7 +1,6 @@
 // lib/home/widgets/streak_badge.dart
 import 'package:flutter/material.dart';
 import 'package:helsa/home/home_text.dart';
-import 'package:helsa/setting/color/color_palette.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
 
 class StreakBadge extends StatefulWidget {
@@ -55,7 +54,7 @@ class _StreakBadgeState extends State<StreakBadge>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final border = widget.isNight
         ? const Color(0xFF7EB6FF)
-        : ColorPalette.calorieBurn;
+        : Theme.of(context).colorScheme.tertiary;
     final bg = isDark
         ? border.withValues(alpha: 0.15)
         : border.withValues(alpha: 0.10);

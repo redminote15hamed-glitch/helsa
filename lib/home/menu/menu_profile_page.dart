@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:helsa/home/menu/menu_expand_host.dart';
 import 'package:flutter/services.dart';
 import 'package:helsa/home/home_text.dart';
-import 'package:helsa/setting/color/color_palette.dart';
 import 'package:helsa/setting/kit/textfielder.dart';
 import 'package:helsa/setting/kit/snackbarer.dart';
 import 'package:helsa/setting/motion/animator/animator.dart';
@@ -395,32 +394,32 @@ class _ProfileEditorState extends State<_ProfileEditor> {
           keyboardType: keyboard,
           inputFormatters: formatters,
           style: TextStyle(color: cs.onSurface, fontWeight: FontWeight.w600),
-          cursorColor: ColorPalette.mintPrimary,
+          cursorColor: cs.primary,
           scrollPadding: const EdgeInsets.only(bottom: 140),
           decoration: InputDecoration(
             filled: true,
             // Stronger fill so boxes read clearly on dark & light
             fillColor: cs.brightness == Brightness.dark
-                ? ColorPalette.mintPrimary.withValues(alpha: 0.12)
-                : ColorPalette.mintPrimary.withValues(alpha: 0.08),
+                ? cs.primary.withValues(alpha: 0.12)
+                : cs.primary.withValues(alpha: 0.08),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide(
-                color: ColorPalette.mintPrimary.withValues(alpha: 0.55),
+                color: cs.primary.withValues(alpha: 0.55),
                 width: 1.5,
               ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide(
-                color: ColorPalette.mintPrimary.withValues(alpha: 0.55),
+                color: cs.primary.withValues(alpha: 0.55),
                 width: 1.5,
               ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(
-                color: ColorPalette.mintPrimary,
+              borderSide: BorderSide(
+                color: cs.primary,
                 width: 2.2,
               ),
             ),

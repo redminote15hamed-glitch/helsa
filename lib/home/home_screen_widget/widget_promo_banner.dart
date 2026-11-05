@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:helsa/home/home_text.dart';
-import 'package:helsa/setting/color/color_palette.dart';
 import 'package:helsa/setting/kit/snackbarer.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
 import 'package:helsa/setting/storage/meta_store.dart';
@@ -99,9 +98,9 @@ class _WidgetPromoBannerState extends State<WidgetPromoBanner> {
     final addLabel = HomeText.getString(lang, 'widget_add_short');
 
     final bg = isDark
-        ? ColorPalette.mintPrimary.withValues(alpha: 0.14)
-        : ColorPalette.mintPrimary.withValues(alpha: 0.10);
-    final border = ColorPalette.mintPrimary.withValues(alpha: 0.35);
+        ? cs.primary.withValues(alpha: 0.14)
+        : cs.primary.withValues(alpha: 0.10);
+    final border = cs.primary.withValues(alpha: 0.35);
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
@@ -134,7 +133,7 @@ class _WidgetPromoBannerState extends State<WidgetPromoBanner> {
                   Icon(
                     Icons.widgets_outlined,
                     size: 20,
-                    color: ColorPalette.mintPrimary,
+                    color: cs.primary,
                   ),
                   SizedBox(width: context.hX3s),
                   Expanded(
@@ -173,7 +172,7 @@ class _WidgetPromoBannerState extends State<WidgetPromoBanner> {
                     borderRadius: BorderRadius.circular(24),
                     child: Ink(
                       decoration: BoxDecoration(
-                        color: ColorPalette.mintPrimary,
+                        color: cs.primary,
                         borderRadius: BorderRadius.circular(24),
                       ),
                       child: Padding(

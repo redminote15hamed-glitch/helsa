@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:helsa/home/home_text.dart';
 import 'package:helsa/home/menu/helsa_avatar.dart';
-import 'package:helsa/setting/color/color_palette.dart';
 import 'package:helsa/setting/kit/snackbarer.dart';
 import 'package:helsa/setting/kit/textfielder.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
@@ -242,7 +241,7 @@ class _AvatarSheetState extends State<_AvatarSheet> {
                             shape: BoxShape.circle,
                             border: Border.all(
                               color: selected
-                                  ? ColorPalette.mintPrimary
+                                  ? Theme.of(context).colorScheme.primary
                                   : Colors.transparent,
                               width: 2.5,
                             ),

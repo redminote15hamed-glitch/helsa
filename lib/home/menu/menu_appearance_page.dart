@@ -9,11 +9,10 @@ import 'package:helsa/setting/responsive/responsive_utils.dart';
 import 'package:helsa/setting/storage/meta_store.dart';
 import 'package:helsa/setting/storage/theme_store.dart';
 
-/// Appearance — preview is local until tick / continue saves.
+/// Appearance — local preview until tick / continue; then saves + closes.
 class MenuAppearancePage extends StatefulWidget {
   const MenuAppearancePage({super.key, this.language});
 
-  /// When null, falls back to [MetaStore.language].
   final String? language;
 
   @override
@@ -28,6 +27,8 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
   late final bool _savedNight;
 
   late final AnimationController _orbitCtrl;
+  late final AnimationController _ringPulse;
+  late final AnimationController _wave;
   double _orbitAngle = 0;
 
   String get _lang => widget.language ?? MetaStore.language;
@@ -55,12 +56,22 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
       vsync: this,
       duration: const Duration(milliseconds: 1100),
     );
+    _ringPulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 4800),
+    )..repeat();
+    _wave = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2400),
+    )..repeat();
     _orbitAngle = _angleForIndex(_selectedIndex);
   }
 
   @override
   void dispose() {
     _orbitCtrl.dispose();
+    _ringPulse.dispose();
+    _wave.dispose();
     super.dispose();
   }
 
@@ -103,12 +114,18 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
   Future<void> _saveAndClose() async {
     ThemeStore.paletteId.value = _paletteId;
     ThemeStore.night.value = _night;
-    await ThemeStore.save();
+    try {
+      await ThemeStore.save();
+    } catch (_) {}
     if (!mounted) return;
-    Navigator.of(context).maybePop();
+    Navigator.of(context).pop();
   }
 
-  void _back() => Navigator.of(context).maybePop();
+  void _back() {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -116,6 +133,7 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
     final pad = context.hM;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
     final metrics = MetricColors.fromPalette(_selected, night: _night);
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
 
     return Theme(
       data: localTheme,
@@ -131,6 +149,7 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                   _TopBar(
                     lang: _lang,
                     dirty: _dirty,
+                    isRtl: isRtl,
                     onBack: _back,
                     onSave: _dirty ? _saveAndClose : null,
                   ),
@@ -139,56 +158,68 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                       builder: (context, constraints) {
                         final h = constraints.maxHeight;
                         final w = constraints.maxWidth;
-                        final appleZone = (h * 0.26).clamp(140.0, 200.0);
-                        final orbitSize = (w * 0.72).clamp(200.0, 280.0);
-                        final cardSide = (w * 0.72).clamp(220.0, 300.0);
+
+                        // Balanced vertical budget (room for Apply)
+                        final appleSize = (w * 0.18).clamp(58.0, 78.0);
+                        final orbitSize = (math.min(w, h) * 0.42)
+                            .clamp(168.0, 220.0);
+                        final cardSide =
+                            (w * 0.52).clamp(168.0, 220.0);
 
                         return Column(
                           children: [
-                            SizedBox(height: context.vS * 0.4),
-                            SizedBox(
-                              height: appleZone * 0.72,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  _PreviewApple(
-                                    label: HomeText.getString(
-                                        _lang, 'appearance_preview_steps'),
-                                    color: metrics.steps,
-                                    fill: 0.62,
-                                    size: appleZone * 0.55,
-                                  ),
-                                  SizedBox(width: w * 0.04),
-                                  _PreviewApple(
-                                    label: HomeText.getString(
-                                        _lang, 'appearance_preview_cal'),
-                                    color: metrics.calories,
-                                    fill: 0.38,
-                                    size: appleZone * 0.55,
-                                  ),
-                                  SizedBox(width: w * 0.04),
-                                  _PreviewApple(
-                                    label: HomeText.getString(
-                                        _lang, 'appearance_preview_time'),
-                                    color: metrics.active,
-                                    fill: 0.55,
-                                    size: appleZone * 0.55,
-                                  ),
-                                ],
-                              ),
+                            SizedBox(height: context.vX3s),
+                            // 1–4: real apple shapes + liquid wave
+                            AnimatedBuilder(
+                              animation: _wave,
+                              builder: (context, _) {
+                                return Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    _PreviewApple(
+                                      label: HomeText.getString(
+                                          _lang, 'appearance_preview_steps'),
+                                      color: metrics.steps,
+                                      fill: 0.62,
+                                      size: appleSize,
+                                      wave: _wave.value,
+                                    ),
+                                    SizedBox(width: w * 0.055),
+                                    _PreviewApple(
+                                      label: HomeText.getString(
+                                          _lang, 'appearance_preview_cal'),
+                                      color: metrics.calories,
+                                      fill: 0.38,
+                                      size: appleSize,
+                                      wave: _wave.value + 0.33,
+                                    ),
+                                    SizedBox(width: w * 0.055),
+                                    _PreviewApple(
+                                      label: HomeText.getString(
+                                          _lang, 'appearance_preview_time'),
+                                      color: metrics.active,
+                                      fill: 0.55,
+                                      size: appleSize,
+                                      wave: _wave.value + 0.66,
+                                    ),
+                                  ],
+                                );
+                              },
                             ),
-                            SizedBox(height: context.vS * 0.5),
+                            SizedBox(height: context.vS * 0.55),
+                            // 17: hearts dock clearly separated
                             _HeartDock(
                               colors: [
                                 cs.primary,
                                 cs.secondary,
                                 cs.tertiary,
-                                cs.primaryContainer,
-                                cs.secondaryContainer,
+                                Color.lerp(cs.primary, cs.secondary, 0.5)!,
+                                Color.lerp(cs.tertiary, cs.primary, 0.4)!,
                               ],
-                              width: w * 0.78,
+                              width: w * 0.58,
                             ),
-                            const Spacer(flex: 2),
+                            SizedBox(height: context.vS * 0.7),
+                            // Card block (smaller, glass, not edge-to-edge)
                             _ThemeInfoCard(
                               palette: _selected,
                               night: _night,
@@ -197,48 +228,68 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                               onDay: () => setState(() => _night = false),
                               onNight: () => setState(() => _night = true),
                             ),
-                            const Spacer(flex: 2),
+                            SizedBox(height: context.vS * 0.85),
+                            // Orbit with dual rings + closer nodes
                             SizedBox(
                               height: orbitSize,
                               width: orbitSize,
-                              child: _OrbitRing(
-                                palettes: _palettes,
-                                selectedIndex: _selectedIndex,
-                                angle: _orbitAngle,
-                                onSelect: _onSelectPalette,
+                              child: AnimatedBuilder(
+                                animation: _ringPulse,
+                                builder: (context, _) {
+                                  return _OrbitRing(
+                                    palettes: _palettes,
+                                    selectedIndex: _selectedIndex,
+                                    angle: _orbitAngle,
+                                    pulse: _ringPulse.value,
+                                    accent: cs.primary,
+                                    onSelect: _onSelectPalette,
+                                  );
+                                },
                               ),
                             ),
-                            SizedBox(height: context.vS * 0.8),
-                            if (_dirty)
-                              Padding(
-                                padding: EdgeInsets.symmetric(horizontal: pad),
-                                child: SizedBox(
-                                  width: double.infinity,
-                                  child: FilledButton(
-                                    onPressed: _saveAndClose,
-                                    style: FilledButton.styleFrom(
+                            const Spacer(flex: 1),
+                            // 8: Apply always has reserved room when dirty
+                            AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 220),
+                              child: _dirty
+                                  ? Padding(
+                                      key: const ValueKey('apply'),
                                       padding: EdgeInsets.symmetric(
-                                        vertical: context.vS * 0.85,
+                                        horizontal: pad * 1.5,
                                       ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(16),
+                                      child: SizedBox(
+                                        width: double.infinity,
+                                        child: FilledButton(
+                                          onPressed: _saveAndClose,
+                                          style: FilledButton.styleFrom(
+                                            padding: EdgeInsets.symmetric(
+                                              vertical: context.vS * 0.8,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(14),
+                                            ),
+                                          ),
+                                          child: Text(
+                                            HomeText.getString(
+                                                _lang, 'appearance_continue'),
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: context.m,
+                                            ),
+                                          ),
+                                        ),
                                       ),
+                                    )
+                                  : SizedBox(
+                                      key: const ValueKey('gap'),
+                                      height: context.vS * 2.2,
                                     ),
-                                    child: Text(
-                                      HomeText.getString(
-                                          _lang, 'appearance_continue'),
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: context.m,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
+                            ),
                             SizedBox(
                               height: bottomInset > 0
-                                  ? bottomInset * 0.3
-                                  : context.vS,
+                                  ? bottomInset * 0.2
+                                  : context.vX3s,
                             ),
                           ],
                         );
@@ -259,29 +310,43 @@ class _TopBar extends StatelessWidget {
   const _TopBar({
     required this.lang,
     required this.dirty,
+    required this.isRtl,
     required this.onBack,
     required this.onSave,
   });
 
   final String lang;
   final bool dirty;
+  final bool isRtl;
   final VoidCallback onBack;
   final VoidCallback? onSave;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    // 18: RTL — back on start (right in RTL)
+    final back = IconButton(
+      onPressed: onBack,
+      icon: Icon(
+        isRtl ? Icons.arrow_forward_rounded : Icons.arrow_back_rounded,
+        color: cs.onSurface,
+      ),
+    );
+    final save = dirty
+        ? IconButton(
+            onPressed: onSave,
+            icon: Icon(Icons.check_rounded, color: cs.primary, size: 28),
+          )
+        : const SizedBox(width: 48);
+
     return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: context.hS,
-        vertical: context.vS * 0.4,
+        vertical: context.vX2s,
       ),
       child: Row(
         children: [
-          IconButton(
-            onPressed: onBack,
-            icon: Icon(Icons.arrow_back_rounded, color: cs.onSurface),
-          ),
+          if (!isRtl) back else save,
           Expanded(
             child: Text(
               HomeText.getString(lang, 'menu_appearance'),
@@ -293,13 +358,7 @@ class _TopBar extends StatelessWidget {
               ),
             ),
           ),
-          if (dirty)
-            IconButton(
-              onPressed: onSave,
-              icon: Icon(Icons.check_rounded, color: cs.primary, size: 28),
-            )
-          else
-            const SizedBox(width: 48),
+          if (!isRtl) save else back,
         ],
       ),
     );
@@ -312,12 +371,14 @@ class _PreviewApple extends StatelessWidget {
     required this.color,
     required this.fill,
     required this.size,
+    required this.wave,
   });
 
   final String label;
   final Color color;
   final double fill;
   final double size;
+  final double wave;
 
   @override
   Widget build(BuildContext context) {
@@ -333,12 +394,16 @@ class _PreviewApple extends StatelessWidget {
             color: color,
           ),
         ),
-        SizedBox(height: context.vS * 0.25),
+        SizedBox(height: context.vX3s),
         CustomPaint(
           size: Size(size, size * 1.12),
-          painter: _ApplePainter(color: color, fill: fill),
+          painter: _ApplePainter(
+            color: color,
+            fill: fill,
+            wavePhase: wave * math.pi * 2,
+          ),
         ),
-        SizedBox(height: context.vS * 0.2),
+        SizedBox(height: context.vX3s),
         Text(
           '${(fill * 100).round()}%',
           style: TextStyle(
@@ -352,75 +417,126 @@ class _PreviewApple extends StatelessWidget {
   }
 }
 
+/// Same silhouette family as home AppleActivityCard painter.
 class _ApplePainter extends CustomPainter {
-  _ApplePainter({required this.color, required this.fill});
+  _ApplePainter({
+    required this.color,
+    required this.fill,
+    required this.wavePhase,
+  });
 
   final Color color;
   final double fill;
+  final double wavePhase;
+
+  Path _bodyPath(Size size) {
+    double x(double n) => n * size.width;
+    double y(double n) => n * size.height;
+    final path = Path();
+    path.moveTo(x(0.50), y(0.22));
+    path.cubicTo(x(0.62), y(0.12), x(0.92), y(0.18), x(0.94), y(0.42));
+    path.cubicTo(x(0.96), y(0.62), x(0.82), y(0.86), x(0.62), y(0.94));
+    path.cubicTo(x(0.55), y(0.98), x(0.45), y(0.98), x(0.38), y(0.94));
+    path.cubicTo(x(0.18), y(0.86), x(0.04), y(0.62), x(0.06), y(0.42));
+    path.cubicTo(x(0.08), y(0.18), x(0.38), y(0.12), x(0.50), y(0.22));
+    path.close();
+    return path;
+  }
+
+  Path _stemPath(Size size) {
+    double x(double n) => n * size.width;
+    double y(double n) => n * size.height;
+    final path = Path();
+    path.moveTo(x(0.48), y(0.22));
+    path.quadraticBezierTo(x(0.46), y(0.12), x(0.50), y(0.04));
+    path.quadraticBezierTo(x(0.54), y(0.12), x(0.52), y(0.22));
+    path.close();
+    return path;
+  }
+
+  Path _leafPath(Size size) {
+    double x(double n) => n * size.width;
+    double y(double n) => n * size.height;
+    final path = Path();
+    path.moveTo(x(0.52), y(0.12));
+    path.cubicTo(x(0.62), y(0.02), x(0.78), y(0.06), x(0.80), y(0.16));
+    path.cubicTo(x(0.78), y(0.24), x(0.62), y(0.22), x(0.52), y(0.14));
+    path.close();
+    return path;
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-    final body = _bodyPath(w, h);
+    final body = _bodyPath(size);
+    final stem = _stemPath(size);
+    final leaf = _leafPath(size);
+    final b = body.getBounds();
+    final strokeW = (size.width * 0.048).clamp(1.8, 2.8);
 
+    // Glass empty
+    final glass = LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        color.withValues(alpha: 0.12),
+        color.withValues(alpha: 0.28),
+        color.withValues(alpha: 0.18),
+      ],
+    ).createShader(b);
     canvas.drawPath(
       body,
       Paint()
-        ..color = color.withValues(alpha: 0.22)
+        ..shader = glass
         ..style = PaintingStyle.fill,
     );
 
-    final fillH = h * fill.clamp(0.0, 1.0);
-    canvas.save();
-    canvas.clipPath(body);
-    canvas.drawRect(
-      Rect.fromLTWH(0, h - fillH, w, fillH),
-      Paint()..color = color,
-    );
-    canvas.restore();
+    // Liquid with soft wave
+    if (fill > 0.001) {
+      canvas.save();
+      canvas.clipPath(body);
+      final fillH = b.height * fill.clamp(0.0, 1.0);
+      final top = b.bottom - fillH;
+      final amp = size.height * 0.018;
+      final wave = Path();
+      wave.moveTo(b.left, b.bottom);
+      wave.lineTo(b.left, top);
+      for (var i = 0; i <= 12; i++) {
+        final t = i / 12.0;
+        final px = b.left + b.width * t;
+        final py = top + math.sin(wavePhase + t * math.pi * 2) * amp;
+        wave.lineTo(px, py);
+      }
+      wave.lineTo(b.right, b.bottom);
+      wave.close();
+      canvas.drawPath(
+        wave,
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              color.withValues(alpha: 0.85),
+              color,
+            ],
+          ).createShader(b),
+      );
+      canvas.restore();
+    }
 
     canvas.drawPath(
       body,
       Paint()
         ..color = color
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.2,
+        ..strokeWidth = strokeW,
     );
-
-    final stem = Path()
-      ..moveTo(w * 0.50, h * 0.10)
-      ..quadraticBezierTo(w * 0.52, h * 0.02, w * 0.58, h * 0.04);
-    canvas.drawPath(
-      stem,
-      Paint()
-        ..color = color.withValues(alpha: 0.85)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2
-        ..strokeCap = StrokeCap.round,
-    );
-
-    final leaf = Path()
-      ..moveTo(w * 0.52, h * 0.08)
-      ..quadraticBezierTo(w * 0.68, h * 0.00, w * 0.62, h * 0.12)
-      ..quadraticBezierTo(w * 0.55, h * 0.14, w * 0.52, h * 0.08);
-    canvas.drawPath(leaf, Paint()..color = color.withValues(alpha: 0.75));
-  }
-
-  Path _bodyPath(double w, double h) {
-    final p = Path();
-    p.moveTo(w * 0.50, h * 0.16);
-    p.cubicTo(w * 0.22, h * 0.16, w * 0.06, h * 0.38, w * 0.08, h * 0.55);
-    p.cubicTo(w * 0.10, h * 0.78, w * 0.28, h * 0.96, w * 0.50, h * 0.96);
-    p.cubicTo(w * 0.72, h * 0.96, w * 0.90, h * 0.78, w * 0.92, h * 0.55);
-    p.cubicTo(w * 0.94, h * 0.38, w * 0.78, h * 0.16, w * 0.50, h * 0.16);
-    p.close();
-    return p;
+    canvas.drawPath(stem, Paint()..color = color.withValues(alpha: 0.92));
+    canvas.drawPath(leaf, Paint()..color = color.withValues(alpha: 0.82));
   }
 
   @override
   bool shouldRepaint(covariant _ApplePainter old) =>
-      old.color != color || old.fill != fill;
+      old.color != color || old.fill != fill || old.wavePhase != wavePhase;
 }
 
 class _HeartDock extends StatelessWidget {
@@ -435,16 +551,20 @@ class _HeartDock extends StatelessWidget {
     return IgnorePointer(
       child: Container(
         width: width,
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: cs.surfaceContainerHighest.withValues(alpha: 0.65),
-          borderRadius: BorderRadius.circular(28),
+          color: cs.surfaceContainerHighest.withValues(alpha: 0.45),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: cs.outline.withValues(alpha: 0.25),
+            width: 0.8,
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             for (final c in colors)
-              Icon(Icons.favorite_rounded, color: c, size: 26),
+              Icon(Icons.favorite_rounded, color: c, size: 20),
           ],
         ),
       ),
@@ -489,64 +609,87 @@ class _ThemeInfoCard extends StatelessWidget {
             onTap: onDay,
           ),
         ),
-        SizedBox(width: context.hS * 0.6),
+        SizedBox(width: context.hXs),
+        // Smaller glass card, thin border
         Container(
           width: side,
-          height: side * 0.92,
-          padding: EdgeInsets.symmetric(
-            horizontal: context.hS,
-            vertical: context.vS * 0.8,
+          height: side * 0.98,
+          padding: EdgeInsets.fromLTRB(
+            context.hS * 0.65,
+            context.vX2s,
+            context.hS * 0.65,
+            context.vX2s,
           ),
           decoration: BoxDecoration(
-            color: cs.primaryContainer.withValues(alpha: 0.45),
-            borderRadius: BorderRadius.circular(28),
+            // 9–10: layered glass, not flat brown slab
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color.alphaBlend(
+                  cs.primary.withValues(alpha: night ? 0.22 : 0.18),
+                  cs.surface.withValues(alpha: night ? 0.55 : 0.92),
+                ),
+                Color.alphaBlend(
+                  cs.primary.withValues(alpha: night ? 0.12 : 0.10),
+                  cs.surface.withValues(alpha: night ? 0.40 : 0.85),
+                ),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: cs.primary.withValues(alpha: 0.35),
-              width: 1.4,
+              color: cs.primary.withValues(alpha: 0.20),
+              width: 1.0,
             ),
             boxShadow: [
               BoxShadow(
-                color: cs.primary.withValues(alpha: 0.18),
-                blurRadius: 24,
-                offset: const Offset(0, 10),
+                color: cs.primary.withValues(alpha: 0.10),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
               ),
             ],
           ),
           child: Column(
             children: [
-              Icon(palette.icon, size: 36, color: cs.primary),
-              SizedBox(height: context.vS * 0.6),
+              // Smaller top icon — less clash with orbit
+              Icon(palette.icon, size: 24, color: cs.primary),
+              SizedBox(height: context.vX2s),
               Expanded(
                 child: Center(
                   child: Container(
                     width: double.infinity,
                     padding: EdgeInsets.symmetric(
-                      horizontal: context.hS * 0.8,
-                      vertical: context.vS * 0.7,
+                      horizontal: context.hXs,
+                      vertical: context.vX2s,
                     ),
                     decoration: BoxDecoration(
-                      color: cs.surface.withValues(alpha: 0.92),
-                      borderRadius: BorderRadius.circular(18),
+                      color: cs.surface.withValues(alpha: night ? 0.50 : 0.88),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: cs.outline.withValues(alpha: 0.18),
+                      ),
                     ),
                     child: Text(
                       desc,
                       textAlign: TextAlign.center,
+                      maxLines: 5,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: context.s * 1.05,
-                        height: 1.45,
+                        fontSize: context.s * 1.12,
+                        height: 1.42,
                         fontWeight: FontWeight.w500,
-                        color: cs.onSurface.withValues(alpha: 0.82),
+                        color: cs.onSurface.withValues(alpha: 0.90),
                       ),
                     ),
                   ),
                 ),
               ),
-              SizedBox(height: context.vS * 0.55),
+              SizedBox(height: context.vX2s),
               Text(
                 name,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: context.l * 1.05,
+                  fontSize: context.l * 1.06,
                   fontWeight: FontWeight.w800,
                   color: cs.onSurface,
                 ),
@@ -554,7 +697,7 @@ class _ThemeInfoCard extends StatelessWidget {
             ],
           ),
         ),
-        SizedBox(width: context.hS * 0.6),
+        SizedBox(width: context.hXs),
         Directionality(
           textDirection: TextDirection.ltr,
           child: _ModePill(
@@ -587,12 +730,13 @@ class _ModePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 12–13: selected night stronger; unselected light quieter
     final bg = lightStyle
-        ? (selected ? const Color(0xFFFFF6E8) : const Color(0xFFF3F0EA))
-        : (selected ? const Color(0xFF1A2330) : const Color(0xFF2A3340));
+        ? (selected ? const Color(0xFFFFF6E8) : const Color(0xFFE8E4DE))
+        : (selected ? const Color(0xFF243044) : const Color(0xFF1A222E));
     final fg = lightStyle
-        ? (selected ? const Color(0xFFE8913A) : const Color(0xFF6B6560))
-        : (selected ? const Color(0xFFE8EEF8) : const Color(0xFF9AA3B2));
+        ? (selected ? const Color(0xFFE8913A) : const Color(0xFF8A837C))
+        : (selected ? const Color(0xFFF0F4FA) : const Color(0xFF7A8494));
 
     return GestureDetector(
       onTap: onTap,
@@ -600,22 +744,22 @@ class _ModePill extends StatelessWidget {
         duration: const Duration(milliseconds: 280),
         curve: Curves.easeOutCubic,
         padding: EdgeInsets.symmetric(
-          horizontal: selected ? 12 : 10,
-          vertical: selected ? 14 : 11,
+          horizontal: selected ? 12 : 9,
+          vertical: selected ? 13 : 10,
         ),
         decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: selected ? fg.withValues(alpha: 0.45) : Colors.transparent,
-            width: 1.5,
+            color: selected ? fg.withValues(alpha: 0.55) : Colors.transparent,
+            width: selected ? 1.6 : 1.0,
           ),
           boxShadow: selected
               ? [
                   BoxShadow(
-                    color: fg.withValues(alpha: 0.28),
-                    blurRadius: 14,
-                    offset: const Offset(0, 4),
+                    color: fg.withValues(alpha: lightStyle ? 0.30 : 0.40),
+                    blurRadius: selected && !lightStyle ? 16 : 12,
+                    offset: const Offset(0, 3),
                   ),
                 ]
               : null,
@@ -623,12 +767,12 @@ class _ModePill extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: selected ? 22 : 18, color: fg),
-            const SizedBox(height: 4),
+            Icon(icon, size: selected ? 20 : 16, color: fg),
+            const SizedBox(height: 3),
             Text(
               label,
               style: TextStyle(
-                fontSize: selected ? context.xs * 1.05 : context.xs,
+                fontSize: selected ? context.xs * 1.06 : context.xs * 0.95,
                 fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
                 color: fg,
               ),
@@ -645,12 +789,16 @@ class _OrbitRing extends StatelessWidget {
     required this.palettes,
     required this.selectedIndex,
     required this.angle,
+    required this.pulse,
+    required this.accent,
     required this.onSelect,
   });
 
   final List<HelsaPalette> palettes;
   final int selectedIndex;
   final double angle;
+  final double pulse;
+  final Color accent;
   final ValueChanged<int> onSelect;
 
   @override
@@ -658,7 +806,8 @@ class _OrbitRing extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, box) {
         final size = math.min(box.maxWidth, box.maxHeight);
-        final radius = size * 0.36;
+        // Closer nodes (14–15)
+        final radius = size * 0.30;
         final n = palettes.length;
         final cx = size / 2;
         final cy = size / 2;
@@ -669,6 +818,15 @@ class _OrbitRing extends StatelessWidget {
           child: Stack(
             clipBehavior: Clip.none,
             children: [
+              CustomPaint(
+                size: Size(size, size),
+                painter: _DualRingPainter(
+                  accent: accent,
+                  pulse: pulse,
+                  outerR: radius * 1.10,
+                  innerR: radius * 0.70,
+                ),
+              ),
               for (var i = 0; i < n; i++)
                 Builder(
                   builder: (context) {
@@ -676,7 +834,7 @@ class _OrbitRing extends StatelessWidget {
                     final x = cx + radius * math.cos(a);
                     final y = cy + radius * math.sin(a);
                     final selected = i == selectedIndex;
-                    final node = selected ? size * 0.20 : size * 0.145;
+                    final node = selected ? size * 0.168 : size * 0.118;
                     final color = palettes[i].swatch;
                     return Positioned(
                       left: x - node / 2,
@@ -690,28 +848,29 @@ class _OrbitRing extends StatelessWidget {
                           curve: Curves.easeOutCubic,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: color.withValues(alpha: selected ? 0.28 : 0.14),
+                            color: color.withValues(
+                                alpha: selected ? 0.32 : 0.12),
                             border: Border.all(
-                              color:
-                                  color.withValues(alpha: selected ? 0.95 : 0.45),
-                              width: selected ? 2.4 : 1.4,
+                              color: color.withValues(
+                                  alpha: selected ? 1.0 : 0.38),
+                              width: selected ? 2.3 : 1.15,
                             ),
                             boxShadow: selected
                                 ? [
                                     BoxShadow(
-                                      color: color.withValues(alpha: 0.45),
+                                      color: color.withValues(alpha: 0.50),
                                       blurRadius: 16,
-                                      spreadRadius: 1,
+                                      spreadRadius: 0.5,
                                     ),
                                   ]
                                 : null,
                           ),
                           child: Icon(
                             palettes[i].icon,
-                            size: selected ? 26 : 20,
+                            size: selected ? 21 : 16,
                             color: selected
                                 ? color
-                                : color.withValues(alpha: 0.75),
+                                : color.withValues(alpha: 0.72),
                           ),
                         ),
                       ),
@@ -724,4 +883,67 @@ class _OrbitRing extends StatelessWidget {
       },
     );
   }
+}
+
+class _DualRingPainter extends CustomPainter {
+  _DualRingPainter({
+    required this.accent,
+    required this.pulse,
+    required this.outerR,
+    required this.innerR,
+  });
+
+  final Color accent;
+  final double pulse;
+  final double outerR;
+  final double innerR;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final breathe = 1.0 + 0.016 * math.sin(pulse * math.pi * 2);
+
+    canvas.drawCircle(
+      c,
+      outerR * breathe,
+      Paint()
+        ..color = accent.withValues(alpha: 0.16)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.25,
+    );
+    canvas.drawCircle(
+      c,
+      innerR / breathe,
+      Paint()
+        ..color = accent.withValues(alpha: 0.11)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.0,
+    );
+
+    final sweep = math.pi * 0.5;
+    final start = pulse * math.pi * 2;
+    final arc = Paint()
+      ..color = accent.withValues(alpha: 0.30)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.7
+      ..strokeCap = StrokeCap.round;
+    canvas.drawArc(
+      Rect.fromCircle(center: c, radius: outerR * breathe),
+      start,
+      sweep,
+      false,
+      arc,
+    );
+    canvas.drawArc(
+      Rect.fromCircle(center: c, radius: innerR / breathe),
+      -start * 1.25,
+      sweep * 0.9,
+      false,
+      arc..color = accent.withValues(alpha: 0.20),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _DualRingPainter old) =>
+      old.pulse != pulse || old.accent != accent;
 }

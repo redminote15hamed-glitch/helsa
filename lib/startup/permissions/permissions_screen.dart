@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:helsa/home/home_screen.dart';
-import 'package:helsa/setting/color/color_palette.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
 import 'package:helsa/setting/storage/meta_store.dart';
 
@@ -183,8 +182,9 @@ class _PermissionsScreenState extends State<PermissionsScreen>
     // تم متفاوت از setup: ته‌آبی/یشمی، نه فقط سبز setup
     final bg = isDark ? const Color(0xFF0A1628) : const Color(0xFFEEF4FF);
     final card = isDark ? const Color(0xFF132238) : Colors.white;
-    final accent = ColorPalette.skyBlue;
-    final accent2 = ColorPalette.mintAccent;
+    final cs = Theme.of(context).colorScheme;
+    final accent = cs.secondary;
+    final accent2 = cs.primary;
 
     return Scaffold(
       backgroundColor: bg,
@@ -280,7 +280,7 @@ class _PermissionsScreenState extends State<PermissionsScreen>
                           SizedBox(height: context.vX2s),
                           _PermTile(
                             cardColor: card,
-                            accent: ColorPalette.calorieBurn,
+                            accent: Theme.of(context).colorScheme.tertiary,
                             icon: Icons.battery_charging_full_rounded,
                             title: _t('battery'),
                             subtitle: _t('battery_desc'),
@@ -371,7 +371,7 @@ class _PermTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: showCheck
-              ? ColorPalette.mintPrimary.withValues(alpha: 0.45)
+              ? accent.withValues(alpha: 0.55)
               : accent.withValues(alpha: 0.15),
         ),
       ),
@@ -415,7 +415,7 @@ class _PermTile extends StatelessWidget {
           SizedBox(width: context.hX3s),
           if (showCheck)
             Icon(Icons.check_circle_rounded,
-                color: ColorPalette.mintPrimary, size: 28)
+                color: accent, size: 28)
           else
             TextButton(
               onPressed: onAction,

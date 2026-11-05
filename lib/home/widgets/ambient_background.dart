@@ -4,7 +4,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:helsa/setting/color/color_palette.dart';
 
 enum _SkyPhase { morning, noon, evening, night }
 
@@ -79,7 +78,7 @@ class _AmbientBackgroundState extends State<AmbientBackground>
         case _SkyPhase.noon:
           base = Color.alphaBlend(const Color(0xFFF3F8F6), cs.surface);
           blobA = cs.primary.withValues(alpha: 0.10);
-          blobB = ColorPalette.skyBlue.withValues(alpha: 0.10);
+          blobB = cs.tertiary.withValues(alpha: 0.10);
           blobC = cs.secondary.withValues(alpha: 0.07);
           break;
         case _SkyPhase.evening:
@@ -93,7 +92,7 @@ class _AmbientBackgroundState extends State<AmbientBackground>
           base = const Color(0xFFEEF2F6);
           blobA = cs.primary.withValues(alpha: 0.07);
           blobB = const Color(0xFF94A3B8).withValues(alpha: 0.10);
-          blobC = ColorPalette.skyBlue.withValues(alpha: 0.06);
+          blobC = cs.tertiary.withValues(alpha: 0.06);
           break;
       }
     }

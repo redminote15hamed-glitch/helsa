@@ -10,6 +10,7 @@ import 'package:helsa/home/home_text.dart';
 import 'package:helsa/home/home_screen_widget/home_widget_bridge.dart';
 import 'package:helsa/home/services/step_tracker.dart';
 import 'package:helsa/setting/color/color_palette.dart';
+import 'package:helsa/setting/color/metric_colors.dart';
 import 'package:helsa/setting/kit/snackbarer.dart';
 import 'package:helsa/setting/kit/textfielder.dart';
 import 'package:helsa/setting/motion/animator/animator.dart';
@@ -472,7 +473,7 @@ class _PreviewCard extends StatelessWidget {
         color: cs.surfaceContainerHighest.withValues(alpha: 0.35),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: ColorPalette.mintPrimary.withValues(alpha: 0.28),
+          color: cs.primary.withValues(alpha: 0.28),
         ),
       ),
       child: Column(
@@ -506,7 +507,7 @@ class _PreviewCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(24),
                 child: Ink(
                   decoration: BoxDecoration(
-                    color: ColorPalette.mintPrimary,
+                    color: cs.primary,
                     borderRadius: BorderRadius.circular(24),
                   ),
                   child: Padding(
@@ -576,7 +577,7 @@ class _MainPreview extends StatelessWidget {
         children: [
           Expanded(
             child: _MetricCol(
-              color: ColorPalette.mintPrimary,
+              color: MetricColors.current.steps,
               icon: Icons.directions_walk_rounded,
               label: HomeText.getString(language, 'steps'),
               value: '$steps',
@@ -585,7 +586,7 @@ class _MainPreview extends StatelessWidget {
           ),
           Expanded(
             child: _MetricCol(
-              color: ColorPalette.calorieBurn,
+              color: MetricColors.current.calories,
               icon: Icons.local_fire_department_rounded,
               label: HomeText.getString(language, 'kcal'),
               value: '$cal',
@@ -594,7 +595,7 @@ class _MainPreview extends StatelessWidget {
           ),
           Expanded(
             child: _MetricCol(
-              color: ColorPalette.skyBlue,
+              color: MetricColors.current.active,
               icon: Icons.timer_outlined,
               label: HomeText.getString(language, 'minutes'),
               value: '$mins',
@@ -647,7 +648,7 @@ class _StepsPreview extends StatelessWidget {
                 child: Text(
                   '$steps',
                   style: const TextStyle(
-                    color: Color(0xFF10B981),
+                    color: MetricColors.current.steps,
                     fontWeight: FontWeight.w800,
                     fontSize: 40,
                     height: 1,
@@ -666,7 +667,7 @@ class _StepsPreview extends StatelessWidget {
             const SizedBox(height: 8),
             Icon(
               Icons.directions_walk_rounded,
-              color: ColorPalette.mintPrimary,
+              color: MetricColors.current.steps,
               size: 22,
             ),
             const SizedBox(height: 10),
@@ -680,14 +681,14 @@ class _StepsPreview extends StatelessWidget {
                     LinearProgressIndicator(
                       value: pct,
                       minHeight: 26,
-                      backgroundColor: const Color(0xFF0B3D32),
-                      color: const Color(0xFF0F7A5A),
+                      backgroundColor: MetricColors.current.steps.withValues(alpha: 0.22),
+                      color: MetricColors.current.steps,
                     ),
                     Center(
                       child: Text(
                         pctLabel,
-                        style: const TextStyle(
-                          color: Color(0xFFA7F3D0),
+                        style: TextStyle(
+                          color: MetricColors.current.steps.withValues(alpha: 0.95),
                           fontWeight: FontWeight.w800,
                           fontSize: 12,
                         ),

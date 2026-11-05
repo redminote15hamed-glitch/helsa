@@ -14,6 +14,7 @@ import 'package:helsa/home/menu/menu_expand_host.dart';
 import 'package:helsa/home/menu/menu_coming_soon_page.dart';
 import 'package:helsa/home/menu/menu_appearance_page.dart';
 import 'package:helsa/setting/color/color_palette.dart';
+import 'package:helsa/setting/color/metric_colors.dart';
 import 'package:helsa/setting/kit/textfielder.dart';
 import 'package:helsa/setting/motion/animator/animator.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
@@ -255,9 +256,9 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          ColorPalette.mintPrimary.withValues(alpha: 0.15),
-                          ColorPalette.mintPrimary.withValues(alpha: 0.85),
-                          ColorPalette.mintPrimary.withValues(alpha: 0.15),
+                          cs.primary.withValues(alpha: 0.15),
+                          cs.primary.withValues(alpha: 0.85),
+                          cs.primary.withValues(alpha: 0.15),
                         ],
                       ),
                     ),
@@ -281,16 +282,16 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
                           end: Alignment.bottomRight,
                           colors: isDark
                               ? [
-                                  ColorPalette.mintPrimary
+                                  cs.primary
                                       .withValues(alpha: 0.28),
-                                  ColorPalette.skyBlue
+                                  MetricColors.current.active
                                       .withValues(alpha: 0.12),
                                   Colors.transparent,
                                 ]
                               : [
-                                  ColorPalette.mintPrimary
+                                  cs.primary
                                       .withValues(alpha: 0.18),
-                                  ColorPalette.skyBlue
+                                  MetricColors.current.active
                                       .withValues(alpha: 0.08),
                                   Colors.transparent,
                                 ],
@@ -309,10 +310,10 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
                                     shape: BoxShape.circle,
                                     gradient: SweepGradient(
                                       colors: [
-                                        ColorPalette.mintPrimary,
-                                        ColorPalette.skyBlue,
-                                        ColorPalette.calorieBurn,
-                                        ColorPalette.mintPrimary,
+                                        cs.primary,
+                                        MetricColors.current.active,
+                                        MetricColors.current.calories,
+                                        cs.primary,
                                       ],
                                     ),
                                   ),
@@ -342,7 +343,7 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
                                         child: Icon(
                                           Icons.edit_rounded,
                                           size: context.s * 0.85,
-                                          color: ColorPalette.mintPrimary,
+                                          color: cs.primary,
                                         ),
                                       ),
                                     ),
@@ -398,7 +399,7 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
                                 label: HomeText.getString(
                                     language, 'menu_profile'),
                                 language: language,
-                                tint: ColorPalette.mintPrimary,
+                                tint: cs.primary,
                                 pulse: _pulse,
                                 pulseKind: _target == _MenuPulse.profile
                                     ? _PulseKind.profile
@@ -416,7 +417,7 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
                                 label: HomeText.getString(
                                     language, 'menu_widget'),
                                 language: language,
-                                tint: ColorPalette.skyBlue,
+                                tint: MetricColors.current.active,
                                 pulse: _pulse,
                                 pulseKind: _target == _MenuPulse.widget
                                     ? _PulseKind.widget
@@ -434,7 +435,7 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
                                 label: HomeText.getString(
                                     language, 'menu_settings'),
                                 language: language,
-                                tint: ColorPalette.calorieBurn,
+                                tint: MetricColors.current.calories,
                                 pulse: _pulse,
                                 pulseKind: _PulseKind.none,
                                 onTap: (ctx) =>
@@ -461,7 +462,7 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
                                 label: HomeText.getString(
                                     language, 'menu_support'),
                                 language: language,
-                                tint: ColorPalette.mintPrimary,
+                                tint: cs.primary,
                                 pulse: _pulse,
                                 pulseKind: _target == _MenuPulse.support
                                     ? _PulseKind.support
