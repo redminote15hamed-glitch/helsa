@@ -11,7 +11,10 @@ import 'package:helsa/setting/storage/theme_store.dart';
 
 /// Appearance — preview is local until tick / continue saves.
 class MenuAppearancePage extends StatefulWidget {
-  const MenuAppearancePage({super.key});
+  const MenuAppearancePage({super.key, this.language});
+
+  /// When null, falls back to [MetaStore.language].
+  final String? language;
 
   @override
   State<MenuAppearancePage> createState() => _MenuAppearancePageState();
@@ -27,7 +30,7 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
   late final AnimationController _orbitCtrl;
   double _orbitAngle = 0;
 
-  String get _lang => MetaStore.language;
+  String get _lang => widget.language ?? MetaStore.language;
 
   bool get _dirty =>
       _paletteId != _savedPaletteId || _night != _savedNight;
@@ -226,7 +229,7 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                                           _lang, 'appearance_continue'),
                                       style: TextStyle(
                                         fontWeight: FontWeight.w700,
-                                        fontSize: context.fontSize(15),
+                                        fontSize: context.m,
                                       ),
                                     ),
                                   ),
@@ -285,7 +288,7 @@ class _TopBar extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontWeight: FontWeight.w700,
-                fontSize: context.fontSize(17),
+                fontSize: context.l,
                 color: cs.onSurface,
               ),
             ),
@@ -325,7 +328,7 @@ class _PreviewApple extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            fontSize: context.fontSize(12),
+            fontSize: context.s,
             fontWeight: FontWeight.w600,
             color: color,
           ),
@@ -339,7 +342,7 @@ class _PreviewApple extends StatelessWidget {
         Text(
           '${(fill * 100).round()}%',
           style: TextStyle(
-            fontSize: context.fontSize(11),
+            fontSize: context.xs,
             fontWeight: FontWeight.w600,
             color: cs.onSurface.withValues(alpha: 0.65),
           ),
@@ -529,7 +532,7 @@ class _ThemeInfoCard extends StatelessWidget {
                       desc,
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: context.fontSize(13),
+                        fontSize: context.s * 1.05,
                         height: 1.45,
                         fontWeight: FontWeight.w500,
                         color: cs.onSurface.withValues(alpha: 0.82),
@@ -543,7 +546,7 @@ class _ThemeInfoCard extends StatelessWidget {
                 name,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: context.fontSize(18),
+                  fontSize: context.l * 1.05,
                   fontWeight: FontWeight.w800,
                   color: cs.onSurface,
                 ),
@@ -625,7 +628,7 @@ class _ModePill extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontSize: selected ? 11.5 : 10.5,
+                fontSize: selected ? context.xs * 1.05 : context.xs,
                 fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
                 color: fg,
               ),

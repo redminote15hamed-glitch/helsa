@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
-import 'package:helsa/setting/color/color_palette.dart';
 import 'package:helsa/setting/color/metric_colors.dart';
 import 'package:helsa/home/home_text.dart';
 import 'package:helsa/home/services/step_tracker.dart';
