@@ -1,12 +1,15 @@
 // lib/home/home_screen_widget/home_widget_bridge.dart
-// Force live widget updates (MIUI-safe).
+// Force live widget updates (MIUI-safe) + theme metric colors.
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:helsa/home/services/step_tracker.dart';
 import 'package:helsa/home/home_text.dart';
+import 'package:helsa/setting/color/metric_colors.dart';
 import 'package:helsa/setting/storage/meta_store.dart';
+import 'package:helsa/setting/storage/theme_store.dart';
 
 class HomeWidgetBridge {
   HomeWidgetBridge._();
@@ -24,6 +27,9 @@ class HomeWidgetBridge {
   int _lastStepsGoal = -1;
   int _lastCalGoal = -1;
   int _lastMinsGoal = -1;
+  int _lastStepsColor = -1;
+  int _lastCalColor = -1;
+  int _lastTimeColor = -1;
   DateTime _lastPush = DateTime.fromMillisecondsSinceEpoch(0);
   Timer? _heartbeat;
 
@@ -34,7 +40,6 @@ class HomeWidgetBridge {
     } catch (_) {}
     attach();
     await push(force: true);
-    // MIUI sometimes drops one-shot updates — heartbeat while app alive
     _heartbeat?.cancel();
     _heartbeat = Timer.periodic(const Duration(seconds: 15), (_) {
       push(force: true);
@@ -45,18 +50,28 @@ class HomeWidgetBridge {
     if (_listening) return;
     _listening = true;
     StepTracker.instance.addListener(_onTracker);
+    ThemeStore.revision.addListener(_onTheme);
   }
 
   void detach() {
     if (!_listening) return;
     _listening = false;
     StepTracker.instance.removeListener(_onTracker);
+    ThemeStore.revision.removeListener(_onTheme);
     _heartbeat?.cancel();
     _heartbeat = null;
   }
 
-  void _onTracker() {
-    push();
+  void _onTracker() => push();
+
+  void _onTheme() => push(force: true);
+
+  static int _argb(Color c) {
+    // Android expects 0xAARRGGBB int
+    return ((c.a * 255.0).round() & 0xff) << 24 |
+        ((c.r * 255.0).round() & 0xff) << 16 |
+        ((c.g * 255.0).round() & 0xff) << 8 |
+        ((c.b * 255.0).round() & 0xff);
   }
 
   Future<void> push({bool force = false}) async {
@@ -69,16 +84,23 @@ class HomeWidgetBridge {
     final calGoal = t.caloriesGoal.round();
     final minsGoal = t.activeMinutesGoal;
 
+    final metrics = MetricColors.current;
+    final stepsColor = _argb(metrics.steps);
+    final calColor = _argb(metrics.calories);
+    final timeColor = _argb(metrics.active);
+
     final unchanged = steps == _lastSteps &&
         cal == _lastCal &&
         mins == _lastMins &&
         stepsGoal == _lastStepsGoal &&
         calGoal == _lastCalGoal &&
-        minsGoal == _lastMinsGoal;
+        minsGoal == _lastMinsGoal &&
+        stepsColor == _lastStepsColor &&
+        calColor == _lastCalColor &&
+        timeColor == _lastTimeColor;
 
     final now = DateTime.now();
     if (!force && unchanged) return;
-    // throttle spam (sensor can fire very often)
     if (!force && now.difference(_lastPush).inMilliseconds < 800) return;
 
     final lang = _lang();
@@ -97,7 +119,11 @@ class HomeWidgetBridge {
       await HomeWidget.saveWidgetData<String>('cal_label', calLabel);
       await HomeWidget.saveWidgetData<String>('time_label', timeLabel);
 
-      // Call both name styles — some launchers only honor qualified name
+      // Theme metric colors (ARGB ints)
+      await HomeWidget.saveWidgetData<int>('steps_color', stepsColor);
+      await HomeWidget.saveWidgetData<int>('cal_color', calColor);
+      await HomeWidget.saveWidgetData<int>('time_color', timeColor);
+
       await HomeWidget.updateWidget(
         name: _mainName,
         androidName: _mainName,
@@ -115,6 +141,9 @@ class HomeWidgetBridge {
       _lastStepsGoal = stepsGoal;
       _lastCalGoal = calGoal;
       _lastMinsGoal = minsGoal;
+      _lastStepsColor = stepsColor;
+      _lastCalColor = calColor;
+      _lastTimeColor = timeColor;
       _lastPush = now;
     } catch (error, stackTrace) {
       debugPrint('HelSa widget update failed: $error');

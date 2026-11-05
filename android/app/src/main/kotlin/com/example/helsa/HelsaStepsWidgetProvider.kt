@@ -3,15 +3,16 @@ package com.example.helsa
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.SharedPreferences
+import android.content.res.ColorStateList
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.util.TypedValue
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetProvider
 
 /**
- * Steps-only widget: big number + unit, step icon, capsule bar with % inside.
- * When bar is mostly filled, percent text switches to white for contrast.
+ * Steps-only widget — number + bar tint follow theme steps_color from Flutter.
  */
 class HelsaStepsWidgetProvider : HomeWidgetProvider() {
 
@@ -53,13 +54,34 @@ class HelsaStepsWidgetProvider : HomeWidgetProvider() {
             val unit = widgetData.getString("steps_label", "steps") ?: "steps"
             val pct = ((steps * 100.0) / goal).toInt().coerceIn(0, 999)
             val bar = pct.coerceAtMost(100)
+            val stepsColor = widgetData.getInt("steps_color", Color.parseColor("#10B981"))
 
             views.setTextViewText(R.id.tv_steps_value, steps.toString())
             views.setTextViewText(R.id.tv_steps_unit, unit)
             views.setTextViewText(R.id.tv_steps_pct, "$pct%")
             views.setProgressBar(R.id.pb_steps_capsule, 100, bar, false)
 
-            // Scale number with height when resized
+            views.setTextColor(R.id.tv_steps_value, stepsColor)
+            views.setTextColor(R.id.tv_steps_unit, stepsColor)
+
+            // Percent: white on filled bar, theme color otherwise
+            if (bar >= 55) {
+                views.setTextColor(R.id.tv_steps_pct, Color.WHITE)
+            } else {
+                views.setTextColor(R.id.tv_steps_pct, stepsColor)
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                try {
+                    views.setColorStateList(
+                        R.id.pb_steps_capsule,
+                        "setProgressTintList",
+                        ColorStateList.valueOf(stepsColor)
+                    )
+                } catch (_: Exception) {
+                }
+            }
+
             val options = appWidgetManager.getAppWidgetOptions(id)
             val minH = options?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0) ?: 0
             val sp = when {
@@ -72,13 +94,6 @@ class HelsaStepsWidgetProvider : HomeWidgetProvider() {
                 TypedValue.COMPLEX_UNIT_SP,
                 sp
             )
-
-            // Percent contrast: filled bar → white; empty/mid → dark mint
-            if (bar >= 55) {
-                views.setTextColor(R.id.tv_steps_pct, Color.WHITE)
-            } else {
-                views.setTextColor(R.id.tv_steps_pct, Color.parseColor("#047857"))
-            }
 
             appWidgetManager.updateAppWidget(id, views)
         } catch (_: Exception) {

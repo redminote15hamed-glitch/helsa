@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
 import 'package:helsa/setting/color/color_palette.dart';
+import 'package:helsa/setting/color/metric_colors.dart';
 import 'package:helsa/home/home_text.dart';
 import 'package:helsa/home/services/step_tracker.dart';
 import 'package:helsa/home/widgets/apple_burst.dart';
@@ -171,7 +172,7 @@ class _AppleActivityCardState extends State<AppleActivityCard>
       _AppleSpec(
         id: 'steps',
         kind: _GoalKind.steps,
-        color: ColorPalette.mintPrimary,
+        color: MetricColors.current.steps,
         icon: Icons.directions_walk_rounded,
         name: HomeText.getString(widget.language, 'steps'),
         progress: s.fill,
@@ -189,7 +190,7 @@ class _AppleActivityCardState extends State<AppleActivityCard>
       _AppleSpec(
         id: 'calories',
         kind: _GoalKind.calories,
-        color: ColorPalette.calorieBurn,
+        color: MetricColors.current.calories,
         icon: Icons.local_fire_department_rounded,
         name: HomeText.getString(widget.language, 'calories'),
         progress: c.fill,
@@ -207,7 +208,7 @@ class _AppleActivityCardState extends State<AppleActivityCard>
       _AppleSpec(
         id: 'active',
         kind: _GoalKind.active,
-        color: ColorPalette.skyBlue,
+        color: MetricColors.current.active,
         icon: Icons.timer_outlined,
         name: HomeText.getString(widget.language, 'active'),
         progress: a.fill,

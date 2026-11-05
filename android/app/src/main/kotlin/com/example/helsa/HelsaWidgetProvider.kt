@@ -3,15 +3,16 @@ package com.example.helsa
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.SharedPreferences
+import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
+import android.content.res.ColorStateList
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetProvider
 
 /**
- * Size-aware widget:
- *  - compact  (~1 row): numbers + labels
- *  - medium   (~2x4):  + fraction + percent
- *  - large    (~3x4+): vertical bottom→top bars + fraction + percent
+ * Size-aware widget with live theme colors from Flutter:
+ *  steps_color / cal_color / time_color (ARGB ints).
  */
 class HelsaWidgetProvider : HomeWidgetProvider() {
 
@@ -49,7 +50,6 @@ class HelsaWidgetProvider : HomeWidgetProvider() {
             val options = appWidgetManager.getAppWidgetOptions(id)
             val minH = options?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0) ?: 0
 
-            // ~70dp ≈ 1 cell, ~140dp ≈ 2 cells, ~210dp ≈ 3 cells
             val layoutId = when {
                 minH >= 160 -> R.layout.helsa_widget_large
                 minH >= 90 -> R.layout.helsa_widget_medium
@@ -69,6 +69,10 @@ class HelsaWidgetProvider : HomeWidgetProvider() {
             val calLabel = widgetData.getString("cal_label", "kcal") ?: "kcal"
             val timeLabel = widgetData.getString("time_label", "min") ?: "min"
 
+            val stepsColor = widgetData.getInt("steps_color", Color.parseColor("#10B981"))
+            val calColor = widgetData.getInt("cal_color", Color.parseColor("#FF8C42"))
+            val timeColor = widgetData.getInt("time_color", Color.parseColor("#4C8DFF"))
+
             val stepsPct = ((steps * 100.0) / stepsGoal).toInt().coerceIn(0, 999)
             val calPct = ((cal * 100.0) / calGoal).toInt().coerceIn(0, 999)
             val minsPct = ((mins * 100.0) / minsGoal).toInt().coerceIn(0, 999)
@@ -76,7 +80,6 @@ class HelsaWidgetProvider : HomeWidgetProvider() {
             val calBar = calPct.coerceAtMost(100)
             val minsBar = minsPct.coerceAtMost(100)
 
-            // Common
             views.setTextViewText(R.id.tv_steps, steps.toString())
             views.setTextViewText(R.id.tv_cal, cal.toString())
             views.setTextViewText(R.id.tv_time, mins.toString())
@@ -84,7 +87,14 @@ class HelsaWidgetProvider : HomeWidgetProvider() {
             views.setTextViewText(R.id.tv_cal_label, calLabel)
             views.setTextViewText(R.id.tv_time_label, timeLabel)
 
-            // Medium + large
+            // Live theme colors on numbers + labels
+            views.setTextColor(R.id.tv_steps, stepsColor)
+            views.setTextColor(R.id.tv_cal, calColor)
+            views.setTextColor(R.id.tv_time, timeColor)
+            views.setTextColor(R.id.tv_steps_label, stepsColor)
+            views.setTextColor(R.id.tv_cal_label, calColor)
+            views.setTextColor(R.id.tv_time_label, timeColor)
+
             if (layoutId == R.layout.helsa_widget_medium ||
                 layoutId == R.layout.helsa_widget_large
             ) {
@@ -94,13 +104,24 @@ class HelsaWidgetProvider : HomeWidgetProvider() {
                 views.setTextViewText(R.id.tv_steps_pct, "$stepsPct%")
                 views.setTextViewText(R.id.tv_cal_pct, "$calPct%")
                 views.setTextViewText(R.id.tv_time_pct, "$minsPct%")
+                try {
+                    views.setTextColor(R.id.tv_steps_frac, stepsColor)
+                    views.setTextColor(R.id.tv_cal_frac, calColor)
+                    views.setTextColor(R.id.tv_time_frac, timeColor)
+                    views.setTextColor(R.id.tv_steps_pct, stepsColor)
+                    views.setTextColor(R.id.tv_cal_pct, calColor)
+                    views.setTextColor(R.id.tv_time_pct, timeColor)
+                } catch (_: Exception) {
+                }
             }
 
-            // Large only: vertical bars
             if (layoutId == R.layout.helsa_widget_large) {
                 views.setProgressBar(R.id.pb_steps, 100, stepsBar, false)
                 views.setProgressBar(R.id.pb_cal, 100, calBar, false)
                 views.setProgressBar(R.id.pb_time, 100, minsBar, false)
+                tintProgress(views, R.id.pb_steps, stepsColor)
+                tintProgress(views, R.id.pb_cal, calColor)
+                tintProgress(views, R.id.pb_time, timeColor)
             }
 
             appWidgetManager.updateAppWidget(id, views)
@@ -108,6 +129,19 @@ class HelsaWidgetProvider : HomeWidgetProvider() {
             try {
                 val fallback = RemoteViews(context.packageName, R.layout.helsa_widget)
                 appWidgetManager.updateAppWidget(id, fallback)
+            } catch (_: Exception) {
+            }
+        }
+    }
+
+    private fun tintProgress(views: RemoteViews, viewId: Int, color: Int) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            try {
+                views.setColorStateList(
+                    viewId,
+                    "setProgressTintList",
+                    ColorStateList.valueOf(color)
+                )
             } catch (_: Exception) {
             }
         }
