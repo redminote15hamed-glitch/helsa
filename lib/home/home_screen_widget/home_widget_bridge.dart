@@ -1,5 +1,5 @@
 // lib/home/home_screen_widget/home_widget_bridge.dart
-// Force live widget updates (MIUI-safe) + theme metric colors.
+// Live metric + surface colors for home widgets (theme-aware).
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
@@ -30,6 +30,7 @@ class HomeWidgetBridge {
   int _lastStepsColor = -1;
   int _lastCalColor = -1;
   int _lastTimeColor = -1;
+  int _lastBgColor = -1;
   DateTime _lastPush = DateTime.fromMillisecondsSinceEpoch(0);
   Timer? _heartbeat;
 
@@ -41,7 +42,7 @@ class HomeWidgetBridge {
     attach();
     await push(force: true);
     _heartbeat?.cancel();
-    _heartbeat = Timer.periodic(const Duration(seconds: 15), (_) {
+    _heartbeat = Timer.periodic(const Duration(seconds: 12), (_) {
       push(force: true);
     });
   }
@@ -63,11 +64,9 @@ class HomeWidgetBridge {
   }
 
   void _onTracker() => push();
-
   void _onTheme() => push(force: true);
 
   static int _argb(Color c) {
-    // Android expects 0xAARRGGBB int
     return ((c.a * 255.0).round() & 0xff) << 24 |
         ((c.r * 255.0).round() & 0xff) << 16 |
         ((c.g * 255.0).round() & 0xff) << 8 |
@@ -85,9 +84,16 @@ class HomeWidgetBridge {
     final minsGoal = t.activeMinutesGoal;
 
     final metrics = MetricColors.current;
+    final palette = ThemeStore.palette;
+    final night = ThemeStore.night;
+    final scheme = palette.scheme(night as bool);
+
     final stepsColor = _argb(metrics.steps);
     final calColor = _argb(metrics.calories);
     final timeColor = _argb(metrics.active);
+    // Surface for widget card — readable contrast
+    final bgColor = _argb(scheme.surfaceContainerHighest.withValues(alpha: 0.92));
+    final mutedColor = _argb(scheme.onSurface.withValues(alpha: 0.55));
 
     final unchanged = steps == _lastSteps &&
         cal == _lastCal &&
@@ -97,15 +103,17 @@ class HomeWidgetBridge {
         minsGoal == _lastMinsGoal &&
         stepsColor == _lastStepsColor &&
         calColor == _lastCalColor &&
-        timeColor == _lastTimeColor;
+        timeColor == _lastTimeColor &&
+        bgColor == _lastBgColor;
 
     final now = DateTime.now();
     if (!force && unchanged) return;
-    if (!force && now.difference(_lastPush).inMilliseconds < 800) return;
+    if (!force && now.difference(_lastPush).inMilliseconds < 600) return;
 
     final lang = _lang();
     final stepsLabel = HomeText.getString(lang, 'steps');
     final calLabel = HomeText.getString(lang, 'kcal');
+    // Short time unit on widget
     final timeLabel = HomeText.getString(lang, 'minutes');
 
     try {
@@ -119,10 +127,11 @@ class HomeWidgetBridge {
       await HomeWidget.saveWidgetData<String>('cal_label', calLabel);
       await HomeWidget.saveWidgetData<String>('time_label', timeLabel);
 
-      // Theme metric colors (ARGB ints)
       await HomeWidget.saveWidgetData<int>('steps_color', stepsColor);
       await HomeWidget.saveWidgetData<int>('cal_color', calColor);
       await HomeWidget.saveWidgetData<int>('time_color', timeColor);
+      await HomeWidget.saveWidgetData<int>('widget_bg', bgColor);
+      await HomeWidget.saveWidgetData<int>('muted_color', mutedColor);
 
       await HomeWidget.updateWidget(
         name: _mainName,
@@ -144,18 +153,18 @@ class HomeWidgetBridge {
       _lastStepsColor = stepsColor;
       _lastCalColor = calColor;
       _lastTimeColor = timeColor;
+      _lastBgColor = bgColor;
       _lastPush = now;
-    } catch (error, stackTrace) {
-      debugPrint('HelSa widget update failed: $error');
-      debugPrintStack(stackTrace: stackTrace);
+    } catch (e, st) {
+      debugPrint('HomeWidgetBridge.push: $e\n$st');
     }
   }
 
   static String _lang() {
     try {
-      return MetaStore.language;
-    } catch (_) {
-      return 'en';
-    }
+      final l = MetaStore.language;
+      if (l == 'fa' || l == 'en' || l == 'fr') return l;
+    } catch (_) {}
+    return 'en';
   }
 }

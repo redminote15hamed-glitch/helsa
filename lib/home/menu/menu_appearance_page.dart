@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:helsa/home/home_text.dart';
+import 'package:helsa/home/menu/menu_expand_host.dart';
 import 'package:helsa/setting/color/metric_colors.dart';
 import 'package:helsa/setting/color/theme_color.dart';
 import 'package:helsa/setting/color/theme_palette.dart';
@@ -10,6 +11,7 @@ import 'package:helsa/setting/storage/meta_store.dart';
 import 'package:helsa/setting/storage/theme_store.dart';
 
 /// Appearance — local preview until tick / continue; then saves + closes.
+/// Opened via [MenuExpandHost] overlay → close with [MenuExpandScope.close].
 class MenuAppearancePage extends StatefulWidget {
   const MenuAppearancePage({super.key, this.language});
 
@@ -118,13 +120,11 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
       await ThemeStore.save();
     } catch (_) {}
     if (!mounted) return;
-    Navigator.of(context).pop();
+    await MenuExpandScope.close(context);
   }
 
-  void _back() {
-    if (Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
-    }
+  Future<void> _back() async {
+    await MenuExpandScope.close(context);
   }
 
   @override
@@ -159,17 +159,16 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                         final h = constraints.maxHeight;
                         final w = constraints.maxWidth;
 
-                        // Balanced vertical budget (room for Apply)
-                        final appleSize = (w * 0.18).clamp(58.0, 78.0);
-                        final orbitSize = (math.min(w, h) * 0.42)
-                            .clamp(168.0, 220.0);
+                        // Compact card · dominant orbit · side margin
+                        final appleSize = (w * 0.15).clamp(50.0, 64.0);
+                        final orbitSize =
+                            (math.min(w, h) * 0.54).clamp(230.0, 310.0);
                         final cardSide =
-                            (w * 0.52).clamp(168.0, 220.0);
+                            (w * 0.40).clamp(136.0, 168.0);
 
                         return Column(
                           children: [
-                            SizedBox(height: context.vX3s),
-                            // 1–4: real apple shapes + liquid wave
+                            SizedBox(height: context.vX3s * 0.35),
                             AnimatedBuilder(
                               animation: _wave,
                               builder: (context, _) {
@@ -184,7 +183,7 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                                       size: appleSize,
                                       wave: _wave.value,
                                     ),
-                                    SizedBox(width: w * 0.055),
+                                    SizedBox(width: w * 0.05),
                                     _PreviewApple(
                                       label: HomeText.getString(
                                           _lang, 'appearance_preview_cal'),
@@ -193,7 +192,7 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                                       size: appleSize,
                                       wave: _wave.value + 0.33,
                                     ),
-                                    SizedBox(width: w * 0.055),
+                                    SizedBox(width: w * 0.05),
                                     _PreviewApple(
                                       label: HomeText.getString(
                                           _lang, 'appearance_preview_time'),
@@ -206,8 +205,7 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                                 );
                               },
                             ),
-                            SizedBox(height: context.vS * 0.55),
-                            // 17: hearts dock clearly separated
+                            SizedBox(height: context.vS * 0.3),
                             _HeartDock(
                               colors: [
                                 cs.primary,
@@ -216,10 +214,9 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                                 Color.lerp(cs.primary, cs.secondary, 0.5)!,
                                 Color.lerp(cs.tertiary, cs.primary, 0.4)!,
                               ],
-                              width: w * 0.58,
+                              width: w * 0.55,
                             ),
-                            SizedBox(height: context.vS * 0.7),
-                            // Card block (smaller, glass, not edge-to-edge)
+                            SizedBox(height: context.vS * 0.35),
                             _ThemeInfoCard(
                               palette: _selected,
                               night: _night,
@@ -228,27 +225,28 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                               onDay: () => setState(() => _night = false),
                               onNight: () => setState(() => _night = true),
                             ),
-                            SizedBox(height: context.vS * 0.85),
-                            // Orbit with dual rings + closer nodes
-                            SizedBox(
-                              height: orbitSize,
-                              width: orbitSize,
-                              child: AnimatedBuilder(
-                                animation: _ringPulse,
-                                builder: (context, _) {
-                                  return _OrbitRing(
-                                    palettes: _palettes,
-                                    selectedIndex: _selectedIndex,
-                                    angle: _orbitAngle,
-                                    pulse: _ringPulse.value,
-                                    accent: cs.primary,
-                                    onSelect: _onSelectPalette,
-                                  );
-                                },
+                            SizedBox(height: context.vS * 0.25),
+                            Expanded(
+                              child: Center(
+                                child: SizedBox(
+                                  height: orbitSize,
+                                  width: orbitSize,
+                                  child: AnimatedBuilder(
+                                    animation: _ringPulse,
+                                    builder: (context, _) {
+                                      return _OrbitRing(
+                                        palettes: _palettes,
+                                        selectedIndex: _selectedIndex,
+                                        angle: _orbitAngle,
+                                        pulse: _ringPulse.value,
+                                        accent: cs.primary,
+                                        onSelect: _onSelectPalette,
+                                      );
+                                    },
+                                  ),
+                                ),
                               ),
                             ),
-                            const Spacer(flex: 1),
-                            // 8: Apply always has reserved room when dirty
                             AnimatedSwitcher(
                               duration: const Duration(milliseconds: 220),
                               child: _dirty
@@ -263,7 +261,7 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                                           onPressed: _saveAndClose,
                                           style: FilledButton.styleFrom(
                                             padding: EdgeInsets.symmetric(
-                                              vertical: context.vS * 0.8,
+                                              vertical: context.vS * 0.75,
                                             ),
                                             shape: RoundedRectangleBorder(
                                               borderRadius:
@@ -283,13 +281,13 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                                     )
                                   : SizedBox(
                                       key: const ValueKey('gap'),
-                                      height: context.vS * 2.2,
+                                      height: context.vS * 1.6,
                                     ),
                             ),
                             SizedBox(
                               height: bottomInset > 0
-                                  ? bottomInset * 0.2
-                                  : context.vX3s,
+                                  ? bottomInset * 0.15
+                                  : context.vX3s * 0.5,
                             ),
                           ],
                         );
@@ -324,7 +322,6 @@ class _TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    // 18: RTL — back on start (right in RTL)
     final back = IconButton(
       onPressed: onBack,
       icon: Icon(
@@ -417,7 +414,6 @@ class _PreviewApple extends StatelessWidget {
   }
 }
 
-/// Same silhouette family as home AppleActivityCard painter.
 class _ApplePainter extends CustomPainter {
   _ApplePainter({
     required this.color,
@@ -473,7 +469,6 @@ class _ApplePainter extends CustomPainter {
     final b = body.getBounds();
     final strokeW = (size.width * 0.048).clamp(1.8, 2.8);
 
-    // Glass empty
     final glass = LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
@@ -490,7 +485,6 @@ class _ApplePainter extends CustomPainter {
         ..style = PaintingStyle.fill,
     );
 
-    // Liquid with soft wave
     if (fill > 0.001) {
       canvas.save();
       canvas.clipPath(body);
@@ -551,7 +545,7 @@ class _HeartDock extends StatelessWidget {
     return IgnorePointer(
       child: Container(
         width: width,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
           color: cs.surfaceContainerHighest.withValues(alpha: 0.45),
           borderRadius: BorderRadius.circular(22),
@@ -564,7 +558,7 @@ class _HeartDock extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             for (final c in colors)
-              Icon(Icons.favorite_rounded, color: c, size: 20),
+              Icon(Icons.favorite_rounded, color: c, size: 18),
           ],
         ),
       ),
@@ -595,120 +589,126 @@ class _ThemeInfoCard extends StatelessWidget {
     final name = HomeText.getString(lang, 'palette_${palette.id}');
     final desc = HomeText.getString(lang, 'palette_${palette.id}_desc');
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Directionality(
-          textDirection: TextDirection.ltr,
-          child: _ModePill(
-            selected: !night,
-            icon: Icons.wb_sunny_rounded,
-            label: HomeText.getString(lang, 'appearance_light'),
-            lightStyle: true,
-            onTap: onDay,
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: context.hM),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: _ModePill(
+              selected: !night,
+              icon: Icons.wb_sunny_rounded,
+              label: HomeText.getString(lang, 'appearance_light'),
+              lightStyle: true,
+              onTap: onDay,
+            ),
           ),
-        ),
-        SizedBox(width: context.hXs),
-        // Smaller glass card, thin border
-        Container(
-          width: side,
-          height: side * 0.98,
-          padding: EdgeInsets.fromLTRB(
-            context.hS * 0.65,
-            context.vX2s,
-            context.hS * 0.65,
-            context.vX2s,
-          ),
-          decoration: BoxDecoration(
-            // 9–10: layered glass, not flat brown slab
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color.alphaBlend(
-                  cs.primary.withValues(alpha: night ? 0.22 : 0.18),
-                  cs.surface.withValues(alpha: night ? 0.55 : 0.92),
-                ),
-                Color.alphaBlend(
-                  cs.primary.withValues(alpha: night ? 0.12 : 0.10),
-                  cs.surface.withValues(alpha: night ? 0.40 : 0.85),
+          SizedBox(width: context.hXs),
+          Container(
+            width: side,
+            height: side * 1.0,
+            padding: EdgeInsets.symmetric(
+              horizontal: context.hXs,
+              vertical: context.vX3s,
+            ),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color.alphaBlend(
+                    cs.primary.withValues(alpha: night ? 0.22 : 0.18),
+                    cs.surface.withValues(alpha: night ? 0.55 : 0.92),
+                  ),
+                  Color.alphaBlend(
+                    cs.primary.withValues(alpha: night ? 0.12 : 0.10),
+                    cs.surface.withValues(alpha: night ? 0.40 : 0.85),
+                  ),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: cs.primary.withValues(alpha: 0.22),
+                width: 1.0,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: cs.primary.withValues(alpha: 0.10),
+                  blurRadius: 14,
+                  offset: const Offset(0, 6),
                 ),
               ],
             ),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: cs.primary.withValues(alpha: 0.20),
-              width: 1.0,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: cs.primary.withValues(alpha: 0.10),
-                blurRadius: 18,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              // Smaller top icon — less clash with orbit
-              Icon(palette.icon, size: 24, color: cs.primary),
-              SizedBox(height: context.vX2s),
-              Expanded(
-                child: Center(
-                  child: Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.symmetric(
-                      horizontal: context.hXs,
-                      vertical: context.vX2s,
-                    ),
-                    decoration: BoxDecoration(
-                      color: cs.surface.withValues(alpha: night ? 0.50 : 0.88),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: cs.outline.withValues(alpha: 0.18),
+            child: Column(
+              children: [
+                Icon(palette.icon, size: 20, color: cs.primary),
+                SizedBox(height: context.vX3s * 0.6),
+                Expanded(
+                  child: Center(
+                    child: Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: context.hXs * 0.6,
+                        vertical: context.vX3s * 0.5,
                       ),
-                    ),
-                    child: Text(
-                      desc,
-                      textAlign: TextAlign.center,
-                      maxLines: 5,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: context.s * 1.12,
-                        height: 1.42,
-                        fontWeight: FontWeight.w500,
-                        color: cs.onSurface.withValues(alpha: 0.90),
+                      decoration: BoxDecoration(
+                        color:
+                            cs.surface.withValues(alpha: night ? 0.50 : 0.88),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: cs.outline.withValues(alpha: 0.18),
+                        ),
+                      ),
+                      child: LayoutBuilder(
+                        builder: (context, box) {
+                          final fs = (box.maxHeight / 10.5)
+                              .clamp(9.5, context.s * 1.0);
+                          return Text(
+                            desc,
+                            textAlign: TextAlign.center,
+                            maxLines: 7,
+                            overflow: TextOverflow.fade,
+                            softWrap: true,
+                            style: TextStyle(
+                              fontSize: fs,
+                              height: 1.30,
+                              fontWeight: FontWeight.w500,
+                              color: cs.onSurface.withValues(alpha: 0.92),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ),
                 ),
-              ),
-              SizedBox(height: context.vX2s),
-              Text(
-                name,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: context.l * 1.06,
-                  fontWeight: FontWeight.w800,
-                  color: cs.onSurface,
+                SizedBox(height: context.vX3s * 0.5),
+                Text(
+                  name,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: context.m,
+                    fontWeight: FontWeight.w800,
+                    color: cs.onSurface,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-        SizedBox(width: context.hXs),
-        Directionality(
-          textDirection: TextDirection.ltr,
-          child: _ModePill(
-            selected: night,
-            icon: Icons.nightlight_round,
-            label: HomeText.getString(lang, 'appearance_dark'),
-            lightStyle: false,
-            onTap: onNight,
+          SizedBox(width: context.hXs),
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: _ModePill(
+              selected: night,
+              icon: Icons.nightlight_round,
+              label: HomeText.getString(lang, 'appearance_dark'),
+              lightStyle: false,
+              onTap: onNight,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -730,7 +730,6 @@ class _ModePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 12–13: selected night stronger; unselected light quieter
     final bg = lightStyle
         ? (selected ? const Color(0xFFFFF6E8) : const Color(0xFFE8E4DE))
         : (selected ? const Color(0xFF243044) : const Color(0xFF1A222E));
@@ -744,21 +743,21 @@ class _ModePill extends StatelessWidget {
         duration: const Duration(milliseconds: 280),
         curve: Curves.easeOutCubic,
         padding: EdgeInsets.symmetric(
-          horizontal: selected ? 12 : 9,
-          vertical: selected ? 13 : 10,
+          horizontal: selected ? 11 : 8,
+          vertical: selected ? 12 : 9,
         ),
         decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: selected ? fg.withValues(alpha: 0.55) : Colors.transparent,
-            width: selected ? 1.6 : 1.0,
+            width: selected ? 1.5 : 1.0,
           ),
           boxShadow: selected
               ? [
                   BoxShadow(
-                    color: fg.withValues(alpha: lightStyle ? 0.30 : 0.40),
-                    blurRadius: selected && !lightStyle ? 16 : 12,
+                    color: fg.withValues(alpha: lightStyle ? 0.28 : 0.38),
+                    blurRadius: selected && !lightStyle ? 14 : 10,
                     offset: const Offset(0, 3),
                   ),
                 ]
@@ -767,12 +766,12 @@ class _ModePill extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: selected ? 20 : 16, color: fg),
+            Icon(icon, size: selected ? 18 : 15, color: fg),
             const SizedBox(height: 3),
             Text(
               label,
               style: TextStyle(
-                fontSize: selected ? context.xs * 1.06 : context.xs * 0.95,
+                fontSize: selected ? context.xs : context.xs * 0.92,
                 fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
                 color: fg,
               ),
@@ -806,11 +805,17 @@ class _OrbitRing extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, box) {
         final size = math.min(box.maxWidth, box.maxHeight);
-        // Closer nodes (14–15)
-        final radius = size * 0.30;
         final n = palettes.length;
         final cx = size / 2;
         final cy = size / 2;
+
+        // Icons live ON the mid path, BETWEEN outer & inner tracks
+        final nodeBase = size * 0.115;
+        final nodeSel = size * 0.155;
+        final midR = size * 0.355;
+        final bandHalf = nodeSel * 0.55;
+        final outerR = midR + bandHalf;
+        final innerR = midR - bandHalf;
 
         return SizedBox(
           width: size,
@@ -823,18 +828,18 @@ class _OrbitRing extends StatelessWidget {
                 painter: _DualRingPainter(
                   accent: accent,
                   pulse: pulse,
-                  outerR: radius * 1.10,
-                  innerR: radius * 0.70,
+                  outerR: outerR,
+                  innerR: innerR,
                 ),
               ),
               for (var i = 0; i < n; i++)
                 Builder(
                   builder: (context) {
                     final a = angle + i * 2 * math.pi / n;
-                    final x = cx + radius * math.cos(a);
-                    final y = cy + radius * math.sin(a);
+                    final x = cx + midR * math.cos(a);
+                    final y = cy + midR * math.sin(a);
                     final selected = i == selectedIndex;
-                    final node = selected ? size * 0.168 : size * 0.118;
+                    final node = selected ? nodeSel : nodeBase;
                     final color = palettes[i].swatch;
                     return Positioned(
                       left: x - node / 2,
@@ -849,25 +854,25 @@ class _OrbitRing extends StatelessWidget {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: color.withValues(
-                                alpha: selected ? 0.32 : 0.12),
+                                alpha: selected ? 0.34 : 0.12),
                             border: Border.all(
                               color: color.withValues(
-                                  alpha: selected ? 1.0 : 0.38),
-                              width: selected ? 2.3 : 1.15,
+                                  alpha: selected ? 1.0 : 0.40),
+                              width: selected ? 2.2 : 1.15,
                             ),
                             boxShadow: selected
                                 ? [
                                     BoxShadow(
-                                      color: color.withValues(alpha: 0.50),
-                                      blurRadius: 16,
-                                      spreadRadius: 0.5,
+                                      color: color.withValues(alpha: 0.48),
+                                      blurRadius: 14,
+                                      spreadRadius: 0.4,
                                     ),
                                   ]
                                 : null,
                           ),
                           child: Icon(
                             palettes[i].icon,
-                            size: selected ? 21 : 16,
+                            size: selected ? 19 : 15,
                             color: selected
                                 ? color
                                 : color.withValues(alpha: 0.72),
@@ -885,6 +890,7 @@ class _OrbitRing extends StatelessWidget {
   }
 }
 
+/// Two tracks = one ring band; icons sit in the gap between them.
 class _DualRingPainter extends CustomPainter {
   _DualRingPainter({
     required this.accent,
@@ -901,49 +907,59 @@ class _DualRingPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final c = Offset(size.width / 2, size.height / 2);
-    final breathe = 1.0 + 0.016 * math.sin(pulse * math.pi * 2);
+    final breathe = 1.0 + 0.01 * math.sin(pulse * math.pi * 2);
+    final out = outerR * breathe;
+    final inn = (innerR / breathe).clamp(1.0, out - 2);
 
+    // Annulus fill (band between tracks)
+    canvas.saveLayer(Offset.zero & size, Paint());
+    canvas.drawCircle(c, out, Paint()..color = accent.withValues(alpha: 0.11));
     canvas.drawCircle(
       c,
-      outerR * breathe,
-      Paint()
-        ..color = accent.withValues(alpha: 0.16)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.25,
+      inn,
+      Paint()..blendMode = BlendMode.clear,
     );
+    canvas.restore();
+
+    // Outer track
     canvas.drawCircle(
       c,
-      innerR / breathe,
+      out,
       Paint()
-        ..color = accent.withValues(alpha: 0.11)
+        ..color = accent.withValues(alpha: 0.45)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.0,
+        ..strokeWidth = 2.1,
+    );
+    // Inner track
+    canvas.drawCircle(
+      c,
+      inn,
+      Paint()
+        ..color = accent.withValues(alpha: 0.38)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.8,
     );
 
-    final sweep = math.pi * 0.5;
-    final start = pulse * math.pi * 2;
-    final arc = Paint()
-      ..color = accent.withValues(alpha: 0.30)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.7
-      ..strokeCap = StrokeCap.round;
+    // Moving highlight along the band
+    final mid = (out + inn) / 2;
+    final bandW = (out - inn).clamp(3.0, 12.0);
     canvas.drawArc(
-      Rect.fromCircle(center: c, radius: outerR * breathe),
-      start,
-      sweep,
+      Rect.fromCircle(center: c, radius: mid),
+      pulse * math.pi * 2,
+      math.pi * 0.5,
       false,
-      arc,
-    );
-    canvas.drawArc(
-      Rect.fromCircle(center: c, radius: innerR / breathe),
-      -start * 1.25,
-      sweep * 0.9,
-      false,
-      arc..color = accent.withValues(alpha: 0.20),
+      Paint()
+        ..color = accent.withValues(alpha: 0.48)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = bandW * 0.85
+        ..strokeCap = StrokeCap.round,
     );
   }
 
   @override
   bool shouldRepaint(covariant _DualRingPainter old) =>
-      old.pulse != pulse || old.accent != accent;
+      old.pulse != pulse ||
+      old.accent != accent ||
+      old.outerR != outerR ||
+      old.innerR != innerR;
 }

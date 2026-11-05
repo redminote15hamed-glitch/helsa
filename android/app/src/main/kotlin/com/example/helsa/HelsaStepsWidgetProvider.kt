@@ -3,17 +3,13 @@ package com.example.helsa
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.SharedPreferences
-import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Build
-import android.os.Bundle
-import android.util.TypedValue
+import android.content.res.ColorStateList
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetProvider
 
-/**
- * Steps-only widget — number + bar tint follow theme steps_color from Flutter.
- */
+/** Single-metric steps widget — theme colors from Flutter. */
 class HelsaStepsWidgetProvider : HomeWidgetProvider() {
 
     override fun onUpdate(
@@ -23,84 +19,47 @@ class HelsaStepsWidgetProvider : HomeWidgetProvider() {
         widgetData: SharedPreferences
     ) {
         for (id in appWidgetIds) {
-            updateOne(context, appWidgetManager, id, widgetData)
-        }
-    }
+            try {
+                val views = RemoteViews(context.packageName, R.layout.helsa_widget_steps)
+                val steps = widgetData.getInt("steps", 0)
+                val goal = widgetData.getInt("steps_goal", 8000).coerceAtLeast(1)
+                val pct = ((steps * 100.0) / goal).toInt().coerceIn(0, 999)
+                val stepsColor = widgetData.getInt("steps_color", Color.parseColor("#10B981"))
+                val bgColor = widgetData.getInt("widget_bg", Color.parseColor("#E6121816"))
+                val muted = widgetData.getInt("muted_color", Color.parseColor("#99FFFFFF"))
+                val unit = widgetData.getString("steps_label", "steps") ?: "steps"
 
-    override fun onAppWidgetOptionsChanged(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        appWidgetId: Int,
-        newOptions: Bundle?
-    ) {
-        val prefs = context.getSharedPreferences(
-            "HomeWidgetPreferences",
-            Context.MODE_PRIVATE
-        )
-        updateOne(context, appWidgetManager, appWidgetId, prefs)
-    }
+                views.setTextViewText(R.id.tv_steps_big, steps.toString())
+                views.setTextViewText(R.id.tv_steps_unit, unit)
+                views.setTextViewText(R.id.tv_steps_pct_capsule, "$pct%")
+                views.setTextColor(R.id.tv_steps_big, stepsColor)
+                views.setTextColor(R.id.tv_steps_unit, muted)
+                views.setTextColor(R.id.tv_steps_pct_capsule, stepsColor)
 
-    private fun updateOne(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        id: Int,
-        widgetData: SharedPreferences
-    ) {
-        try {
-            val views = RemoteViews(context.packageName, R.layout.helsa_widget_steps)
-
-            val steps = widgetData.getInt("steps", 0)
-            val goal = widgetData.getInt("steps_goal", 8000).coerceAtLeast(1)
-            val unit = widgetData.getString("steps_label", "steps") ?: "steps"
-            val pct = ((steps * 100.0) / goal).toInt().coerceIn(0, 999)
-            val bar = pct.coerceAtMost(100)
-            val stepsColor = widgetData.getInt("steps_color", Color.parseColor("#10B981"))
-
-            views.setTextViewText(R.id.tv_steps_value, steps.toString())
-            views.setTextViewText(R.id.tv_steps_unit, unit)
-            views.setTextViewText(R.id.tv_steps_pct, "$pct%")
-            views.setProgressBar(R.id.pb_steps_capsule, 100, bar, false)
-
-            views.setTextColor(R.id.tv_steps_value, stepsColor)
-            views.setTextColor(R.id.tv_steps_unit, stepsColor)
-
-            // Percent: white on filled bar, theme color otherwise
-            if (bar >= 55) {
-                views.setTextColor(R.id.tv_steps_pct, Color.WHITE)
-            } else {
-                views.setTextColor(R.id.tv_steps_pct, stepsColor)
-            }
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 try {
-                    views.setColorStateList(
-                        R.id.pb_steps_capsule,
-                        "setProgressTintList",
-                        ColorStateList.valueOf(stepsColor)
-                    )
+                    views.setInt(R.id.widget_steps_root, "setBackgroundColor", bgColor)
                 } catch (_: Exception) {
                 }
-            }
+                try {
+                    val iconId = context.resources.getIdentifier("iv_steps_big", "id", context.packageName)
+                    if (iconId != 0) views.setInt(iconId, "setColorFilter", stepsColor)
+                } catch (_: Exception) {
+                }
 
-            val options = appWidgetManager.getAppWidgetOptions(id)
-            val minH = options?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0) ?: 0
-            val sp = when {
-                minH >= 160 -> 40f
-                minH >= 120 -> 34f
-                else -> 28f
-            }
-            views.setTextViewTextSize(
-                R.id.tv_steps_value,
-                TypedValue.COMPLEX_UNIT_SP,
-                sp
-            )
+                try {
+                    views.setProgressBar(R.id.bar_steps_capsule, 100, pct.coerceAtMost(100), false)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        views.setProgressTintList(
+                            R.id.bar_steps_capsule,
+                            ColorStateList.valueOf(stepsColor)
+                        )
+                    }
+                } catch (_: Exception) {
+                }
 
-            appWidgetManager.updateAppWidget(id, views)
-        } catch (_: Exception) {
-            try {
-                val fallback = RemoteViews(context.packageName, R.layout.helsa_widget_steps)
-                appWidgetManager.updateAppWidget(id, fallback)
-            } catch (_: Exception) {
+                appWidgetManager.updateAppWidget(id, views)
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }

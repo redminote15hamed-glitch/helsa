@@ -11,8 +11,9 @@ import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetProvider
 
 /**
- * Size-aware widget with live theme colors from Flutter:
- *  steps_color / cal_color / time_color (ARGB ints).
+ * Theme-aware home widget. Colors from Flutter:
+ * steps_color / cal_color / time_color / widget_bg (ARGB ints).
+ * ImageViews should use ids: iv_steps, iv_cal, iv_time (white vectors preferred).
  */
 class HelsaWidgetProvider : HomeWidgetProvider() {
 
@@ -72,13 +73,12 @@ class HelsaWidgetProvider : HomeWidgetProvider() {
             val stepsColor = widgetData.getInt("steps_color", Color.parseColor("#10B981"))
             val calColor = widgetData.getInt("cal_color", Color.parseColor("#FF8C42"))
             val timeColor = widgetData.getInt("time_color", Color.parseColor("#4C8DFF"))
+            val bgColor = widgetData.getInt("widget_bg", Color.parseColor("#E6121816"))
+            val muted = widgetData.getInt("muted_color", Color.parseColor("#99FFFFFF"))
 
             val stepsPct = ((steps * 100.0) / stepsGoal).toInt().coerceIn(0, 999)
             val calPct = ((cal * 100.0) / calGoal).toInt().coerceIn(0, 999)
             val minsPct = ((mins * 100.0) / minsGoal).toInt().coerceIn(0, 999)
-            val stepsBar = stepsPct.coerceAtMost(100)
-            val calBar = calPct.coerceAtMost(100)
-            val minsBar = minsPct.coerceAtMost(100)
 
             views.setTextViewText(R.id.tv_steps, steps.toString())
             views.setTextViewText(R.id.tv_cal, cal.toString())
@@ -87,13 +87,23 @@ class HelsaWidgetProvider : HomeWidgetProvider() {
             views.setTextViewText(R.id.tv_cal_label, calLabel)
             views.setTextViewText(R.id.tv_time_label, timeLabel)
 
-            // Live theme colors on numbers + labels
             views.setTextColor(R.id.tv_steps, stepsColor)
             views.setTextColor(R.id.tv_cal, calColor)
             views.setTextColor(R.id.tv_time, timeColor)
-            views.setTextColor(R.id.tv_steps_label, stepsColor)
-            views.setTextColor(R.id.tv_cal_label, calColor)
-            views.setTextColor(R.id.tv_time_label, timeColor)
+            views.setTextColor(R.id.tv_steps_label, muted)
+            views.setTextColor(R.id.tv_cal_label, muted)
+            views.setTextColor(R.id.tv_time_label, muted)
+
+            // Background for contrast
+            try {
+                views.setInt(R.id.widget_root, "setBackgroundColor", bgColor)
+            } catch (_: Exception) {
+            }
+
+            // Icon tints (need ImageView ids iv_steps / iv_cal / iv_time)
+            tintIcon(views, "iv_steps", stepsColor, context)
+            tintIcon(views, "iv_cal", calColor, context)
+            tintIcon(views, "iv_time", timeColor, context)
 
             if (layoutId == R.layout.helsa_widget_medium ||
                 layoutId == R.layout.helsa_widget_large
@@ -116,34 +126,32 @@ class HelsaWidgetProvider : HomeWidgetProvider() {
             }
 
             if (layoutId == R.layout.helsa_widget_large) {
-                views.setProgressBar(R.id.pb_steps, 100, stepsBar, false)
-                views.setProgressBar(R.id.pb_cal, 100, calBar, false)
-                views.setProgressBar(R.id.pb_time, 100, minsBar, false)
-                tintProgress(views, R.id.pb_steps, stepsColor)
-                tintProgress(views, R.id.pb_cal, calColor)
-                tintProgress(views, R.id.pb_time, timeColor)
+                try {
+                    views.setProgressBar(R.id.bar_steps, 100, stepsPct.coerceAtMost(100), false)
+                    views.setProgressBar(R.id.bar_cal, 100, calPct.coerceAtMost(100), false)
+                    views.setProgressBar(R.id.bar_time, 100, minsPct.coerceAtMost(100), false)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        views.setProgressTintList(R.id.bar_steps, ColorStateList.valueOf(stepsColor))
+                        views.setProgressTintList(R.id.bar_cal, ColorStateList.valueOf(calColor))
+                        views.setProgressTintList(R.id.bar_time, ColorStateList.valueOf(timeColor))
+                    }
+                } catch (_: Exception) {
+                }
             }
 
             appWidgetManager.updateAppWidget(id, views)
         } catch (e: Exception) {
-            try {
-                val fallback = RemoteViews(context.packageName, R.layout.helsa_widget)
-                appWidgetManager.updateAppWidget(id, fallback)
-            } catch (_: Exception) {
-            }
+            e.printStackTrace()
         }
     }
 
-    private fun tintProgress(views: RemoteViews, viewId: Int, color: Int) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            try {
-                views.setColorStateList(
-                    viewId,
-                    "setProgressTintList",
-                    ColorStateList.valueOf(color)
-                )
-            } catch (_: Exception) {
+    private fun tintIcon(views: RemoteViews, name: String, color: Int, context: Context) {
+        try {
+            val id = context.resources.getIdentifier(name, "id", context.packageName)
+            if (id != 0) {
+                views.setInt(id, "setColorFilter", color)
             }
+        } catch (_: Exception) {
         }
     }
 }
