@@ -85,11 +85,17 @@ class StepForeground {
     StepTracker.instance.removeListener(_onTrackerChanged);
   }
 
+  bool _hasMeaningfulTrackerChange(StepTracker tracker) {
+    final goalChanged = tracker.stepsGoal != _lastGoal;
+    final stepsChanged = _lastSteps < 0 ||
+        tracker.steps < _lastSteps ||
+        tracker.steps - _lastSteps >= 10;
+    return goalChanged || stepsChanged;
+  }
+
   void _onTrackerChanged() {
     final tracker = StepTracker.instance;
-    if (tracker.steps == _lastSteps && tracker.stepsGoal == _lastGoal) {
-      return;
-    }
+    if (!_hasMeaningfulTrackerChange(tracker)) return;
     _lastSteps = tracker.steps;
     _lastGoal = tracker.stepsGoal;
     unawaited(_sendTrackerState());
@@ -188,10 +194,7 @@ class StepForeground {
   Future<void> refresh({bool force = false}) async {
     if (kIsWeb || !Platform.isAndroid) return;
     final tracker = StepTracker.instance;
-    if (!force && tracker.steps == _lastSteps &&
-        tracker.stepsGoal == _lastGoal) {
-      return;
-    }
+    if (!force && !_hasMeaningfulTrackerChange(tracker)) return;
 
     _lastSteps = tracker.steps;
     _lastGoal = tracker.stepsGoal;
