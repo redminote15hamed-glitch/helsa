@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:helsa/startup/splash/splash_screen.dart';
 import 'package:helsa/setting/color/edge_to_edge.dart';
 import 'package:helsa/setting/storage/profile_store.dart';
@@ -9,6 +10,7 @@ import 'package:helsa/setting/storage/theme_store.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  FlutterForegroundTask.initCommunicationPort();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
   await ProfileStore.init();
@@ -35,8 +37,6 @@ class MyApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           theme: data,
           darkTheme: data,
-          // Brightness is already baked into [data]; keep mode in sync
-          // so Theme.of(context).brightness matches everywhere.
           themeMode: night ? ThemeMode.dark : ThemeMode.light,
           builder: (context, child) {
             return EdgeToEdgeWrapper(child: child!);
