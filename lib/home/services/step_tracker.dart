@@ -19,7 +19,6 @@ class StepTracker extends ChangeNotifier {
   String? _trackedDayKey;
   bool _isWalking = false;
   bool _permissionGranted = false;
-  bool _paused = false;
   bool _backgroundActivityAuthority = false;
 
   DateTime? _walkStartedAt;
@@ -29,6 +28,8 @@ class StepTracker extends ChangeNotifier {
   Timer? _saveTimer;
   bool _dirty = false;
   DateTime _lastActivePersistAt = DateTime.fromMillisecondsSinceEpoch(0);
+  int _lastNotifiedActiveMinute = -1;
+  bool? _lastNotifiedWalking;
 
   int get steps => _steps;
   int? get baseDeviceSteps => _baseDevice;
@@ -36,15 +37,8 @@ class StepTracker extends ChangeNotifier {
     _syncCalendarDay();
     return _trackedDayKey ?? StepsStore.currentDayKey;
   }
-  bool get isWalking => _isWalking && !isPaused;
+  bool get isWalking => _isWalking;
   bool get permissionGranted => _permissionGranted;
-
-  bool get isPaused {
-    try {
-      if (StepsStore.isCountingPaused) return true;
-    } catch (_) {}
-    return _paused;
-  }
 
   int get stepsGoal {
     final custom = StepsStore.customStepsGoal;
@@ -66,7 +60,7 @@ class StepTracker extends ChangeNotifier {
 
   int get activeMillisecondsForSync {
     var milliseconds = _activeMs;
-    if (_walkStartedAt != null && !isPaused) {
+    if (_walkStartedAt != null) {
       milliseconds += DateTime.now().difference(_walkStartedAt!).inMilliseconds;
     }
     return milliseconds;
@@ -92,10 +86,6 @@ class StepTracker extends ChangeNotifier {
       _activeMs = StepsStore.activeMs;
       _trackedDayKey = StepsStore.currentDayKey;
 
-      if (StepsStore.isCountingPaused) {
-        await StepsStore.clearPause();
-      }
-      _paused = false;
     } catch (error, stackTrace) {
       debugPrint('StepTracker storage init failed: $error\n$stackTrace');
     }
@@ -106,9 +96,7 @@ class StepTracker extends ChangeNotifier {
     }
 
     final activityPermission = await Permission.activityRecognition.request();
-    final sensorPermission = await Permission.sensors.request();
-    _permissionGranted =
-        activityPermission.isGranted || sensorPermission.isGranted;
+    _permissionGranted = activityPermission.isGranted;
 
     if (!_permissionGranted) {
       notifyListeners();
@@ -149,6 +137,8 @@ class StepTracker extends ChangeNotifier {
     required bool isWalking,
   }) {
     _backgroundActivityAuthority = true;
+    final previousMinute = activeMinutes;
+    final previousWalking = isWalking;
     final now = DateTime.now();
     final activeChanged = activeMs > _activeMs;
     if (activeChanged) _activeMs = activeMs;
@@ -160,17 +150,40 @@ class StepTracker extends ChangeNotifier {
       _lastActivePersistAt = now;
       unawaited(StepsStore.saveActiveMs(_activeMs));
     }
-    notifyListeners();
+    _notifyIfDisplayChanged(
+      previousMinute: previousMinute,
+      previousWalking: previousWalking,
+    );
   }
 
   void setBackgroundActivityAuthority(bool enabled) {
+    final changed = _backgroundActivityAuthority != enabled ||
+        (!enabled && _isWalking);
     _backgroundActivityAuthority = enabled;
     if (!enabled) {
       _walkStartedAt = null;
       _lastStepAt = null;
       _isWalking = false;
     }
-    notifyListeners();
+    if (changed) notifyListeners();
+  }
+
+  void _notifyIfDisplayChanged({
+    int? previousMinute,
+    bool? previousWalking,
+  }) {
+    final minute = activeMinutes;
+    final walking = isWalking;
+    if (previousMinute == null ||
+        previousWalking == null ||
+        minute != previousMinute ||
+        walking != previousWalking ||
+        minute != _lastNotifiedActiveMinute ||
+        walking != _lastNotifiedWalking) {
+      _lastNotifiedActiveMinute = minute;
+      _lastNotifiedWalking = walking;
+      notifyListeners();
+    }
   }
 
   String _localDayKey() {
@@ -248,14 +261,13 @@ class StepTracker extends ChangeNotifier {
 
   void _onTick() {
     _syncCalendarDay();
-    if (_paused && !StepsStore.isCountingPaused) {
-      _paused = false;
-      notifyListeners();
-      return;
-    }
-    if (isPaused) return;
+    final previousMinute = activeMinutes;
+    final previousWalking = isWalking;
     if (_backgroundActivityAuthority) {
-      notifyListeners();
+      _notifyIfDisplayChanged(
+        previousMinute: previousMinute,
+        previousWalking: previousWalking,
+      );
       return;
     }
 
@@ -282,7 +294,10 @@ class StepTracker extends ChangeNotifier {
       unawaited(StepsStore.saveActiveMs(liveActiveMs));
     }
 
-    notifyListeners();
+    _notifyIfDisplayChanged(
+      previousMinute: previousMinute,
+      previousWalking: previousWalking,
+    );
   }
 
   void _finishWalkingSession(DateTime now) {
@@ -298,11 +313,8 @@ class StepTracker extends ChangeNotifier {
 
   void _onStatus(PedestrianStatus event) {
     if (_backgroundActivityAuthority) return;
-    if (isPaused) {
-      _isWalking = false;
-      return;
-    }
-
+    final previousMinute = activeMinutes;
+    final previousWalking = isWalking;
     final walking = event.status.toLowerCase() == 'walking';
     final now = DateTime.now();
 
@@ -317,7 +329,10 @@ class StepTracker extends ChangeNotifier {
       }
     }
 
-    notifyListeners();
+    _notifyIfDisplayChanged(
+      previousMinute: previousMinute,
+      previousWalking: previousWalking,
+    );
   }
 
   /// Call after profile body/activity/age changes so listeners recalculate goals.
@@ -335,30 +350,6 @@ class StepTracker extends ChangeNotifier {
 
   Future<void> setActiveGoal(int value) async {
     await StepsStore.saveActiveGoal(value);
-    notifyListeners();
-  }
-
-  Future<void> pauseWalkingDetection() async {
-    if (_walkStartedAt != null) {
-      _activeMs += DateTime.now().difference(_walkStartedAt!).inMilliseconds;
-      _walkStartedAt = null;
-      await StepsStore.saveActiveMs(_activeMs);
-    }
-    _isWalking = false;
-    _lastStepAt = null;
-    _paused = true;
-    await StepsStore.setPauseForOneHour();
-    notifyListeners();
-  }
-
-  Future<void> resumeWalkingDetection({bool force = false}) async {
-    if (!force && StepsStore.isCountingPaused) {
-      _paused = true;
-      notifyListeners();
-      return;
-    }
-    await StepsStore.clearPause();
-    _paused = false;
     notifyListeners();
   }
 
