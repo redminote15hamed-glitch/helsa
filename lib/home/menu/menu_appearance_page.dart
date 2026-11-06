@@ -2,6 +2,10 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:helsa/home/home_text.dart';
+import 'package:helsa/home/menu/appearance_chrome.dart';
+import 'package:helsa/home/menu/appearance_theme_card.dart';
+import 'package:helsa/home/menu/appearance_metric_preview.dart';
+import 'package:helsa/home/menu/appearance_orbit_ring.dart';
 import 'package:helsa/home/menu/menu_expand_host.dart';
 import 'package:helsa/setting/color/metric_colors.dart';
 import 'package:helsa/setting/color/theme_color.dart';
@@ -29,9 +33,12 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
   late final bool _savedNight;
 
   late final AnimationController _orbitCtrl;
+  late final AnimationController _cardCtrl;
+  late final AnimationController _burstCtrl; // 0=heart center, 1=icons on ring
   late final AnimationController _ringPulse;
   late final AnimationController _wave;
   double _orbitAngle = 0;
+  bool _busy = false; // intro / exit / switch in progress
 
   String get _lang => widget.language ?? MetaStore.language;
 
@@ -58,6 +65,18 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
       vsync: this,
       duration: const Duration(milliseconds: 1100),
     );
+    // Card starts hidden — only after icons land
+    _cardCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 420),
+      value: 0,
+    );
+    // Soft open burst; close will temporarily speed up
+    _burstCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 980),
+      value: 0,
+    );
     _ringPulse = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 4800),
@@ -67,11 +86,15 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
       duration: const Duration(milliseconds: 2400),
     )..repeat();
     _orbitAngle = _angleForIndex(_selectedIndex);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => _playOpen());
   }
 
   @override
   void dispose() {
     _orbitCtrl.dispose();
+    _cardCtrl.dispose();
+    _burstCtrl.dispose();
     _ringPulse.dispose();
     _wave.dispose();
     super.dispose();
@@ -80,6 +103,54 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
   double _angleForIndex(int index) {
     final n = _palettes.length;
     return -math.pi / 2 - (index * 2 * math.pi / n);
+  }
+
+  Future<void> _playOpen() async {
+    if (!mounted) return;
+    _busy = true;
+    // Brief beat after host expand finishes
+    await Future<void>.delayed(const Duration(milliseconds: 140));
+    if (!mounted) return;
+    _burstCtrl.duration = const Duration(milliseconds: 980);
+    await _burstCtrl.forward();
+    if (!mounted) return;
+    await Future<void>.delayed(const Duration(milliseconds: 60));
+    if (!mounted) return;
+    _cardCtrl.duration = const Duration(milliseconds: 420);
+    await _cardCtrl.forward();
+    if (!mounted) return;
+    _busy = false;
+  }
+
+  Future<void> _playCloseAndDismiss({required bool save}) async {
+    if (_busy) return;
+    _busy = true;
+    if (save) {
+      ThemeStore.paletteId.value = _paletteId;
+      ThemeStore.night.value = _night;
+      try {
+        await ThemeStore.save();
+      } catch (_) {}
+    }
+    if (!mounted) return;
+
+    // Card retreats first (quick)
+    _cardCtrl.duration = const Duration(milliseconds: 220);
+    if (_cardCtrl.value > 0) {
+      await _cardCtrl.reverse();
+    }
+    if (!mounted) return;
+
+    // Short hold, then icons collapse into heart (faster than open)
+    await Future<void>.delayed(const Duration(milliseconds: 90));
+    if (!mounted) return;
+    _burstCtrl.duration = const Duration(milliseconds: 420);
+    await _burstCtrl.reverse();
+    if (!mounted) return;
+
+    await Future<void>.delayed(const Duration(milliseconds: 40));
+    if (!mounted) return;
+    await MenuExpandScope.close(context);
   }
 
   Future<void> _rotateTo(int index) async {
@@ -106,25 +177,29 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
     setState(() => _orbitAngle = target);
   }
 
-  void _onSelectPalette(int index) {
+  Future<void> _onSelectPalette(int index) async {
+    if (_busy) return;
     final p = _palettes[index];
     if (p.id == _paletteId) return;
+    _busy = true;
+    // Card soft-returns into orbit icon, then new card emerges
+    await _cardCtrl.reverse();
+    if (!mounted) return;
     setState(() => _paletteId = p.id);
-    _rotateTo(index);
+    await Future.wait([
+      _rotateTo(index),
+      _cardCtrl.forward(),
+    ]);
+    if (!mounted) return;
+    _busy = false;
   }
 
   Future<void> _saveAndClose() async {
-    ThemeStore.paletteId.value = _paletteId;
-    ThemeStore.night.value = _night;
-    try {
-      await ThemeStore.save();
-    } catch (_) {}
-    if (!mounted) return;
-    await MenuExpandScope.close(context);
+    await _playCloseAndDismiss(save: true);
   }
 
   Future<void> _back() async {
-    await MenuExpandScope.close(context);
+    await _playCloseAndDismiss(save: false);
   }
 
   @override
@@ -146,7 +221,7 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
             body: SafeArea(
               child: Column(
                 children: [
-                  _TopBar(
+                  AppearanceTopBar(
                     lang: _lang,
                     dirty: _dirty,
                     isRtl: isRtl,
@@ -159,12 +234,12 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                         final h = constraints.maxHeight;
                         final w = constraints.maxWidth;
 
-                        // Compact card · dominant orbit · side margin
-                        final appleSize = (w * 0.15).clamp(50.0, 64.0);
+                        // Bigger apples/hearts · card tight above orbit
+                        final appleSize = (w * 0.175).clamp(58.0, 76.0);
                         final orbitSize =
-                            (math.min(w, h) * 0.54).clamp(230.0, 310.0);
+                            (math.min(w, h) * 0.52).clamp(220.0, 300.0);
                         final cardSide =
-                            (w * 0.40).clamp(136.0, 168.0);
+                            (w * 0.38).clamp(128.0, 160.0);
 
                         return Column(
                           children: [
@@ -175,7 +250,7 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                                 return Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    _PreviewApple(
+                                    AppearancePreviewApple(
                                       label: HomeText.getString(
                                           _lang, 'appearance_preview_steps'),
                                       color: metrics.steps,
@@ -184,7 +259,7 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                                       wave: _wave.value,
                                     ),
                                     SizedBox(width: w * 0.05),
-                                    _PreviewApple(
+                                    AppearancePreviewApple(
                                       label: HomeText.getString(
                                           _lang, 'appearance_preview_cal'),
                                       color: metrics.calories,
@@ -193,7 +268,7 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                                       wave: _wave.value + 0.33,
                                     ),
                                     SizedBox(width: w * 0.05),
-                                    _PreviewApple(
+                                    AppearancePreviewApple(
                                       label: HomeText.getString(
                                           _lang, 'appearance_preview_time'),
                                       color: metrics.active,
@@ -205,8 +280,8 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                                 );
                               },
                             ),
-                            SizedBox(height: context.vS * 0.3),
-                            _HeartDock(
+                            SizedBox(height: context.vS * 0.45),
+                            AppearanceHeartDock(
                               colors: [
                                 cs.primary,
                                 cs.secondary,
@@ -214,31 +289,54 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                                 Color.lerp(cs.primary, cs.secondary, 0.5)!,
                                 Color.lerp(cs.tertiary, cs.primary, 0.4)!,
                               ],
-                              width: w * 0.55,
+                              width: w * 0.62,
                             ),
-                            SizedBox(height: context.vS * 0.35),
-                            _ThemeInfoCard(
-                              palette: _selected,
-                              night: _night,
-                              lang: _lang,
-                              side: cardSide,
-                              onDay: () => setState(() => _night = false),
-                              onNight: () => setState(() => _night = true),
+                            SizedBox(height: context.vS * 0.55),
+                            AnimatedBuilder(
+                              animation: _cardCtrl,
+                              builder: (context, child) {
+                                final tCard = Curves.easeOutCubic
+                                    .transform(_cardCtrl.value);
+                                return Opacity(
+                                  opacity: tCard.clamp(0.0, 1.0),
+                                  child: Transform.translate(
+                                    offset: Offset(0, (1 - tCard) * 36),
+                                    child: Transform.scale(
+                                      scale: 0.35 + 0.65 * tCard,
+                                      alignment: Alignment.bottomCenter,
+                                      child: child,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: AppearanceThemeInfoCard(
+                                palette: _selected,
+                                night: _night,
+                                lang: _lang,
+                                side: cardSide,
+                                onDay: () => setState(() => _night = false),
+                                onNight: () => setState(() => _night = true),
+                              ),
                             ),
-                            SizedBox(height: context.vS * 0.25),
+                            // Card sits close above orbit
+                            SizedBox(height: context.vX3s * 0.4),
                             Expanded(
                               child: Center(
                                 child: SizedBox(
                                   height: orbitSize,
                                   width: orbitSize,
                                   child: AnimatedBuilder(
-                                    animation: _ringPulse,
+                                    animation: Listenable.merge([
+                                      _ringPulse,
+                                      _burstCtrl,
+                                    ]),
                                     builder: (context, _) {
-                                      return _OrbitRing(
+                                      return AppearanceOrbitRing(
                                         palettes: _palettes,
                                         selectedIndex: _selectedIndex,
                                         angle: _orbitAngle,
                                         pulse: _ringPulse.value,
+                                        burst: _burstCtrl.value,
                                         accent: cs.primary,
                                         onSelect: _onSelectPalette,
                                       );
@@ -247,42 +345,10 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                                 ),
                               ),
                             ),
-                            AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 220),
-                              child: _dirty
-                                  ? Padding(
-                                      key: const ValueKey('apply'),
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: pad * 1.5,
-                                      ),
-                                      child: SizedBox(
-                                        width: double.infinity,
-                                        child: FilledButton(
-                                          onPressed: _saveAndClose,
-                                          style: FilledButton.styleFrom(
-                                            padding: EdgeInsets.symmetric(
-                                              vertical: context.vS * 0.75,
-                                            ),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(14),
-                                            ),
-                                          ),
-                                          child: Text(
-                                            HomeText.getString(
-                                                _lang, 'appearance_continue'),
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w700,
-                                              fontSize: context.m,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    )
-                                  : SizedBox(
-                                      key: const ValueKey('gap'),
-                                      height: context.vS * 1.6,
-                                    ),
+                            AppearanceApplyBar(
+                              lang: _lang,
+                              visible: _dirty,
+                              onApply: _saveAndClose,
                             ),
                             SizedBox(
                               height: bottomInset > 0
@@ -304,662 +370,3 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
   }
 }
 
-class _TopBar extends StatelessWidget {
-  const _TopBar({
-    required this.lang,
-    required this.dirty,
-    required this.isRtl,
-    required this.onBack,
-    required this.onSave,
-  });
-
-  final String lang;
-  final bool dirty;
-  final bool isRtl;
-  final VoidCallback onBack;
-  final VoidCallback? onSave;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final back = IconButton(
-      onPressed: onBack,
-      icon: Icon(
-        isRtl ? Icons.arrow_forward_rounded : Icons.arrow_back_rounded,
-        color: cs.onSurface,
-      ),
-    );
-    final save = dirty
-        ? IconButton(
-            onPressed: onSave,
-            icon: Icon(Icons.check_rounded, color: cs.primary, size: 28),
-          )
-        : const SizedBox(width: 48);
-
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: context.hS,
-        vertical: context.vX2s,
-      ),
-      child: Row(
-        children: [
-          if (!isRtl) back else save,
-          Expanded(
-            child: Text(
-              HomeText.getString(lang, 'menu_appearance'),
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: context.l,
-                color: cs.onSurface,
-              ),
-            ),
-          ),
-          if (!isRtl) save else back,
-        ],
-      ),
-    );
-  }
-}
-
-class _PreviewApple extends StatelessWidget {
-  const _PreviewApple({
-    required this.label,
-    required this.color,
-    required this.fill,
-    required this.size,
-    required this.wave,
-  });
-
-  final String label;
-  final Color color;
-  final double fill;
-  final double size;
-  final double wave;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: context.s,
-            fontWeight: FontWeight.w600,
-            color: color,
-          ),
-        ),
-        SizedBox(height: context.vX3s),
-        CustomPaint(
-          size: Size(size, size * 1.12),
-          painter: _ApplePainter(
-            color: color,
-            fill: fill,
-            wavePhase: wave * math.pi * 2,
-          ),
-        ),
-        SizedBox(height: context.vX3s),
-        Text(
-          '${(fill * 100).round()}%',
-          style: TextStyle(
-            fontSize: context.xs,
-            fontWeight: FontWeight.w600,
-            color: cs.onSurface.withValues(alpha: 0.65),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ApplePainter extends CustomPainter {
-  _ApplePainter({
-    required this.color,
-    required this.fill,
-    required this.wavePhase,
-  });
-
-  final Color color;
-  final double fill;
-  final double wavePhase;
-
-  Path _bodyPath(Size size) {
-    double x(double n) => n * size.width;
-    double y(double n) => n * size.height;
-    final path = Path();
-    path.moveTo(x(0.50), y(0.22));
-    path.cubicTo(x(0.62), y(0.12), x(0.92), y(0.18), x(0.94), y(0.42));
-    path.cubicTo(x(0.96), y(0.62), x(0.82), y(0.86), x(0.62), y(0.94));
-    path.cubicTo(x(0.55), y(0.98), x(0.45), y(0.98), x(0.38), y(0.94));
-    path.cubicTo(x(0.18), y(0.86), x(0.04), y(0.62), x(0.06), y(0.42));
-    path.cubicTo(x(0.08), y(0.18), x(0.38), y(0.12), x(0.50), y(0.22));
-    path.close();
-    return path;
-  }
-
-  Path _stemPath(Size size) {
-    double x(double n) => n * size.width;
-    double y(double n) => n * size.height;
-    final path = Path();
-    path.moveTo(x(0.48), y(0.22));
-    path.quadraticBezierTo(x(0.46), y(0.12), x(0.50), y(0.04));
-    path.quadraticBezierTo(x(0.54), y(0.12), x(0.52), y(0.22));
-    path.close();
-    return path;
-  }
-
-  Path _leafPath(Size size) {
-    double x(double n) => n * size.width;
-    double y(double n) => n * size.height;
-    final path = Path();
-    path.moveTo(x(0.52), y(0.12));
-    path.cubicTo(x(0.62), y(0.02), x(0.78), y(0.06), x(0.80), y(0.16));
-    path.cubicTo(x(0.78), y(0.24), x(0.62), y(0.22), x(0.52), y(0.14));
-    path.close();
-    return path;
-  }
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final body = _bodyPath(size);
-    final stem = _stemPath(size);
-    final leaf = _leafPath(size);
-    final b = body.getBounds();
-    final strokeW = (size.width * 0.048).clamp(1.8, 2.8);
-
-    final glass = LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [
-        color.withValues(alpha: 0.12),
-        color.withValues(alpha: 0.28),
-        color.withValues(alpha: 0.18),
-      ],
-    ).createShader(b);
-    canvas.drawPath(
-      body,
-      Paint()
-        ..shader = glass
-        ..style = PaintingStyle.fill,
-    );
-
-    if (fill > 0.001) {
-      canvas.save();
-      canvas.clipPath(body);
-      final fillH = b.height * fill.clamp(0.0, 1.0);
-      final top = b.bottom - fillH;
-      final amp = size.height * 0.018;
-      final wave = Path();
-      wave.moveTo(b.left, b.bottom);
-      wave.lineTo(b.left, top);
-      for (var i = 0; i <= 12; i++) {
-        final t = i / 12.0;
-        final px = b.left + b.width * t;
-        final py = top + math.sin(wavePhase + t * math.pi * 2) * amp;
-        wave.lineTo(px, py);
-      }
-      wave.lineTo(b.right, b.bottom);
-      wave.close();
-      canvas.drawPath(
-        wave,
-        Paint()
-          ..shader = LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              color.withValues(alpha: 0.85),
-              color,
-            ],
-          ).createShader(b),
-      );
-      canvas.restore();
-    }
-
-    canvas.drawPath(
-      body,
-      Paint()
-        ..color = color
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeW,
-    );
-    canvas.drawPath(stem, Paint()..color = color.withValues(alpha: 0.92));
-    canvas.drawPath(leaf, Paint()..color = color.withValues(alpha: 0.82));
-  }
-
-  @override
-  bool shouldRepaint(covariant _ApplePainter old) =>
-      old.color != color || old.fill != fill || old.wavePhase != wavePhase;
-}
-
-class _HeartDock extends StatelessWidget {
-  const _HeartDock({required this.colors, required this.width});
-
-  final List<Color> colors;
-  final double width;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return IgnorePointer(
-      child: Container(
-        width: width,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-        decoration: BoxDecoration(
-          color: cs.surfaceContainerHighest.withValues(alpha: 0.45),
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(
-            color: cs.outline.withValues(alpha: 0.25),
-            width: 0.8,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            for (final c in colors)
-              Icon(Icons.favorite_rounded, color: c, size: 18),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ThemeInfoCard extends StatelessWidget {
-  const _ThemeInfoCard({
-    required this.palette,
-    required this.night,
-    required this.lang,
-    required this.side,
-    required this.onDay,
-    required this.onNight,
-  });
-
-  final HelsaPalette palette;
-  final bool night;
-  final String lang;
-  final double side;
-  final VoidCallback onDay;
-  final VoidCallback onNight;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final name = HomeText.getString(lang, 'palette_${palette.id}');
-    final desc = HomeText.getString(lang, 'palette_${palette.id}_desc');
-
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: context.hM),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Directionality(
-            textDirection: TextDirection.ltr,
-            child: _ModePill(
-              selected: !night,
-              icon: Icons.wb_sunny_rounded,
-              label: HomeText.getString(lang, 'appearance_light'),
-              lightStyle: true,
-              onTap: onDay,
-            ),
-          ),
-          SizedBox(width: context.hXs),
-          Container(
-            width: side,
-            height: side * 1.0,
-            padding: EdgeInsets.symmetric(
-              horizontal: context.hXs,
-              vertical: context.vX3s,
-            ),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color.alphaBlend(
-                    cs.primary.withValues(alpha: night ? 0.22 : 0.18),
-                    cs.surface.withValues(alpha: night ? 0.55 : 0.92),
-                  ),
-                  Color.alphaBlend(
-                    cs.primary.withValues(alpha: night ? 0.12 : 0.10),
-                    cs.surface.withValues(alpha: night ? 0.40 : 0.85),
-                  ),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: cs.primary.withValues(alpha: 0.22),
-                width: 1.0,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: cs.primary.withValues(alpha: 0.10),
-                  blurRadius: 14,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Icon(palette.icon, size: 20, color: cs.primary),
-                SizedBox(height: context.vX3s * 0.6),
-                Expanded(
-                  child: Center(
-                    child: Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: context.hXs * 0.6,
-                        vertical: context.vX3s * 0.5,
-                      ),
-                      decoration: BoxDecoration(
-                        color:
-                            cs.surface.withValues(alpha: night ? 0.50 : 0.88),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: cs.outline.withValues(alpha: 0.18),
-                        ),
-                      ),
-                      child: LayoutBuilder(
-                        builder: (context, box) {
-                          final fs = (box.maxHeight / 10.5)
-                              .clamp(9.5, context.s * 1.0);
-                          return Text(
-                            desc,
-                            textAlign: TextAlign.center,
-                            maxLines: 7,
-                            overflow: TextOverflow.fade,
-                            softWrap: true,
-                            style: TextStyle(
-                              fontSize: fs,
-                              height: 1.30,
-                              fontWeight: FontWeight.w500,
-                              color: cs.onSurface.withValues(alpha: 0.92),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(height: context.vX3s * 0.5),
-                Text(
-                  name,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: context.m,
-                    fontWeight: FontWeight.w800,
-                    color: cs.onSurface,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(width: context.hXs),
-          Directionality(
-            textDirection: TextDirection.ltr,
-            child: _ModePill(
-              selected: night,
-              icon: Icons.nightlight_round,
-              label: HomeText.getString(lang, 'appearance_dark'),
-              lightStyle: false,
-              onTap: onNight,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ModePill extends StatelessWidget {
-  const _ModePill({
-    required this.selected,
-    required this.icon,
-    required this.label,
-    required this.lightStyle,
-    required this.onTap,
-  });
-
-  final bool selected;
-  final IconData icon;
-  final String label;
-  final bool lightStyle;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final bg = lightStyle
-        ? (selected ? const Color(0xFFFFF6E8) : const Color(0xFFE8E4DE))
-        : (selected ? const Color(0xFF243044) : const Color(0xFF1A222E));
-    final fg = lightStyle
-        ? (selected ? const Color(0xFFE8913A) : const Color(0xFF8A837C))
-        : (selected ? const Color(0xFFF0F4FA) : const Color(0xFF7A8494));
-
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 280),
-        curve: Curves.easeOutCubic,
-        padding: EdgeInsets.symmetric(
-          horizontal: selected ? 11 : 8,
-          vertical: selected ? 12 : 9,
-        ),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: selected ? fg.withValues(alpha: 0.55) : Colors.transparent,
-            width: selected ? 1.5 : 1.0,
-          ),
-          boxShadow: selected
-              ? [
-                  BoxShadow(
-                    color: fg.withValues(alpha: lightStyle ? 0.28 : 0.38),
-                    blurRadius: selected && !lightStyle ? 14 : 10,
-                    offset: const Offset(0, 3),
-                  ),
-                ]
-              : null,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: selected ? 18 : 15, color: fg),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: selected ? context.xs : context.xs * 0.92,
-                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-                color: fg,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _OrbitRing extends StatelessWidget {
-  const _OrbitRing({
-    required this.palettes,
-    required this.selectedIndex,
-    required this.angle,
-    required this.pulse,
-    required this.accent,
-    required this.onSelect,
-  });
-
-  final List<HelsaPalette> palettes;
-  final int selectedIndex;
-  final double angle;
-  final double pulse;
-  final Color accent;
-  final ValueChanged<int> onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, box) {
-        final size = math.min(box.maxWidth, box.maxHeight);
-        final n = palettes.length;
-        final cx = size / 2;
-        final cy = size / 2;
-
-        // Icons live ON the mid path, BETWEEN outer & inner tracks
-        final nodeBase = size * 0.115;
-        final nodeSel = size * 0.155;
-        final midR = size * 0.355;
-        final bandHalf = nodeSel * 0.55;
-        final outerR = midR + bandHalf;
-        final innerR = midR - bandHalf;
-
-        return SizedBox(
-          width: size,
-          height: size,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              CustomPaint(
-                size: Size(size, size),
-                painter: _DualRingPainter(
-                  accent: accent,
-                  pulse: pulse,
-                  outerR: outerR,
-                  innerR: innerR,
-                ),
-              ),
-              for (var i = 0; i < n; i++)
-                Builder(
-                  builder: (context) {
-                    final a = angle + i * 2 * math.pi / n;
-                    final x = cx + midR * math.cos(a);
-                    final y = cy + midR * math.sin(a);
-                    final selected = i == selectedIndex;
-                    final node = selected ? nodeSel : nodeBase;
-                    final color = palettes[i].swatch;
-                    return Positioned(
-                      left: x - node / 2,
-                      top: y - node / 2,
-                      width: node,
-                      height: node,
-                      child: GestureDetector(
-                        onTap: () => onSelect(i),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 320),
-                          curve: Curves.easeOutCubic,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: color.withValues(
-                                alpha: selected ? 0.34 : 0.12),
-                            border: Border.all(
-                              color: color.withValues(
-                                  alpha: selected ? 1.0 : 0.40),
-                              width: selected ? 2.2 : 1.15,
-                            ),
-                            boxShadow: selected
-                                ? [
-                                    BoxShadow(
-                                      color: color.withValues(alpha: 0.48),
-                                      blurRadius: 14,
-                                      spreadRadius: 0.4,
-                                    ),
-                                  ]
-                                : null,
-                          ),
-                          child: Icon(
-                            palettes[i].icon,
-                            size: selected ? 19 : 15,
-                            color: selected
-                                ? color
-                                : color.withValues(alpha: 0.72),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-/// Two tracks = one ring band; icons sit in the gap between them.
-class _DualRingPainter extends CustomPainter {
-  _DualRingPainter({
-    required this.accent,
-    required this.pulse,
-    required this.outerR,
-    required this.innerR,
-  });
-
-  final Color accent;
-  final double pulse;
-  final double outerR;
-  final double innerR;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final c = Offset(size.width / 2, size.height / 2);
-    final breathe = 1.0 + 0.01 * math.sin(pulse * math.pi * 2);
-    final out = outerR * breathe;
-    final inn = (innerR / breathe).clamp(1.0, out - 2);
-
-    // Annulus fill (band between tracks)
-    canvas.saveLayer(Offset.zero & size, Paint());
-    canvas.drawCircle(c, out, Paint()..color = accent.withValues(alpha: 0.11));
-    canvas.drawCircle(
-      c,
-      inn,
-      Paint()..blendMode = BlendMode.clear,
-    );
-    canvas.restore();
-
-    // Outer track
-    canvas.drawCircle(
-      c,
-      out,
-      Paint()
-        ..color = accent.withValues(alpha: 0.45)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.1,
-    );
-    // Inner track
-    canvas.drawCircle(
-      c,
-      inn,
-      Paint()
-        ..color = accent.withValues(alpha: 0.38)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.8,
-    );
-
-    // Moving highlight along the band
-    final mid = (out + inn) / 2;
-    final bandW = (out - inn).clamp(3.0, 12.0);
-    canvas.drawArc(
-      Rect.fromCircle(center: c, radius: mid),
-      pulse * math.pi * 2,
-      math.pi * 0.5,
-      false,
-      Paint()
-        ..color = accent.withValues(alpha: 0.48)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = bandW * 0.85
-        ..strokeCap = StrokeCap.round,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _DualRingPainter old) =>
-      old.pulse != pulse ||
-      old.accent != accent ||
-      old.outerR != outerR ||
-      old.innerR != innerR;
-}
