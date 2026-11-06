@@ -127,13 +127,27 @@ class HelsaWidgetProvider : HomeWidgetProvider() {
 
             if (layoutId == R.layout.helsa_widget_large) {
                 try {
-                    views.setProgressBar(R.id.bar_steps, 100, stepsPct.coerceAtMost(100), false)
-                    views.setProgressBar(R.id.bar_cal, 100, calPct.coerceAtMost(100), false)
-                    views.setProgressBar(R.id.bar_time, 100, minsPct.coerceAtMost(100), false)
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        views.setProgressTintList(R.id.bar_steps, ColorStateList.valueOf(stepsColor))
-                        views.setProgressTintList(R.id.bar_cal, ColorStateList.valueOf(calColor))
-                        views.setProgressTintList(R.id.bar_time, ColorStateList.valueOf(timeColor))
+                    views.setProgressBar(R.id.pb_steps, 100, stepsPct.coerceAtMost(100), false)
+                    views.setProgressBar(R.id.pb_cal, 100, calPct.coerceAtMost(100), false)
+                    views.setProgressBar(R.id.pb_time, 100, minsPct.coerceAtMost(100), false)
+
+                    // RemoteViews supports ColorStateList method calls from Android 12 (API 31).
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        views.setColorStateList(
+                            R.id.pb_steps,
+                            "setProgressTintList",
+                            ColorStateList.valueOf(stepsColor)
+                        )
+                        views.setColorStateList(
+                            R.id.pb_cal,
+                            "setProgressTintList",
+                            ColorStateList.valueOf(calColor)
+                        )
+                        views.setColorStateList(
+                            R.id.pb_time,
+                            "setProgressTintList",
+                            ColorStateList.valueOf(timeColor)
+                        )
                     }
                 } catch (_: Exception) {
                 }
