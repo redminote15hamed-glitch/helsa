@@ -335,6 +335,26 @@ class StepTracker extends ChangeNotifier {
     );
   }
 
+  /// Resets in-memory counters after the persisted profile and step stores are cleared.
+  /// Sensor subscriptions stay active so counting can resume after setup is completed.
+  void resetInMemory() {
+    _saveTimer?.cancel();
+    _saveTimer = null;
+    _dirty = false;
+    _steps = 0;
+    _baseDevice = null;
+    _trackedDayKey = null;
+    _isWalking = false;
+    _backgroundActivityAuthority = false;
+    _walkStartedAt = null;
+    _lastStepAt = null;
+    _activeMs = 0;
+    _lastActivePersistAt = DateTime.fromMillisecondsSinceEpoch(0);
+    _lastNotifiedActiveMinute = -1;
+    _lastNotifiedWalking = null;
+    notifyListeners();
+  }
+
   /// Call after profile body/activity/age changes so listeners recalculate goals.
   void profileChanged() => notifyListeners();
 
