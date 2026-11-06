@@ -14,6 +14,9 @@ import 'package:helsa/setting/storage/identity_store.dart';
 import 'package:helsa/setting/storage/restriction_store.dart';
 import 'package:helsa/setting/storage/sleep_store.dart';
 import 'package:helsa/home/services/step_tracker.dart';
+import 'package:helsa/home/services/step_foreground.dart';
+import 'package:helsa/setting/storage/steps_store.dart';
+import 'package:helsa/setting/storage/streak_store.dart';
 
 /// Privacy & data control — opened via [MenuExpandHost].
 class MenuPrivacyPage extends StatelessWidget {
@@ -307,8 +310,13 @@ class _DeleteDataSheetState extends State<_DeleteDataSheet> {
           await RestrictionStore.open();
           await RestrictionStore.clear();
         case _DeleteKind.allExceptName:
-          // Keep firstName / lastName — clear everything else listed + sleep
+          // Keep firstName / lastName and avatar, but clear every health record.
+          final restartBackground =
+              await StepForeground.instance.resetForProfileClear();
+          await StepTracker.instance.stopForProfileClear();
           await Future.wait([
+            StepsStore.open(),
+            StreakStore.open(),
             GenderStore.open(),
             AgeStore.open(),
             BodyStore.open(),
@@ -331,12 +339,19 @@ class _DeleteDataSheetState extends State<_DeleteDataSheet> {
           await FavoriteStore.clear();
           await RestrictionStore.clear();
           await SleepStore.clear();
+          await StepsStore.clear();
+          await StreakStore.clear();
           // Restore name (and avatar so identity shell stays usable)
           await IdentityStore.save(firstName: first, lastName: last);
           if (avatarPath.isNotEmpty) {
             await IdentityStore.saveAvatarFile(avatarPath);
           } else if (avatarPreset.isNotEmpty) {
             await IdentityStore.saveAvatarPreset(avatarPreset);
+          }
+          StepTracker.instance.resetInMemory();
+          await StepTracker.instance.init();
+          if (restartBackground) {
+            await StepForeground.instance.start();
           }
       }
       // Refresh goals (standard if profile incomplete) + UI listeners
