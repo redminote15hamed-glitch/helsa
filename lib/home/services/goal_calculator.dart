@@ -7,11 +7,31 @@ import 'package:helsa/setting/storage/activity_store.dart';
 
 /// Goals from Hive profile.
 ///
+/// When any input used for calculation is missing (gender, age, height,
+/// weight, activity), pure **standard** goals are returned — not a mix of
+/// remaining values and silent defaults.
+///
 /// Steps: activity band (CDC / common coaching ranges), then age + BMI soft adjust.
 /// Calories (movement): steps × kcal/step, kept in the *hundreds* (≤ 900).
 /// Active minutes: ~WHO 150 min/week moderate, spread daily by activity.
 class GoalCalculator {
   GoalCalculator._();
+
+  // ─── Standard goals (neutral adult, moderate band) ───
+  static const int standardStepsGoal = 7500;
+  static const double standardCaloriesGoal = 300.0;
+  static const int standardActiveMinutesGoal = 30;
+
+  /// All fields that affect step / calorie / active goals.
+  static bool get isProfileComplete {
+    final g = GenderStore.gender?.trim();
+    if (g == null || g.isEmpty) return false;
+    if (AgeStore.age == null) return false;
+    if (BodyStore.height == null || BodyStore.height! <= 0) return false;
+    if (BodyStore.weight == null || BodyStore.weight! <= 0) return false;
+    if (ActivityStore.activityLevel == null) return false;
+    return true;
+  }
 
   static int get _age => AgeStore.age ?? 30;
 
@@ -74,6 +94,8 @@ class GoalCalculator {
   ///   0 sedentary ≈ 4 000 · 1 light ≈ 5 500 · 2 moderate ≈ 7 500
   ///   3 active ≈ 9 500 · 4 very active ≈ 11 500
   static int stepsGoal() {
+    if (!isProfileComplete) return standardStepsGoal;
+
     const band = [4000, 5500, 7500, 9500, 11500];
     double goal = band[_activityIndex].toDouble();
 
@@ -119,6 +141,8 @@ class GoalCalculator {
   /// Movement-calorie goal for the day — **hundreds only** (max 900).
   /// Derived from step goal × kcal/step, then rounded to 10s.
   static double caloriesGoal() {
+    if (!isProfileComplete) return standardCaloriesGoal;
+
     final fromSteps = stepsGoal() * kcalPerStep();
 
     // Cap: stay in hundreds (not 1000+)
@@ -133,6 +157,8 @@ class GoalCalculator {
 
   /// Active minutes — daily share of ~150 min moderate / week.
   static int activeMinutesGoal() {
+    if (!isProfileComplete) return standardActiveMinutesGoal;
+
     const daily = [18, 22, 30, 40, 50];
     double m = daily[_activityIndex].toDouble();
 

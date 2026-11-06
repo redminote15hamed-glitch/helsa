@@ -13,6 +13,7 @@ import 'package:helsa/home/menu/menu_widget_page.dart';
 import 'package:helsa/home/menu/menu_expand_host.dart';
 import 'package:helsa/home/menu/menu_coming_soon_page.dart';
 import 'package:helsa/home/menu/menu_appearance_page.dart';
+import 'package:helsa/home/menu/menu_privacy_page.dart';
 import 'package:helsa/setting/color/metric_colors.dart';
 import 'package:helsa/setting/kit/textfielder.dart';
 import 'package:helsa/setting/motion/animator/animator.dart';
@@ -72,14 +73,18 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
     } catch (_) {}
     if (!mounted) return;
     final lang = widget.language;
-    final g = (GenderStore.gender ?? '').toLowerCase();
+    final raw = (GenderStore.gender ?? '').trim();
+    final g = raw.toLowerCase();
     String title;
-    if (g.startsWith('f') || g.contains('female') || g.contains('زن') || g.contains('خانم')) {
+    if (raw.isEmpty) {
+      // Both titles with slash → not selected / deleted
+      title = HomeText.getString(lang, 'menu_title_neutral');
+    } else if (g.startsWith('f') || g.contains('female') || g.contains('زن') || g.contains('خانم')) {
       title = HomeText.getString(lang, 'menu_title_female');
     } else if (g.startsWith('m') || g.contains('male') || g.contains('مرد') || g.contains('آقا')) {
       title = HomeText.getString(lang, 'menu_title_male');
     } else {
-      title = _genderTitle;
+      title = HomeText.getString(lang, 'menu_title_neutral');
     }
     final name = IdentityStore.fullName;
     setState(() {
@@ -177,6 +182,13 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
     return _openFromRow(
       rowCtx,
       builder: (ctx) => MenuAppearancePage(language: widget.language),
+    );
+  }
+
+  Future<void> _openPrivacy(BuildContext rowCtx) {
+    return _openFromRow(
+      rowCtx,
+      builder: (ctx) => MenuPrivacyPage(language: widget.language),
     );
   }
 
@@ -467,6 +479,16 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
                                     ? _PulseKind.support
                                     : _PulseKind.none,
                                 onTap: _openSupport,
+                              ),
+                              _DockItem(
+                                icon: Icons.privacy_tip_outlined,
+                                label: HomeText.getString(
+                                    language, 'menu_privacy'),
+                                language: language,
+                                tint: const Color(0xFF2BBBAD),
+                                pulse: _pulse,
+                                pulseKind: _PulseKind.none,
+                                onTap: (ctx) => _openPrivacy(ctx),
                               ),
                             ],
                           ),

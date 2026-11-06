@@ -194,6 +194,7 @@ class _ProfileEditorState extends State<_ProfileEditor> {
   late final TextEditingController _age;
   late final TextEditingController _height;
   late final TextEditingController _weight;
+  late final TextEditingController _waist;
   late final TextEditingController _sleep;
   late final TextEditingController _wake;
 
@@ -203,7 +204,7 @@ class _ProfileEditorState extends State<_ProfileEditor> {
   List<int> _restrictions = [];
   List<int> _favorites = [];
 
-  late String _sFirst, _sLast, _sAge, _sHeight, _sWeight, _sSleep, _sWake;
+  late String _sFirst, _sLast, _sAge, _sHeight, _sWeight, _sWaist, _sSleep, _sWake;
   late String? _sGender;
   late int? _sActivity, _sDiet;
   late List<int> _sRestrictions, _sFavorites;
@@ -226,6 +227,7 @@ class _ProfileEditorState extends State<_ProfileEditor> {
         _age.text.trim() != _sAge ||
         _height.text.trim() != _sHeight ||
         _weight.text.trim() != _sWeight ||
+        _waist.text.trim() != _sWaist ||
         _sleep.text.trim() != _sSleep ||
         _wake.text.trim() != _sWake ||
         _gender != _sGender ||
@@ -244,6 +246,7 @@ class _ProfileEditorState extends State<_ProfileEditor> {
     _sAge = AgeStore.age?.toString() ?? '';
     _sHeight = BodyStore.height?.toString() ?? '';
     _sWeight = BodyStore.weight?.toString() ?? '';
+    _sWaist = BodyStore.waist?.toString() ?? '';
     _sActivity = ActivityStore.activityLevel;
     _sDiet = DietStore.diet;
     _sRestrictions = List<int>.from(RestrictionStore.list);
@@ -256,6 +259,7 @@ class _ProfileEditorState extends State<_ProfileEditor> {
     _age = TextEditingController(text: _sAge);
     _height = TextEditingController(text: _sHeight);
     _weight = TextEditingController(text: _sWeight);
+    _waist = TextEditingController(text: _sWaist);
     _sleep = TextEditingController(text: _sSleep);
     _wake = TextEditingController(text: _sWake);
     _gender = _sGender;
@@ -264,7 +268,7 @@ class _ProfileEditorState extends State<_ProfileEditor> {
     _restrictions = List<int>.from(_sRestrictions);
     _favorites = List<int>.from(_sFavorites);
 
-    for (final c in [_first, _last, _age, _height, _weight, _sleep, _wake]) {
+    for (final c in [_first, _last, _age, _height, _weight, _waist, _sleep, _wake]) {
       c.addListener(() => setState(() {}));
     }
   }
@@ -277,6 +281,7 @@ class _ProfileEditorState extends State<_ProfileEditor> {
     _age.dispose();
     _height.dispose();
     _weight.dispose();
+    _waist.dispose();
     _sleep.dispose();
     _wake.dispose();
     super.dispose();
@@ -292,8 +297,10 @@ class _ProfileEditorState extends State<_ProfileEditor> {
 
     double? height = double.tryParse(_height.text.trim().replaceAll(',', '.'));
     double? weight = double.tryParse(_weight.text.trim().replaceAll(',', '.'));
+    double? waist = double.tryParse(_waist.text.trim().replaceAll(',', '.'));
     if (height != null && height < 50) height = null; // reject nonsense cm
     if (weight != null && weight < 20) weight = null;
+    if (waist != null && waist < 30) waist = null;
 
     await IdentityStore.save(
       firstName: _first.text,
@@ -304,7 +311,7 @@ class _ProfileEditorState extends State<_ProfileEditor> {
     await BodyStore.save(
       height: height,
       weight: weight,
-      waist: BodyStore.waist,
+      waist: waist,
     );
     await ActivityStore.save(_activity);
     await DietStore.save(_diet);
@@ -326,6 +333,7 @@ class _ProfileEditorState extends State<_ProfileEditor> {
       _sAge = age?.toString() ?? '';
       _sHeight = height?.toString() ?? '';
       _sWeight = weight?.toString() ?? '';
+      _sWaist = waist?.toString() ?? '';
       _sGender = _gender;
       _sActivity = _activity;
       _sDiet = _diet;
@@ -543,7 +551,7 @@ class _ProfileEditorState extends State<_ProfileEditor> {
                   formatters: [FilteringTextInputFormatter.digitsOnly],
                 ),
 
-                // 4 Body — explicit labels height / weight
+                // 4 Body — height, waist, weight
                 _sectionTitle(4, 'profile_body'),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -570,6 +578,15 @@ class _ProfileEditorState extends State<_ProfileEditor> {
                       ),
                     ),
                   ],
+                ),
+                SizedBox(height: context.vX2s),
+                _labeledField(
+                  c: _waist,
+                  labelKey: 'profile_waist',
+                  helperKey: 'profile_waist_helper',
+                  keyboard: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                 ),
 
                 // 5 Activity — natural height, not cramped fixed box
