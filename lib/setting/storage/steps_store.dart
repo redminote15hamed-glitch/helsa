@@ -161,6 +161,18 @@ class StepsStore {
     await _b.clear();
   }
 
+  /// Persist the live counter and sensor offset in one Hive write batch.
+  static Future<void> saveTrackerState({
+    required int steps,
+    required int baseDeviceSteps,
+  }) async {
+    _ensureToday();
+    await _b.putAll({
+      'steps': steps < 0 ? 0 : steps,
+      'baseDeviceSteps': baseDeviceSteps,
+    });
+  }
+
   static Future<void> saveSteps(int value) async {
     _ensureToday();
     await _b.put('steps', value < 0 ? 0 : value);
@@ -175,8 +187,10 @@ class StepsStore {
   static Future<void> saveActiveMs(int value) async {
     _ensureToday();
     final safeValue = value < 0 ? 0 : value;
-    await _b.put('activeMs', safeValue);
-    await _b.put('activeMinutes', (safeValue / 60000).floor());
+    await _b.putAll({
+      'activeMs': safeValue,
+      'activeMinutes': (safeValue / 60000).floor(),
+    });
   }
 
   static Future<void> saveStepsGoal(int value) =>
