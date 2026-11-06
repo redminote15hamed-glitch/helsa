@@ -25,7 +25,7 @@ class GoalCalculator {
   static int get _activityIndex {
     final value = ActivityStore.activityLevel;
     if (value == null) return 1;
-    return value.clamp(0, 4);
+    return value.clamp(0, 4).toInt();
   }
 
   /// Step goals are app-level targets, not a diagnostic or a required minimum.
@@ -37,7 +37,7 @@ class GoalCalculator {
     const adultBands = [4000, 5500, 7500, 9500, 11000];
 
     final bands = _age < 18 ? childAndTeenBands : adultBands;
-    return bands[_activityIndex].clamp(3000, 12000);
+    return bands[_activityIndex].clamp(3000, 12000).toInt();
   }
 
   /// A rough movement-energy estimate per step.
@@ -56,7 +56,7 @@ class GoalCalculator {
     const dailyWalkingMinutes = [15, 20, 30, 40, 45];
     final value = dailyWalkingMinutes[_activityIndex];
 
-    if (_age >= 65) return (value * 0.85).round().clamp(15, 45);
+    if (_age >= 65) return (value * 0.85).round().clamp(15, 45).toInt();
     return value;
   }
 }
