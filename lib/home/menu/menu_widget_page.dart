@@ -255,14 +255,30 @@ class _WidgetEditorState extends State<_WidgetEditor>
       _pinAccepted = Completer<bool>();
       _resumed = Completer<void>();
 
-      final shown = await _channel.invokeMethod<bool>(
-            'pinWidget',
-            <String, dynamic>{'stepsOnly': stepsOnly},
-          ) ??
-          false;
+      final raw = await _channel.invokeMethod<dynamic>(
+        'pinWidget',
+        <String, dynamic>{'stepsOnly': stepsOnly},
+      );
       if (!mounted) return;
+
+      // Kotlin now returns Map {shown, reason} (legacy bool still accepted).
+      var shown = false;
+      var reason = 'error';
+      if (raw is bool) {
+        shown = raw;
+        reason = raw ? 'ok' : 'unsupported_oem';
+      } else if (raw is Map) {
+        shown = raw['shown'] == true;
+        reason = raw['reason']?.toString() ?? 'error';
+      }
+
       if (!shown) {
-        _toast(HomeText.getString(_lang, 'widget_pin_manual'), error: true);
+        final key = switch (reason) {
+          'unsupported_api' || 'unsupported_oem' || 'no_manager' =>
+            'widget_pin_manual',
+          _ => 'widget_pin_error',
+        };
+        _toast(HomeText.getString(_lang, key), error: true);
         return;
       }
 

@@ -42,7 +42,6 @@ class MainActivity : FlutterActivity() {
     override fun onResume() {
         super.onResume()
         handlePinCallback(intent)
-        // Tell Flutter we are foreground again (for pin result polling).
         widgetChannel?.invokeMethod("appResumed", null)
     }
 
@@ -74,10 +73,24 @@ class MainActivity : FlutterActivity() {
         intent.action = null
     }
 
-    private fun requestPinHelsaWidget(stepsOnly: Boolean): Boolean {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false
-        val mgr = getSystemService(AppWidgetManager::class.java) ?: return false
-        if (!mgr.isRequestPinAppWidgetSupported) return false
+    /**
+     * Returns a map:
+     *  shown: Boolean — system pin UI was requested
+     *  reason: String — ok | unsupported_api | unsupported_oem | no_manager | error
+     *
+     * Important: successCallback PendingIntent must be MUTABLE on API 31+,
+     * otherwise many OEMs never show the pin confirmation dialog.
+     */
+    private fun requestPinHelsaWidget(stepsOnly: Boolean): Map<String, Any> {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            return mapOf("shown" to false, "reason" to "unsupported_api")
+        }
+        val mgr = getSystemService(AppWidgetManager::class.java)
+            ?: return mapOf("shown" to false, "reason" to "no_manager")
+
+        if (!mgr.isRequestPinAppWidgetSupported) {
+            return mapOf("shown" to false, "reason" to "unsupported_oem")
+        }
 
         val clazz = if (stepsOnly) {
             HelsaStepsWidgetProvider::class.java
@@ -91,12 +104,17 @@ class MainActivity : FlutterActivity() {
             putExtra(EXTRA_STEPS_ONLY, stepsOnly)
             addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         }
-        val flags = PendingIntent.FLAG_UPDATE_CURRENT or
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                PendingIntent.FLAG_IMMUTABLE
-            } else {
-                0
-            }
+
+        // MUTABLE is required so the system can fill in widget pin result extras.
+        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            // Pre-12: IMMUTABLE is fine and preferred when system does not need to mutate.
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        } else {
+            PendingIntent.FLAG_UPDATE_CURRENT
+        }
+
         val successCallback = PendingIntent.getActivity(
             this,
             if (stepsOnly) REQ_PIN_STEPS else REQ_PIN_MAIN,
@@ -105,10 +123,19 @@ class MainActivity : FlutterActivity() {
         )
 
         return try {
-            mgr.requestPinAppWidget(provider, null, successCallback)
-            true
-        } catch (_: Exception) {
-            false
+            val accepted = mgr.requestPinAppWidget(provider, null, successCallback)
+            // accepted == false means launcher refused to show UI (common on some MIUI builds)
+            if (accepted) {
+                mapOf("shown" to true, "reason" to "ok")
+            } else {
+                mapOf("shown" to false, "reason" to "unsupported_oem")
+            }
+        } catch (e: Exception) {
+            mapOf(
+                "shown" to false,
+                "reason" to "error",
+                "message" to (e.message ?: "pin_failed"),
+            )
         }
     }
 

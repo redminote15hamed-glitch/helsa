@@ -3,17 +3,21 @@ package com.example.helsa
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.SharedPreferences
+import android.content.res.ColorStateList
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.RectF
 import android.os.Build
 import android.os.Bundle
-import android.content.res.ColorStateList
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetProvider
 
 /**
- * Theme-aware home widget. Colors from Flutter:
- * steps_color / cal_color / time_color / widget_bg (ARGB ints).
- * ImageViews should use ids: iv_steps, iv_cal, iv_time (white vectors preferred).
+ * Theme-aware 3-metric widget.
+ * Colors come from Flutter prefs: steps_color, cal_color, time_color, widget_bg, muted_color.
+ * Background is drawn as a rounded bitmap so corners stay soft (setBackgroundColor would square them).
  */
 class HelsaWidgetProvider : HomeWidgetProvider() {
 
@@ -34,10 +38,7 @@ class HelsaWidgetProvider : HomeWidgetProvider() {
         appWidgetId: Int,
         newOptions: Bundle?
     ) {
-        val prefs = context.getSharedPreferences(
-            "HomeWidgetPreferences",
-            Context.MODE_PRIVATE
-        )
+        val prefs = context.getSharedPreferences("HomeWidgetPreferences", Context.MODE_PRIVATE)
         updateOne(context, appWidgetManager, appWidgetId, prefs)
     }
 
@@ -50,6 +51,7 @@ class HelsaWidgetProvider : HomeWidgetProvider() {
         try {
             val options = appWidgetManager.getAppWidgetOptions(id)
             val minH = options?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0) ?: 0
+            val minW = options?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 180) ?: 180
 
             val layoutId = when {
                 minH >= 160 -> R.layout.helsa_widget_large
@@ -73,12 +75,21 @@ class HelsaWidgetProvider : HomeWidgetProvider() {
             val stepsColor = widgetData.getInt("steps_color", Color.parseColor("#10B981"))
             val calColor = widgetData.getInt("cal_color", Color.parseColor("#FF8C42"))
             val timeColor = widgetData.getInt("time_color", Color.parseColor("#4C8DFF"))
-            val bgColor = widgetData.getInt("widget_bg", Color.parseColor("#E6121816"))
+            val bgColor = forceOpaque(widgetData.getInt("widget_bg", Color.parseColor("#FF121816")))
             val muted = widgetData.getInt("muted_color", Color.parseColor("#99FFFFFF"))
 
             val stepsPct = ((steps * 100.0) / stepsGoal).toInt().coerceIn(0, 999)
             val calPct = ((cal * 100.0) / calGoal).toInt().coerceIn(0, 999)
             val minsPct = ((mins * 100.0) / minsGoal).toInt().coerceIn(0, 999)
+
+            // Soft rounded card background (keeps 22dp corners)
+            val density = context.resources.displayMetrics.density
+            val wPx = (minW.coerceAtLeast(120) * density).toInt().coerceIn(200, 1200)
+            val hPx = (minH.coerceAtLeast(56) * density).toInt().coerceIn(100, 800)
+            views.setImageViewBitmap(
+                R.id.widget_bg_image,
+                roundedRectBitmap(wPx, hPx, 22f * density, bgColor)
+            )
 
             views.setTextViewText(R.id.tv_steps, steps.toString())
             views.setTextViewText(R.id.tv_cal, cal.toString())
@@ -94,16 +105,13 @@ class HelsaWidgetProvider : HomeWidgetProvider() {
             views.setTextColor(R.id.tv_cal_label, muted)
             views.setTextColor(R.id.tv_time_label, muted)
 
-            // Background for contrast
-            try {
-                views.setInt(R.id.widget_root, "setBackgroundColor", bgColor)
-            } catch (_: Exception) {
-            }
-
-            // Icon tints (need ImageView ids iv_steps / iv_cal / iv_time)
-            tintIcon(views, "iv_steps", stepsColor, context)
-            tintIcon(views, "iv_cal", calColor, context)
-            tintIcon(views, "iv_time", timeColor, context)
+            // Icon glyph + soft halo disk
+            tint(views, R.id.iv_steps, stepsColor)
+            tint(views, R.id.iv_cal, calColor)
+            tint(views, R.id.iv_time, timeColor)
+            tint(views, R.id.iv_steps_disk, withAlpha(stepsColor, 0x33))
+            tint(views, R.id.iv_cal_disk, withAlpha(calColor, 0x33))
+            tint(views, R.id.iv_time_disk, withAlpha(timeColor, 0x33))
 
             if (layoutId == R.layout.helsa_widget_medium ||
                 layoutId == R.layout.helsa_widget_large
@@ -114,43 +122,12 @@ class HelsaWidgetProvider : HomeWidgetProvider() {
                 views.setTextViewText(R.id.tv_steps_pct, "$stepsPct%")
                 views.setTextViewText(R.id.tv_cal_pct, "$calPct%")
                 views.setTextViewText(R.id.tv_time_pct, "$minsPct%")
-                try {
-                    views.setTextColor(R.id.tv_steps_frac, stepsColor)
-                    views.setTextColor(R.id.tv_cal_frac, calColor)
-                    views.setTextColor(R.id.tv_time_frac, timeColor)
-                    views.setTextColor(R.id.tv_steps_pct, stepsColor)
-                    views.setTextColor(R.id.tv_cal_pct, calColor)
-                    views.setTextColor(R.id.tv_time_pct, timeColor)
-                } catch (_: Exception) {
-                }
-            }
-
-            if (layoutId == R.layout.helsa_widget_large) {
-                try {
-                    views.setProgressBar(R.id.pb_steps, 100, stepsPct.coerceAtMost(100), false)
-                    views.setProgressBar(R.id.pb_cal, 100, calPct.coerceAtMost(100), false)
-                    views.setProgressBar(R.id.pb_time, 100, minsPct.coerceAtMost(100), false)
-
-                    // RemoteViews supports ColorStateList method calls from Android 12 (API 31).
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        views.setColorStateList(
-                            R.id.pb_steps,
-                            "setProgressTintList",
-                            ColorStateList.valueOf(stepsColor)
-                        )
-                        views.setColorStateList(
-                            R.id.pb_cal,
-                            "setProgressTintList",
-                            ColorStateList.valueOf(calColor)
-                        )
-                        views.setColorStateList(
-                            R.id.pb_time,
-                            "setProgressTintList",
-                            ColorStateList.valueOf(timeColor)
-                        )
-                    }
-                } catch (_: Exception) {
-                }
+                views.setTextColor(R.id.tv_steps_frac, muted)
+                views.setTextColor(R.id.tv_cal_frac, muted)
+                views.setTextColor(R.id.tv_time_frac, muted)
+                views.setTextColor(R.id.tv_steps_pct, stepsColor)
+                views.setTextColor(R.id.tv_cal_pct, calColor)
+                views.setTextColor(R.id.tv_time_pct, timeColor)
             }
 
             appWidgetManager.updateAppWidget(id, views)
@@ -159,13 +136,38 @@ class HelsaWidgetProvider : HomeWidgetProvider() {
         }
     }
 
-    private fun tintIcon(views: RemoteViews, name: String, color: Int, context: Context) {
-        try {
-            val id = context.resources.getIdentifier(name, "id", context.packageName)
-            if (id != 0) {
+    companion object {
+        fun tint(views: RemoteViews, id: Int, color: Int) {
+            try {
                 views.setInt(id, "setColorFilter", color)
+            } catch (_: Exception) {
             }
-        } catch (_: Exception) {
+        }
+
+        fun withAlpha(color: Int, alpha: Int): Int {
+            return (color and 0x00FFFFFF) or ((alpha and 0xFF) shl 24)
+        }
+
+        fun forceOpaque(color: Int): Int {
+            // If Flutter sent near-transparent surface, force readable card.
+            val a = (color ushr 24) and 0xFF
+            return if (a < 0xCC) (color and 0x00FFFFFF) or 0xF0000000.toInt() else color
+        }
+
+        fun roundedRectBitmap(width: Int, height: Int, radius: Float, color: Int): Bitmap {
+            val bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bmp)
+            val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                this.color = color
+                style = Paint.Style.FILL
+            }
+            canvas.drawRoundRect(
+                RectF(0f, 0f, width.toFloat(), height.toFloat()),
+                radius,
+                radius,
+                paint,
+            )
+            return bmp
         }
     }
 }

@@ -103,9 +103,10 @@ class HomeWidgetBridge {
       final stepsColor = _argb(metrics.steps);
       final calColor = _argb(metrics.calories);
       final timeColor = _argb(metrics.active);
-      final bgColor =
-          _argb(scheme.surfaceContainerHighest.withValues(alpha: 0.92));
-      final mutedColor = _argb(scheme.onSurface.withValues(alpha: 0.55));
+      // Fully opaque surface keeps widget edges readable and theme-accurate.
+      // (Semi-transparent ARGB + setBackgroundColor was killing rounded corners.)
+      final bgColor = _argb(scheme.surface);
+      final mutedColor = _argb(scheme.onSurface.withValues(alpha: 0.58));
 
       final unchanged = steps == _lastSteps &&
           cal == _lastCal &&

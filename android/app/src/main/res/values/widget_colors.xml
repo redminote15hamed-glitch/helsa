@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="widget_bg">#FFF4F7F5</color>
+    <color name="widget_bg">#FF141A18</color>
     <color name="widget_steps">#FF10B981</color>
     <color name="widget_cal">#FFFF8C42</color>
     <color name="widget_time">#FF4C8DFF</color>
-    <color name="widget_label">#99000000</color>
-    <color name="widget_divider">#22000000</color>
+    <color name="widget_label">#99FFFFFF</color>
+    <color name="widget_divider">#22FFFFFF</color>
     <color name="widget_track_steps">#3310B981</color>
     <color name="widget_track_cal">#33FF8C42</color>
     <color name="widget_track_time">#334C8DFF</color>

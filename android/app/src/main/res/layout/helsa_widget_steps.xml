@@ -1,56 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_steps_root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:padding="12dp"
-    android:background="@drawable/helsa_widget_bg">
-
-    <TextView
-        android:id="@+id/tv_steps_big"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="0"
-        android:textStyle="bold"
-        android:textSize="28sp"
-        android:includeFontPadding="false"
-        android:maxLines="1" />
-
-    <TextView
-        android:id="@+id/tv_steps_unit"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:text="steps"
-        android:textSize="12sp"
-        android:includeFontPadding="false" />
+    android:layout_height="match_parent">
 
     <ImageView
-        android:id="@+id/iv_steps_big"
-        android:layout_width="22dp"
-        android:layout_height="22dp"
-        android:layout_marginTop="8dp"
-        android:src="@drawable/ic_widget_steps"
+        android:id="@+id/widget_bg_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitXY"
         android:contentDescription="@null" />
 
-    <ProgressBar
-        android:id="@+id/bar_steps_capsule"
-        style="?android:attr/progressBarStyleHorizontal"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="14dp"
-        android:layout_marginTop="10dp"
-        android:max="100"
-        android:progress="0"
-        android:progressDrawable="@drawable/widget_capsule_steps" />
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="14dp">
 
-    <TextView
-        android:id="@+id/tv_steps_pct_capsule"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:text="0%"
-        android:textSize="11sp"
-        android:includeFontPadding="false" />
-</LinearLayout>
+        <FrameLayout
+            android:layout_width="36dp"
+            android:layout_height="36dp">
+            <ImageView
+                android:id="@+id/iv_steps_disk"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/widget_icon_disk"
+                android:contentDescription="@null" />
+            <ImageView
+                android:id="@+id/iv_steps_big"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_widget_steps"
+                android:contentDescription="@null" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/tv_steps_big"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="0"
+            android:textStyle="bold"
+            android:textSize="30sp"
+            android:includeFontPadding="false"
+            android:maxLines="1" />
+
+        <TextView
+            android:id="@+id/tv_steps_unit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="steps"
+            android:textSize="12sp"
+            android:includeFontPadding="false" />
+
+        <ProgressBar
+            android:id="@+id/bar_steps_capsule"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="10dp"
+            android:layout_marginTop="12dp"
+            android:max="100"
+            android:progress="0"
+            android:progressDrawable="@drawable/widget_capsule_steps" />
+
+        <TextView
+            android:id="@+id/tv_steps_pct_capsule"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="0%"
+            android:textStyle="bold"
+            android:textSize="12sp"
+            android:includeFontPadding="false" />
+    </LinearLayout>
+</FrameLayout>
