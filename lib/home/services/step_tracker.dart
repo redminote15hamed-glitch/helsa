@@ -4,7 +4,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:helsa/setting/storage/body_store.dart';
 import 'package:helsa/setting/storage/steps_store.dart';
 import 'package:helsa/home/services/goal_calculator.dart';
 
@@ -158,17 +157,13 @@ class StepTracker extends ChangeNotifier {
 
     if (_baseDevice == null) {
       _baseDevice = rawDeviceSteps - _steps;
-      if (_baseDevice! < 0) _baseDevice = rawDeviceSteps;
       unawaited(StepsStore.saveBaseDeviceSteps(_baseDevice!));
     }
 
-    // The hardware counter resets after a device reboot.
+    // The hardware counter resets after a device reboot. A negative offset
+    // preserves today's already-counted steps while the sensor starts again.
     if (rawDeviceSteps < _baseDevice!) {
       _baseDevice = rawDeviceSteps - _steps;
-      if (_baseDevice! < 0) {
-        _baseDevice = rawDeviceSteps;
-        _steps = 0;
-      }
       unawaited(StepsStore.saveBaseDeviceSteps(_baseDevice!));
     }
 
