@@ -295,16 +295,11 @@ class StepTaskHandler extends TaskHandler {
 
     if (_baseDeviceSteps == null) {
       _baseDeviceSteps = event.steps - _dailySteps;
-      if (_baseDeviceSteps! < 0) _baseDeviceSteps = event.steps;
     }
 
     if (event.steps < _baseDeviceSteps!) {
-      // Hardware counter reset (usually after a device reboot).
+      // Preserve today's accumulated steps when the hardware counter restarts.
       _baseDeviceSteps = event.steps - _dailySteps;
-      if (_baseDeviceSteps! < 0) {
-        _baseDeviceSteps = event.steps;
-        _dailySteps = 0;
-      }
     }
 
     final calculated = event.steps - _baseDeviceSteps!;
