@@ -119,12 +119,11 @@ class _PermissionsScreenState extends State<PermissionsScreen>
       return;
     }
     final ar = await Permission.activityRecognition.status;
-    final sensors = await Permission.sensors.status;
     final notif = await Permission.notification.status;
     final bat = await Permission.ignoreBatteryOptimizations.status;
     if (!mounted) return;
     setState(() {
-      _activity = ar.isGranted || sensors.isGranted;
+      _activity = ar.isGranted;
       _notification = notif.isGranted || notif.isLimited;
       _battery = bat.isGranted;
       _checking = false;
@@ -132,10 +131,7 @@ class _PermissionsScreenState extends State<PermissionsScreen>
   }
 
   Future<void> _requestActivity() async {
-    var s = await Permission.activityRecognition.request();
-    if (!s.isGranted) {
-      s = await Permission.sensors.request();
-    }
+    final s = await Permission.activityRecognition.request();
     if (s.isPermanentlyDenied) {
       await openAppSettings();
     }
