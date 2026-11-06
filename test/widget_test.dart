@@ -99,7 +99,9 @@ void main() {
     expect(StepsStore.customActiveGoal, isNull);
   });
 
-  test('in-memory tracker reset drops live counters and sensor baseline', () async {
+  test(
+    'in-memory tracker reset drops live counters and sensor baseline',
+    () async {
     final tracker = StepTracker.instance;
     tracker.ingestExternalDeviceSteps(100);
     tracker.ingestExternalDeviceSteps(112);
@@ -113,7 +115,8 @@ void main() {
     expect(tracker.baseDeviceSteps, isNull);
     expect(tracker.activeMinutes, 0);
     expect(tracker.isWalking, isFalse);
-  });
+    },
+  );
 
   test('streak storage opens and records a completed goal', () async {
     await StreakStore.evaluate(
