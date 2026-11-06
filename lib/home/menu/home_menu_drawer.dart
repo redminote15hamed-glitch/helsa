@@ -11,7 +11,6 @@ import 'package:helsa/home/menu/menu_avatar_picker.dart';
 import 'package:helsa/home/menu/helsa_avatar.dart';
 import 'package:helsa/home/menu/menu_widget_page.dart';
 import 'package:helsa/home/menu/menu_expand_host.dart';
-import 'package:helsa/home/menu/menu_coming_soon_page.dart';
 import 'package:helsa/home/menu/menu_appearance_page.dart';
 import 'package:helsa/home/menu/menu_privacy_page.dart';
 import 'package:helsa/setting/color/metric_colors.dart';
@@ -31,7 +30,7 @@ class HomeMenuDrawerOverlay extends StatefulWidget {
   final VoidCallback onBarrierTap;
   final VoidCallback onExitDone;
 
-  static const String appVersion = '1.0.0';
+  static const String appVersion = '1.0.0+3';
 
   const HomeMenuDrawerOverlay({
     super.key,
@@ -172,16 +171,6 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
       language: widget.language,
     );
     if (mounted) _pulseTarget(_MenuPulse.support);
-  }
-
-  Future<void> _openComingSoon(BuildContext rowCtx, String titleKey) {
-    return _openFromRow(
-      rowCtx,
-      builder: (ctx) => MenuComingSoonPage(
-        language: widget.language,
-        titleKey: titleKey,
-      ),
-    );
   }
 
   Future<void> _openAppearance(BuildContext rowCtx) {
@@ -445,17 +434,6 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
                           _GroupCard(
                             isDark: isDark,
                             children: [
-                              _DockItem(
-                                icon: Icons.settings_rounded,
-                                label: HomeText.getString(
-                                    language, 'menu_settings'),
-                                language: language,
-                                tint: MetricColors.current.calories,
-                                pulse: _pulse,
-                                pulseKind: _PulseKind.none,
-                                onTap: (ctx) =>
-                                    _openComingSoon(ctx, 'menu_settings'),
-                              ),
                               _DockItem(
                                 icon: Icons.format_paint_rounded,
                                 label: HomeText.getString(

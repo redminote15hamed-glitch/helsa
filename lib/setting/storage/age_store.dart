@@ -1,5 +1,6 @@
 // lib/setting/storage/age_store.dart
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:helsa/setting/storage/secure_hive.dart';
 
 class AgeStore {
   AgeStore._();
@@ -7,7 +8,7 @@ class AgeStore {
   static Box<dynamic>? _box;
 
   static Future<void> open() async {
-    _box ??= await Hive.openBox(boxName);
+    _box ??= await SecureHive.openBox(boxName);
   }
 
   static Box<dynamic> get _b {

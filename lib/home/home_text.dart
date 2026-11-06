@@ -58,8 +58,7 @@ class HomeText {
       'menu_privacy': 'حریم خصوصی',
       'privacy_on_device_badge': 'اطلاعات فقط روی همین گوشی ذخیره می‌شود',
       'privacy_title': 'سیاست اطلاعات Helsa',
-      'privacy_body':
-          'Helsa برای کمک به سلامت شما طراحی شده و اصل ما این است که داده‌های شخصی‌تان روی خود دستگاه بماند. ما این داده‌ها را به سرور ارسال نمی‌کنیم و برای نمایش، محاسبه و پیشنهادهای داخل اپ فقط از اطلاعات ذخیره‌شده روی گوشی شما استفاده می‌کنیم. شما هر زمان می‌توانید بخش‌هایی از داده را پاک کنید؛ نام شما در حذف کامل نگه داشته می‌شود مگر اینکه خودتان پروفایل را ویرایش کنید.',
+      'privacy_body': 'Helsa برای کمک به سلامت شما طراحی شده. داده‌های شخصی روی خود دستگاه می‌مانند، با رمزنگاری AES-۲۵۶ در حالت سکون ذخیره می‌شوند و کلید رمز فقط در فضای امن سیستم‌عامل (Android Keystore / iOS Keychain) نگه داشته می‌شود. ما این داده‌ها را به سرور ارسال نمی‌کنیم. شما هر زمان می‌توانید بخش‌هایی از داده را پاک کنید؛ در حذف کامل، نام نگه داشته می‌شود مگر اینکه خودتان پروفایل را ویرایش کنید.',
       'privacy_points_title': 'تعهد ما',
       'privacy_point_local': 'ذخیره‌سازی محلی روی دستگاه شما',
       'privacy_point_encrypt': 'رمزنگاری سخت برای داده‌های حساس در سطح دستگاه',
@@ -203,8 +202,7 @@ class HomeText {
       'menu_privacy': 'Privacy',
       'privacy_on_device_badge': 'Your data stays only on this phone',
       'privacy_title': 'Helsa information policy',
-      'privacy_body':
-          'Helsa is built to support your health while keeping personal data on your device. We do not upload this data to our servers. Calculations and in-app guidance use only what is stored locally. You can delete any section anytime; your name is kept when you clear everything else, unless you edit the profile yourself.',
+      'privacy_body': 'Helsa is built to support your health. Personal data stays on this device, encrypted at rest with AES-256. The encryption key is kept only in the OS secure store (Android Keystore / iOS Keychain). We do not upload your data to a server. You can delete parts of your data at any time. Your name is kept after a full wipe unless you edit the profile yourself.',
       'privacy_points_title': 'Our commitments',
       'privacy_point_local': 'Local storage on your device',
       'privacy_point_encrypt': 'Strong on-device encryption for sensitive data',
@@ -349,8 +347,7 @@ class HomeText {
       'privacy_on_device_badge':
           'Vos données restent uniquement sur cet appareil',
       'privacy_title': 'Politique d\'information Helsa',
-      'privacy_body':
-          'Helsa est conçu pour soutenir votre santé en gardant les données personnelles sur votre appareil. Nous n\'envoyons pas ces données sur nos serveurs. Les calculs et conseils dans l\'app utilisent uniquement le stockage local. Vous pouvez supprimer chaque section à tout moment ; votre nom est conservé si vous effacez le reste, sauf si vous modifiez le profil vous-même.',
+      'privacy_body': 'Helsa est conçu pour soutenir votre santé. Les données personnelles restent sur cet appareil, chiffrées au repos en AES-256. La clé est conservée uniquement dans le stockage sécurisé du système (Android Keystore / iOS Keychain). Nous n’envoyons pas vos données sur un serveur. Vous pouvez supprimer des parties de vos données à tout moment. Votre nom est conservé après un effacement complet sauf si vous modifiez vous-même le profil.',
       'privacy_points_title': 'Nos engagements',
       'privacy_point_local': 'Stockage local sur votre appareil',
       'privacy_point_encrypt':

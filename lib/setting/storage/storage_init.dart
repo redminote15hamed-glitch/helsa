@@ -1,5 +1,6 @@
 // lib/setting/storage/storage_init.dart
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:helsa/setting/storage/secure_hive.dart';
 import 'package:helsa/setting/storage/meta_store.dart';
 import 'package:helsa/setting/storage/identity_store.dart';
 import 'package:helsa/setting/storage/gender_store.dart';
@@ -19,6 +20,7 @@ class StorageInit {
 
   static Future<void> init() async {
     await Hive.initFlutter();
+    await SecureHive.ensureReady();
     await Future.wait([
       MetaStore.open(),
       IdentityStore.open(),

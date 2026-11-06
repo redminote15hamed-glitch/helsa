@@ -1,6 +1,7 @@
 // lib/setting/storage/theme_store.dart
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:helsa/setting/storage/secure_hive.dart';
 import 'package:helsa/setting/color/theme_palette.dart';
 import 'package:helsa/setting/color/theme_color.dart';
 
@@ -24,7 +25,7 @@ class ThemeStore {
   static bool _savedNight = false;
 
   static Future<void> open() async {
-    _box ??= await Hive.openBox(boxName);
+    _box ??= await SecureHive.openBox(boxName);
     final p = (_box!.get(_keyPalette) ?? 'mint').toString();
     final n = (_box!.get(_keyNight) == true || _box!.get(_keyNight) == 1);
     paletteId.value = HelsaPalette.byId(p).id;
