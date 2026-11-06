@@ -1,5 +1,4 @@
 // lib/home/services/health_permissions.dart
-// هر ۴ لایه دسترسی سلامت Helsa
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -7,7 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 class HealthPermissions {
   HealthPermissions._();
 
-  /// Activity + Notification + (اختیاری) باتری
+  /// Requests the permissions required for step counting and its notification.
   static Future<HealthPermissionResult> requestAll() async {
     if (kIsWeb || !Platform.isAndroid) {
       return const HealthPermissionResult(
@@ -18,41 +17,27 @@ class HealthPermissions {
     }
 
     final activity = await Permission.activityRecognition.request();
-    final sensors = await Permission.sensors.request();
-    final activityOk = activity.isGranted || sensors.isGranted;
-
-    final notif = await Permission.notification.request();
-    final notifOk = notif.isGranted || notif.isLimited;
-
-    // ۴) معافیت بهینه‌سازی باتری — دیالوگ سیستم
-    var batteryOk = true;
-    final bat = await Permission.ignoreBatteryOptimizations.status;
-    if (!bat.isGranted) {
-      final r = await Permission.ignoreBatteryOptimizations.request();
-      batteryOk = r.isGranted;
-    }
+    final notification = await Permission.notification.request();
 
     return HealthPermissionResult(
-      activity: activityOk,
-      notification: notifOk,
-      battery: batteryOk,
+      activity: activity.isGranted,
+      notification: notification.isGranted || notification.isLimited,
+      battery: true,
     );
   }
 
   static Future<bool> ensureActivity() async {
-    if (kIsWeb) return true;
-    var s = await Permission.activityRecognition.status;
-    if (s.isGranted) return true;
-    s = await Permission.activityRecognition.request();
-    if (s.isGranted) return true;
-    final sensors = await Permission.sensors.request();
-    return sensors.isGranted;
+    if (kIsWeb || !Platform.isAndroid) return true;
+    final status = await Permission.activityRecognition.status;
+    if (status.isGranted) return true;
+    final requested = await Permission.activityRecognition.request();
+    return requested.isGranted;
   }
 
   static Future<bool> ensureNotification() async {
-    if (kIsWeb) return true;
-    final s = await Permission.notification.request();
-    return s.isGranted || s.isLimited;
+    if (kIsWeb || !Platform.isAndroid) return true;
+    final status = await Permission.notification.request();
+    return status.isGranted || status.isLimited;
   }
 }
 
