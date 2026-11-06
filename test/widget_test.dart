@@ -28,7 +28,7 @@ void main() {
   setUp(() async {
     await AgeStore.save(14);
     await ActivityStore.save(2);
-    await StepsStore.clearPause();
+    await StepsStore.clear();
     await StreakStore.clear();
   });
 
@@ -82,6 +82,20 @@ void main() {
   test('negative sensor offset is retained after a device reboot', () async {
     await StepsStore.saveBaseDeviceSteps(-1800);
     expect(StepsStore.baseDeviceSteps, -1800);
+  });
+
+  test('full step-store reset removes counters and custom goals', () async {
+    await StepsStore.saveSteps(1234);
+    await StepsStore.saveStepsGoal(8000);
+    await StepsStore.saveCaloriesGoal(350);
+    await StepsStore.saveActiveGoal(45);
+
+    await StepsStore.clear();
+
+    expect(StepsStore.steps, 0);
+    expect(StepsStore.customStepsGoal, isNull);
+    expect(StepsStore.customCaloriesGoal, isNull);
+    expect(StepsStore.customActiveGoal, isNull);
   });
 
   test('streak storage opens and records a completed goal', () async {
