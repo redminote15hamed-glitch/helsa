@@ -11,6 +11,8 @@ import 'package:helsa/setting/storage/diet_store.dart';
 import 'package:helsa/setting/storage/restriction_store.dart';
 import 'package:helsa/setting/storage/favorite_store.dart';
 import 'package:helsa/setting/storage/sleep_store.dart';
+import 'package:helsa/home/services/step_foreground.dart';
+import 'package:helsa/home/services/step_tracker.dart';
 
 class ProfileStore {
   ProfileStore._();
@@ -74,5 +76,12 @@ class ProfileStore {
         wakeTime: wakeTime,
       );
 
-  static Future<void> clear() => StorageInit.clearAll();
+  static Future<void> clear() async {
+    try {
+      await StepForeground.instance.resetForProfileClear();
+    } finally {
+      await StorageInit.clearAll();
+      StepTracker.instance.resetInMemory();
+    }
+  }
 }
