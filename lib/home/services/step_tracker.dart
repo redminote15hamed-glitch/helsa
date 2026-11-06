@@ -146,12 +146,17 @@ class StepTracker extends ChangeNotifier {
     required bool isWalking,
   }) {
     _backgroundActivityAuthority = true;
-    if (activeMs > _activeMs) _activeMs = activeMs;
-    _walkStartedAt = isWalking ? DateTime.now() : null;
+    final now = DateTime.now();
+    final activeChanged = activeMs > _activeMs;
+    if (activeChanged) _activeMs = activeMs;
+    _walkStartedAt = isWalking ? now : null;
     _isWalking = isWalking;
-    _lastStepAt = isWalking ? DateTime.now() : null;
-    _lastActivePersistAt = DateTime.now();
-    unawaited(StepsStore.saveActiveMs(_activeMs));
+    _lastStepAt = isWalking ? now : null;
+    if (activeChanged &&
+        (!isWalking || now.difference(_lastActivePersistAt).inSeconds >= 30)) {
+      _lastActivePersistAt = now;
+      unawaited(StepsStore.saveActiveMs(_activeMs));
+    }
     notifyListeners();
   }
 
