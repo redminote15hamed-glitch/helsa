@@ -47,23 +47,23 @@ class StepForeground {
       _initialized = true;
       FlutterForegroundTask.init(
         androidNotificationOptions: AndroidNotificationOptions(
-        channelId: 'helsa_step_service_v3',
-        channelName: 'Helsa Steps',
-        channelDescription: 'Live step counting',
-        channelImportance: NotificationChannelImportance.LOW,
-        priority: NotificationPriority.LOW,
-        onlyAlertOnce: true,
+          channelId: 'helsa_step_service_v3',
+          channelName: 'Helsa Steps',
+          channelDescription: 'Live step counting',
+          channelImportance: NotificationChannelImportance.LOW,
+          priority: NotificationPriority.LOW,
+          onlyAlertOnce: true,
         ),
         iosNotificationOptions: const IOSNotificationOptions(
-        showNotification: false,
-        playSound: false,
+          showNotification: false,
+          playSound: false,
         ),
         foregroundTaskOptions: ForegroundTaskOptions(
-        eventAction: ForegroundTaskEventAction.repeat(3000),
-        autoRunOnBoot: true,
-        autoRunOnMyPackageReplaced: true,
-        allowWakeLock: true,
-        allowWifiLock: false,
+          eventAction: ForegroundTaskEventAction.repeat(3000),
+          autoRunOnBoot: true,
+          autoRunOnMyPackageReplaced: true,
+          allowWakeLock: true,
+          allowWifiLock: false,
         ),
       );
     }
@@ -260,7 +260,7 @@ class StepTaskHandler extends TaskHandler {
 
   int? _baseDeviceSteps;
   int _dailySteps = 0;
-  int _stepsGoal = GoalCalculatorFallback.steps;
+  int _stepsGoal = 7500;
   int _lastNotifiedSteps = -1;
   int _lastPersistedSteps = -1;
   int _activeMs = 0;
@@ -528,8 +528,4 @@ class StepTaskHandler extends TaskHandler {
   void onNotificationPressed() {
     FlutterForegroundTask.launchApp('/');
   }
-}
-
-class GoalCalculatorFallback {
-  static const int steps = 7500;
 }
