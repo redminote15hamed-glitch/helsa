@@ -15,6 +15,8 @@ import 'package:helsa/home/services/step_tracker.dart';
 import 'package:helsa/setting/storage/meta_store.dart';
 import 'package:helsa/setting/storage/steps_store.dart';
 
+const String _stepTaskStateKey = 'helsa_step_state';
+
 @pragma('vm:entry-point')
 void stepForegroundCallback() {
   FlutterForegroundTask.setTaskHandler(StepTaskHandler());
@@ -216,6 +218,32 @@ class StepForeground {
     }
   }
 
+  /// Stops the live task and overwrites its persisted snapshot so old
+  /// counters cannot be restored after a full profile reset.
+  Future<void> resetForProfileClear() async {
+    if (kIsWeb || !Platform.isAndroid || !_initialized) return;
+
+    await stop();
+    final now = DateTime.now();
+    final dayKey = '${now.year.toString().padLeft(4, '0')}-'
+        '${now.month.toString().padLeft(2, '0')}-'
+        '${now.day.toString().padLeft(2, '0')}';
+    await FlutterForegroundTask.saveData(
+      key: _stepTaskStateKey,
+      value: jsonEncode({
+        'dayKey': dayKey,
+        'baseDeviceSteps': null,
+        'dailySteps': 0,
+        'stepsGoal': 7500,
+        'stepsLabel': HomeText.getString(_lang(), 'steps'),
+        'notificationBody': _body(),
+        'activeMs': 0,
+      }),
+    );
+    _lastSteps = 0;
+    _lastGoal = -1;
+  }
+
   Future<void> stop() async {
     if (kIsWeb || !Platform.isAndroid) return;
     detachTracker();
@@ -263,7 +291,6 @@ class StepTaskHandler extends TaskHandler {
   String _stepsLabel = 'steps';
   String _notificationBody = 'Helsa is tracking activity';
 
-  static const String _stateKey = 'helsa_step_state';
 
   String _todayKey() {
     final now = DateTime.now();
@@ -277,7 +304,7 @@ class StepTaskHandler extends TaskHandler {
     _dayKey = _todayKey();
 
     try {
-      final saved = await FlutterForegroundTask.getData(key: _stateKey);
+      final saved = await FlutterForegroundTask.getData(key: _stepTaskStateKey);
       if (saved is String) {
         final decoded = jsonDecode(saved);
         if (decoded is Map) {
@@ -422,7 +449,7 @@ class StepTaskHandler extends TaskHandler {
 
   Future<void> _persistState() async {
     await FlutterForegroundTask.saveData(
-      key: _stateKey,
+      key: _stepTaskStateKey,
       value: jsonEncode({
         'dayKey': _dayKey,
         'baseDeviceSteps': _baseDeviceSteps,
