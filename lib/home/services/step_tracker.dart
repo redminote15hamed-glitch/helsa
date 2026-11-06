@@ -359,10 +359,14 @@ class StepTracker extends ChangeNotifier {
     _saveTimer = Timer(const Duration(milliseconds: 800), () {
       if (!_dirty) return;
       _dirty = false;
-      unawaited(StepsStore.saveSteps(_steps));
       final base = _baseDevice;
       if (base != null) {
-        unawaited(StepsStore.saveBaseDeviceSteps(base));
+        unawaited(StepsStore.saveTrackerState(
+          steps: _steps,
+          baseDeviceSteps: base,
+        ));
+      } else {
+        unawaited(StepsStore.saveSteps(_steps));
       }
     });
   }
@@ -371,10 +375,14 @@ class StepTracker extends ChangeNotifier {
     _saveTimer?.cancel();
     if (!_dirty) return;
     _dirty = false;
-    unawaited(StepsStore.saveSteps(_steps));
     final base = _baseDevice;
     if (base != null) {
-      unawaited(StepsStore.saveBaseDeviceSteps(base));
+      unawaited(StepsStore.saveTrackerState(
+        steps: _steps,
+        baseDeviceSteps: base,
+      ));
+    } else {
+      unawaited(StepsStore.saveSteps(_steps));
     }
   }
 
