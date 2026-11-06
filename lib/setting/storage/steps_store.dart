@@ -156,30 +156,10 @@ class StepsStore {
     return value is num ? value.toInt() : null;
   }
 
-  static DateTime? get pauseUntil {
-    final value = _b.get('pause_until');
-    if (value is num) {
-      return DateTime.fromMillisecondsSinceEpoch(value.toInt());
-    }
-    return null;
+  /// Clears all step history, custom goals, and legacy pause data.
+  static Future<void> clear() async {
+    await _b.clear();
   }
-
-  static bool get isCountingPaused {
-    final until = pauseUntil;
-    if (until == null) return false;
-    if (DateTime.now().isAfter(until)) {
-      _b.delete('pause_until');
-      return false;
-    }
-    return true;
-  }
-
-  static Future<void> setPauseForOneHour() async {
-    final until = DateTime.now().add(const Duration(hours: 1));
-    await _b.put('pause_until', until.millisecondsSinceEpoch);
-  }
-
-  static Future<void> clearPause() => _b.delete('pause_until');
 
   static Future<void> saveSteps(int value) async {
     _ensureToday();
