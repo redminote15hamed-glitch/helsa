@@ -48,14 +48,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Future<void> _bootstrap() async {
     StepForeground.instance.init();
-    HomeWidgetBridge.instance.init();
-    final perms = await HealthPermissions.requestAll();
+    await HomeWidgetBridge.instance.init();
+    final permissions = await HealthPermissions.requestAll();
     await _tracker.init();
+    await _evalStreak();
     await WalkingNotification.instance.init();
-    if (perms.readyForBackgroundNotify) {
+
+    if (permissions.readyForBackgroundNotify) {
       await StepForeground.instance.start();
       await StepForeground.instance.refresh(force: true);
     }
+
     if (mounted) setState(() {});
     WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowRecap());
   }
@@ -75,11 +78,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   void _onUpdate() {
     _evalStreak();
-    final s = _tracker.steps;
-    final g = _tracker.stepsGoal;
-    if (s != _lastNotifSteps || g != _lastNotifGoal) {
-      _lastNotifSteps = s;
-      _lastNotifGoal = g;
+    final steps = _tracker.steps;
+    final goal = _tracker.stepsGoal;
+    if (steps != _lastNotifSteps || goal != _lastNotifGoal) {
+      _lastNotifSteps = steps;
+      _lastNotifGoal = goal;
       StepForeground.instance.refresh(force: true);
     }
     HomeWidgetBridge.instance.push();
@@ -102,13 +105,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _requestActivityPermission() async {
-    final ok = await HealthPermissions.ensureActivity();
-    if (ok) {
+    final granted = await HealthPermissions.ensureActivity();
+    if (granted) {
       await _tracker.init();
       await StepForeground.instance.start();
       if (mounted) setState(() {});
       return;
     }
+
     final status = await Permission.activityRecognition.status;
     if (status.isPermanentlyDenied) {
       await openAppSettings();
@@ -116,7 +120,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Widget _header(String name) {
-    // Menu sits on the *start* side: right in fa (RTL), left in en/fr (LTR)
     return Row(
       children: [
         const HomeMenuButton(),
@@ -132,22 +135,24 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Future<void> _evalStreak() async {
     try {
-      final t = StepTracker.instance;
+      final tracker = StepTracker.instance;
       await StreakStore.evaluate(
-        steps: t.steps,
-        stepsGoal: t.stepsGoal,
-        calories: t.calories,
-        caloriesGoal: t.caloriesGoal,
-        activeMinutes: t.activeMinutes,
-        activeMinutesGoal: t.activeMinutesGoal,
+        steps: tracker.steps,
+        stepsGoal: tracker.stepsGoal,
+        calories: tracker.calories,
+        caloriesGoal: tracker.caloriesGoal,
+        activeMinutes: tracker.activeMinutes,
+        activeMinutesGoal: tracker.activeMinutesGoal,
       );
-    } catch (_) {}
+    } catch (error, stackTrace) {
+      debugPrint('HomeScreen streak evaluation failed: $error\n$stackTrace');
+    }
   }
 
-  Widget _card(String lang) {
-    final double cal = (_tracker.calories as num).toDouble();
-    final double calGoal = (_tracker.caloriesGoal as num).toDouble();
-    int streak = 0;
+  Widget _card(String language) {
+    final calories = _tracker.calories;
+    final caloriesGoal = _tracker.caloriesGoal;
+    var streak = 0;
     try {
       streak = StreakStore.currentStreak;
     } catch (_) {}
@@ -155,13 +160,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        StreakBadge(language: lang, streak: streak, isNight: SleepMode.isNightNow),
+        StreakBadge(
+          language: language,
+          streak: streak,
+          isNight: SleepMode.isNightNow,
+        ),
         AppleActivityCard(
-          language: lang,
+          language: language,
           steps: _tracker.steps,
           stepsGoal: _tracker.stepsGoal,
-          calories: cal,
-          caloriesGoal: calGoal,
+          calories: calories,
+          caloriesGoal: caloriesGoal,
           activeMinutes: _tracker.activeMinutes,
           activeMinutesGoal: _tracker.activeMinutesGoal,
           isWalking: _tracker.isWalking,
@@ -171,13 +180,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 
-  Widget? _permissionBanner(String lang) {
+  Widget? _permissionBanner(String language) {
     if (_tracker.permissionGranted) return null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         TextFielder(
-          text: HomeText.getString(lang, 'perm_activity'),
+          text: HomeText.getString(language, 'perm_activity'),
           template: TextTemplate.caption,
           textAlign: TextAlign.center,
         ),
@@ -185,7 +194,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         Center(
           child: FilledButton(
             onPressed: _requestActivityPermission,
-            child: Text(HomeText.getString(lang, 'perm_grant')),
+            child: Text(HomeText.getString(language, 'perm_grant')),
           ),
         ),
       ],
@@ -194,61 +203,61 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    String name = '';
+    var name = '';
     try {
       name = IdentityStore.fullName;
     } catch (_) {}
-    final lang = _lang;
+    final language = _lang;
 
     final header = _header(name);
-    final card = _card(lang);
-    final banner = _permissionBanner(lang);
+    final card = _card(language);
+    final banner = _permissionBanner(language);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: AmbientBackground(
         child: DeviceModifier(
-        defaultVertical: HomeMobileVertical(
-          header: header,
-          activityCard: card,
-          permissionBanner: banner,
+          defaultVertical: HomeMobileVertical(
+            header: header,
+            activityCard: card,
+            permissionBanner: banner,
+          ),
+          defaultHorizontal: HomeMobileHorizontal(
+            header: header,
+            activityCard: card,
+            permissionBanner: banner,
+          ),
+          mobileVertical: HomeMobileVertical(
+            header: header,
+            activityCard: card,
+            permissionBanner: banner,
+          ),
+          mobileHorizontal: HomeMobileHorizontal(
+            header: header,
+            activityCard: card,
+            permissionBanner: banner,
+          ),
+          tabletVertical: HomeTabletVertical(
+            header: header,
+            activityCard: card,
+            permissionBanner: banner,
+          ),
+          tabletHorizontal: HomeTabletHorizontal(
+            header: header,
+            activityCard: card,
+            permissionBanner: banner,
+          ),
+          desktopVertical: HomeDesktopVertical(
+            header: header,
+            activityCard: card,
+            permissionBanner: banner,
+          ),
+          desktopHorizontal: HomeDesktopHorizontal(
+            header: header,
+            activityCard: card,
+            permissionBanner: banner,
+          ),
         ),
-        defaultHorizontal: HomeMobileHorizontal(
-          header: header,
-          activityCard: card,
-          permissionBanner: banner,
-        ),
-        mobileVertical: HomeMobileVertical(
-          header: header,
-          activityCard: card,
-          permissionBanner: banner,
-        ),
-        mobileHorizontal: HomeMobileHorizontal(
-          header: header,
-          activityCard: card,
-          permissionBanner: banner,
-        ),
-        tabletVertical: HomeTabletVertical(
-          header: header,
-          activityCard: card,
-          permissionBanner: banner,
-        ),
-        tabletHorizontal: HomeTabletHorizontal(
-          header: header,
-          activityCard: card,
-          permissionBanner: banner,
-        ),
-        desktopVertical: HomeDesktopVertical(
-          header: header,
-          activityCard: card,
-          permissionBanner: banner,
-        ),
-        desktopHorizontal: HomeDesktopHorizontal(
-          header: header,
-          activityCard: card,
-          permissionBanner: banner,
-        ),
-      ),
       ),
     );
   }
