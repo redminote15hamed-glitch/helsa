@@ -6,13 +6,12 @@ import 'package:permission_handler/permission_handler.dart';
 class HealthPermissions {
   HealthPermissions._();
 
-  /// Requests the permissions required for step counting and its notification.
+  /// Requests only the runtime permissions required by step counting.
   static Future<HealthPermissionResult> requestAll() async {
     if (kIsWeb || !Platform.isAndroid) {
       return const HealthPermissionResult(
         activity: true,
         notification: true,
-        battery: true,
       );
     }
 
@@ -22,7 +21,6 @@ class HealthPermissions {
     return HealthPermissionResult(
       activity: activity.isGranted,
       notification: notification.isGranted || notification.isLimited,
-      battery: true,
     );
   }
 
@@ -44,12 +42,10 @@ class HealthPermissions {
 class HealthPermissionResult {
   final bool activity;
   final bool notification;
-  final bool battery;
 
   const HealthPermissionResult({
     required this.activity,
     required this.notification,
-    required this.battery,
   });
 
   bool get readyForSteps => activity;
