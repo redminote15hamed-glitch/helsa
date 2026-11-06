@@ -38,14 +38,14 @@ class StepForeground {
   bool _initialized = false;
   int _lastSteps = -1;
   int _lastGoal = -1;
+  bool _lastPaused = false;
 
   void init() {
     if (kIsWeb || !Platform.isAndroid) return;
 
-    if (_initialized) return;
-    _initialized = true;
-
-    FlutterForegroundTask.init(
+    if (!_initialized) {
+      _initialized = true;
+      FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
         channelId: 'helsa_step_service_v3',
         channelName: 'Helsa Steps',
@@ -59,13 +59,14 @@ class StepForeground {
         playSound: false,
       ),
       foregroundTaskOptions: ForegroundTaskOptions(
-        eventAction: ForegroundTaskEventAction.nothing(),
+        eventAction: ForegroundTaskEventAction.repeat(3000),
         autoRunOnBoot: true,
         autoRunOnMyPackageReplaced: true,
         allowWakeLock: true,
         allowWifiLock: false,
       ),
-    );
+      );
+    }
 
     if (!_taskDataAttached) {
       FlutterForegroundTask.addTaskDataCallback(_onTaskData);
@@ -87,19 +88,34 @@ class StepForeground {
 
   void _onTrackerChanged() {
     final tracker = StepTracker.instance;
-    if (tracker.steps == _lastSteps && tracker.stepsGoal == _lastGoal) {
+    final paused = tracker.isPaused;
+    if (tracker.steps == _lastSteps &&
+        tracker.stepsGoal == _lastGoal &&
+        paused == _lastPaused) {
       return;
     }
     _lastSteps = tracker.steps;
     _lastGoal = tracker.stepsGoal;
+    _lastPaused = paused;
     unawaited(_sendTrackerState());
   }
 
   void _onTaskData(Object data) {
     if (data is! Map) return;
+    final tracker = StepTracker.instance;
     final rawSteps = data['deviceSteps'];
     if (rawSteps is num) {
-      StepTracker.instance.ingestExternalDeviceSteps(rawSteps.toInt());
+      tracker.ingestExternalDeviceSteps(rawSteps.toInt());
+    }
+    if (data['backgroundActivity'] == true) {
+      final activeMs = data['activeMs'];
+      final isWalking = data['isWalking'];
+      if (activeMs is num && isWalking is bool) {
+        tracker.ingestBackgroundActivity(
+          activeMs: activeMs.toInt(),
+          isWalking: isWalking,
+        );
+      }
     }
   }
 
@@ -112,6 +128,9 @@ class StepForeground {
         'dailySteps': tracker.steps,
         'stepsGoal': tracker.stepsGoal,
         'dayKey': tracker.currentDayKey,
+        'activeMs': tracker.activeMillisecondsForSync,
+        'isWalking': tracker.isWalking,
+        'isPaused': tracker.isPaused,
         'stepsLabel': HomeText.getString(_lang(), 'steps'),
         'notificationBody': _body(),
       });
@@ -132,6 +151,7 @@ class StepForeground {
     attachTracker();
 
     if (await FlutterForegroundTask.isRunningService) {
+      StepTracker.instance.setBackgroundActivityAuthority(true);
       await _sendTrackerState();
       await refresh(force: true);
       return true;
@@ -148,6 +168,7 @@ class StepForeground {
 
     final started = result is ServiceRequestSuccess;
     if (started) {
+      tracker.setBackgroundActivityAuthority(true);
       _lastSteps = tracker.steps;
       _lastGoal = tracker.stepsGoal;
       await _sendTrackerState();
@@ -162,6 +183,7 @@ class StepForeground {
     if (kIsWeb || !Platform.isAndroid) return;
     try {
       if (!await FlutterForegroundTask.isRunningService) {
+        StepTracker.instance.setBackgroundActivityAuthority(false);
         await start();
       } else {
         await _sendTrackerState();
@@ -206,6 +228,7 @@ class StepForeground {
     if (await FlutterForegroundTask.isRunningService) {
       await FlutterForegroundTask.stopService();
     }
+    StepTracker.instance.setBackgroundActivityAuthority(false);
     if (_taskDataAttached) {
       FlutterForegroundTask.removeTaskDataCallback(_onTaskData);
       _taskDataAttached = false;
@@ -230,12 +253,19 @@ class StepForeground {
 
 class StepTaskHandler extends TaskHandler {
   StreamSubscription<StepCount>? _stepSubscription;
+  StreamSubscription<PedestrianStatus>? _statusSubscription;
 
   int? _baseDeviceSteps;
   int _dailySteps = 0;
   int _stepsGoal = GoalCalculatorFallback.steps;
   int _lastNotifiedSteps = -1;
   int _lastPersistedSteps = -1;
+  int _activeMs = 0;
+  bool _isWalking = false;
+  bool _paused = false;
+  DateTime? _walkStartedAt;
+  DateTime? _lastStepAt;
+  DateTime _lastPersistAt = DateTime.fromMillisecondsSinceEpoch(0);
   String _dayKey = '';
   String _stepsLabel = 'steps';
   String _notificationBody = 'Helsa is tracking activity';
@@ -266,6 +296,9 @@ class StepTaskHandler extends TaskHandler {
             _baseDeviceSteps = base is num ? base.toInt() : null;
             _dailySteps = steps is num ? steps.toInt() : 0;
             _stepsGoal = goal is num ? goal.toInt() : _stepsGoal;
+            final activeMs = decoded['activeMs'];
+            _activeMs = activeMs is num ? activeMs.toInt() : 0;
+            _paused = decoded['isPaused'] == true;
             _stepsLabel = decoded['stepsLabel']?.toString() ?? _stepsLabel;
             _notificationBody =
                 decoded['notificationBody']?.toString() ?? _notificationBody;
@@ -283,6 +316,13 @@ class StepTaskHandler extends TaskHandler {
       },
       cancelOnError: false,
     );
+    _statusSubscription = Pedometer.pedestrianStatusStream.listen(
+      _onPedestrianStatus,
+      onError: (error, stackTrace) {
+        debugPrint('StepTaskHandler status stream: $error');
+      },
+      cancelOnError: false,
+    );
   }
 
   void _onStepCount(StepCount event) {
@@ -291,6 +331,27 @@ class StepTaskHandler extends TaskHandler {
       _dayKey = today;
       _baseDeviceSteps = event.steps;
       _dailySteps = 0;
+      _activeMs = 0;
+      _walkStartedAt = null;
+      _lastStepAt = null;
+      _isWalking = false;
+      _lastPersistedSteps = -1;
+    }
+
+    if (_paused) {
+      _baseDeviceSteps = event.steps - _dailySteps;
+      FlutterForegroundTask.sendDataToMain({
+        'deviceSteps': event.steps,
+        'dayKey': _dayKey,
+      });
+      unawaited(_persistState());
+      return;
+    }
+
+    _lastStepAt = DateTime.now();
+    if (!_isWalking) {
+      _isWalking = true;
+      _walkStartedAt = DateTime.now();
     }
 
     if (_baseDeviceSteps == null) {
@@ -316,6 +377,8 @@ class StepTaskHandler extends TaskHandler {
       unawaited(_persistState());
     }
 
+    _sendActivityState();
+
     if (_lastNotifiedSteps < 0 ||
         _dailySteps - _lastNotifiedSteps >= 10 ||
         (_stepsGoal > 0 && _dailySteps >= _stepsGoal &&
@@ -328,6 +391,54 @@ class StepTaskHandler extends TaskHandler {
     }
   }
 
+  void _onPedestrianStatus(PedestrianStatus event) {
+    if (_paused) return;
+    final now = DateTime.now();
+    final walking = event.status.toLowerCase() == 'walking';
+
+    if (walking) {
+      _lastStepAt = now;
+      if (!_isWalking) {
+        _isWalking = true;
+        _walkStartedAt = now;
+      }
+    } else if (_isWalking) {
+      final lastStep = _lastStepAt;
+      if (lastStep == null || now.difference(lastStep).inSeconds > 15) {
+        _finishWalkingSession(now);
+      }
+    }
+    _sendActivityState();
+  }
+
+  void _finishWalkingSession(DateTime now) {
+    final startedAt = _walkStartedAt;
+    if (startedAt != null) {
+      _activeMs += now.difference(startedAt).inMilliseconds;
+    }
+    _walkStartedAt = null;
+    _isWalking = false;
+    _lastStepAt = null;
+    unawaited(_persistState());
+    _sendActivityState();
+  }
+
+  int _liveActiveMs() {
+    final startedAt = _walkStartedAt;
+    if (_isWalking && startedAt != null && !_paused) {
+      return _activeMs + DateTime.now().difference(startedAt).inMilliseconds;
+    }
+    return _activeMs;
+  }
+
+  void _sendActivityState() {
+    FlutterForegroundTask.sendDataToMain({
+      'backgroundActivity': true,
+      'activeMs': _liveActiveMs(),
+      'isWalking': _isWalking && !_paused,
+    });
+  }
+
   Future<void> _persistState() async {
     await FlutterForegroundTask.saveData(
       key: _stateKey,
@@ -338,6 +449,8 @@ class StepTaskHandler extends TaskHandler {
         'stepsGoal': _stepsGoal,
         'stepsLabel': _stepsLabel,
         'notificationBody': _notificationBody,
+        'activeMs': _activeMs,
+        'isPaused': _paused,
       }),
     );
   }
@@ -358,6 +471,15 @@ class StepTaskHandler extends TaskHandler {
     _dailySteps = steps is num ? steps.toInt() : 0;
     _lastPersistedSteps = _dailySteps;
     _stepsGoal = goal is num ? goal.toInt() : _stepsGoal;
+    final activeMs = data['activeMs'];
+    if (activeMs is num && activeMs.toInt() >= _activeMs) {
+      _activeMs = activeMs.toInt();
+    }
+    _paused = data['isPaused'] == true;
+    final isWalking = data['isWalking'] == true && !_paused;
+    _isWalking = isWalking;
+    _walkStartedAt = isWalking ? DateTime.now() : null;
+    _lastStepAt = isWalking ? DateTime.now() : null;
     _stepsLabel = data['stepsLabel']?.toString() ?? _stepsLabel;
     _notificationBody =
         data['notificationBody']?.toString() ?? _notificationBody;
@@ -366,13 +488,24 @@ class StepTaskHandler extends TaskHandler {
 
   @override
   void onRepeatEvent(DateTime timestamp) {
-    // Sensor events, not a polling timer, drive step updates.
+    if (_isWalking && _lastStepAt != null &&
+        timestamp.difference(_lastStepAt!).inSeconds > 12) {
+      _finishWalkingSession(timestamp);
+    }
+    _sendActivityState();
+    if (timestamp.difference(_lastPersistAt).inSeconds >= 30) {
+      _lastPersistAt = timestamp;
+      unawaited(_persistState());
+    }
   }
 
   @override
   Future<void> onDestroy(DateTime timestamp, bool isTimeout) async {
+    _finishWalkingSession(timestamp);
     await _stepSubscription?.cancel();
+    await _statusSubscription?.cancel();
     _stepSubscription = null;
+    _statusSubscription = null;
     await _persistState();
   }
 
