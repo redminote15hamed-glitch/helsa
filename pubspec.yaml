@@ -23,7 +23,7 @@ dependencies:
   home_widget: ^0.10.0
   image_picker: ^1.1.2
   path_provider: ^2.1.5
-  flutter_secure_storage: ^11.2.0
+  flutter_secure_storage: ^9.2.4
 
 dev_dependencies:
   flutter_test:
@@ -36,6 +36,10 @@ dependency_overrides:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/icon/helsa_icon.png
+    - assets/icon/launcher/
 
   fonts:
     - family: YekanBakh
