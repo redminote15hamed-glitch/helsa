@@ -48,9 +48,12 @@ class HelsaStepsWidgetProvider : HomeWidgetProvider() {
 
                 try {
                     views.setProgressBar(R.id.bar_steps_capsule, 100, pct.coerceAtMost(100), false)
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        views.setProgressTintList(
+
+                    // RemoteViews supports ColorStateList method calls from Android 12 (API 31).
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        views.setColorStateList(
                             R.id.bar_steps_capsule,
+                            "setProgressTintList",
                             ColorStateList.valueOf(stepsColor)
                         )
                     }
