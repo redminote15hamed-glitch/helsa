@@ -211,7 +211,6 @@ class StepForeground {
         notificationIcon: _notifIcon,
       );
       await _sendTrackerState();
-      await HomeWidgetBridge.instance.push();
     } catch (error, stackTrace) {
       debugPrint('StepForeground.refresh: $error\n$stackTrace');
     }
