@@ -25,6 +25,7 @@ class HomeWidgetBridge {
   bool _pushInProgress = false;
   bool _pushQueued = false;
   bool _queuedForce = false;
+  Timer? _retryTimer;
 
   int _lastSteps = -1;
   int _lastCal = -1;
@@ -58,6 +59,8 @@ class HomeWidgetBridge {
   }
 
   void detach() {
+    _retryTimer?.cancel();
+    _retryTimer = null;
     if (!_listening) return;
     _listening = false;
     StepTracker.instance.removeListener(_onTracker);
@@ -117,8 +120,13 @@ class HomeWidgetBridge {
 
       final now = DateTime.now();
       if (!force && unchanged) return;
-      if (!force && now.difference(_lastPush).inMilliseconds < 600) {
-        _pushQueued = true;
+      final elapsedMs = now.difference(_lastPush).inMilliseconds;
+      if (!force && elapsedMs < 600) {
+        _retryTimer?.cancel();
+        _retryTimer = Timer(
+          Duration(milliseconds: 600 - elapsedMs),
+          () => unawaited(push()),
+        );
         return;
       }
 
