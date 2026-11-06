@@ -144,6 +144,7 @@ class StepForeground {
   Future<bool> start() async {
     if (kIsWeb || !Platform.isAndroid) return false;
 
+    init();
     await StepsStore.open();
     attachTracker();
 
@@ -220,9 +221,10 @@ class StepForeground {
 
   /// Stops the live task and overwrites its persisted snapshot so old
   /// counters cannot be restored after a full profile reset.
-  Future<void> resetForProfileClear() async {
-    if (kIsWeb || !Platform.isAndroid || !_initialized) return;
+  Future<bool> resetForProfileClear() async {
+    if (kIsWeb || !Platform.isAndroid || !_initialized) return false;
 
+    final wasRunning = await FlutterForegroundTask.isRunningService;
     await stop();
     final now = DateTime.now();
     final dayKey = '${now.year.toString().padLeft(4, '0')}-'
@@ -242,6 +244,7 @@ class StepForeground {
     );
     _lastSteps = 0;
     _lastGoal = -1;
+    return wasRunning;
   }
 
   Future<void> stop() async {
