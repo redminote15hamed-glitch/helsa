@@ -557,63 +557,179 @@ class _PreviewCard extends StatelessWidget {
   }
 }
 
+
 class _MainPreview extends StatelessWidget {
-  final String language;
   final int steps, stepsGoal, cal, calGoal, mins, minsGoal;
+  final String language;
 
   const _MainPreview({
-    required this.language,
     required this.steps,
     required this.stepsGoal,
     required this.cal,
     required this.calGoal,
     required this.mins,
     required this.minsGoal,
+    required this.language,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
+    final mc = MetricColors.current;
+    final stepsPct = stepsGoal <= 0 ? 0 : (steps / stepsGoal * 100).round().clamp(0, 999);
+    final calPct = calGoal <= 0 ? 0 : (cal / calGoal * 100).round().clamp(0, 999);
+    final minsPct = minsGoal <= 0 ? 0 : (mins / minsGoal * 100).round().clamp(0, 999);
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF121820) : Colors.white,
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.35)),
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Hero steps (~55%)
+            Expanded(
+              flex: 11,
+              child: _RailPanel(
+                color: mc.steps,
+                icon: Icons.directions_walk_rounded,
+                label: HomeText.getString(language, 'steps'),
+                value: '$steps',
+                sub: '$stepsPct%',
+                tall: true,
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Cal + time stacked
+            Expanded(
+              flex: 9,
+              child: Column(
+                children: [
+                  Expanded(
+                    child: _RailPanel(
+                      color: mc.calories,
+                      icon: Icons.local_fire_department_rounded,
+                      label: HomeText.getString(language, 'kcal'),
+                      value: '$cal',
+                      sub: '$calPct%',
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: _RailPanel(
+                      color: mc.active,
+                      icon: Icons.timer_outlined,
+                      label: HomeText.getString(language, 'active'),
+                      value: '$mins',
+                      sub: '$minsPct%',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RailPanel extends StatelessWidget {
+  const _RailPanel({
+    required this.color,
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.sub,
+    this.tall = false,
+  });
+
+  final Color color;
+  final IconData icon;
+  final String label, value, sub;
+  final bool tall;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Row(
         children: [
-          Expanded(
-            child: _MetricCol(
-              color: MetricColors.current.steps,
-              icon: Icons.directions_walk_rounded,
-              label: HomeText.getString(language, 'steps'),
-              value: '$steps',
-              goal: '$stepsGoal',
+          Container(
+            width: 4,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(99),
             ),
           ),
+          const SizedBox(width: 10),
           Expanded(
-            child: _MetricCol(
-              color: MetricColors.current.calories,
-              icon: Icons.local_fire_department_rounded,
-              label: HomeText.getString(language, 'kcal'),
-              value: '$cal',
-              goal: '$calGoal',
-            ),
-          ),
-          Expanded(
-            child: _MetricCol(
-              color: MetricColors.current.active,
-              icon: Icons.timer_outlined,
-              label: HomeText.getString(language, 'minutes'),
-              value: '$mins',
-              goal: '$minsGoal',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: tall ? 30 : 26,
+                      height: tall ? 30 : 26,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: color.withValues(alpha: 0.20),
+                      ),
+                      child: Icon(icon, size: tall ? 17 : 15, color: color),
+                    ),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: color,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: tall ? 10 : 6),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: tall ? 30 : 20,
+                    fontWeight: FontWeight.w900,
+                    height: 1,
+                    color: cs.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                  child: Text(
+                    sub,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: color,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -623,151 +739,107 @@ class _MainPreview extends StatelessWidget {
 }
 
 class _StepsPreview extends StatelessWidget {
-  final String language;
   final int steps, stepsGoal;
+  final String language;
 
   const _StepsPreview({
-    required this.language,
     required this.steps,
     required this.stepsGoal,
+    required this.language,
   });
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final mc = MetricColors.current;
     final pct = stepsGoal <= 0 ? 0.0 : (steps / stepsGoal).clamp(0.0, 1.0);
-    final pctLabel = '${(pct * 100).round()}%';
-    // Match real Android steps widget: tall card, big number, label, icon, capsule %.
-    return Center(
-      child: Container(
-        width: 168,
-        height: 200,
-        padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-        decoration: BoxDecoration(
-          color: const Color(0xFF0E1512),
-          borderRadius: BorderRadius.circular(22),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.18),
-              blurRadius: 14,
-              offset: const Offset(0, 5),
+    final pctLabel = (pct * 100).round();
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            HomeText.getString(language, 'steps').toUpperCase(),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.4,
+              color: mc.steps,
             ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Expanded(
-              child: Center(
+          ),
+          const SizedBox(height: 8),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Container(
+                width: 4,
+                height: 52,
+                margin: const EdgeInsets.only(right: 12, bottom: 4),
+                decoration: BoxDecoration(
+                  color: mc.steps,
+                  borderRadius: BorderRadius.circular(99),
+                ),
+              ),
+              Expanded(
                 child: Text(
                   '$steps',
                   style: TextStyle(
-                    color: MetricColors.current.steps,
-                    fontWeight: FontWeight.w800,
                     fontSize: 40,
+                    fontWeight: FontWeight.w900,
                     height: 1,
+                    color: cs.onSurface,
                   ),
                 ),
               ),
-            ),
-            Text(
-              HomeText.getString(language, 'steps'),
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.45),
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: mc.steps.withValues(alpha: 0.18),
+                ),
+                child: Icon(Icons.directions_walk_rounded, color: mc.steps),
               ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(99),
+            child: LinearProgressIndicator(
+              value: pct,
+              minHeight: 8,
+              backgroundColor: mc.steps.withValues(alpha: 0.15),
+              color: mc.steps,
             ),
-            const SizedBox(height: 8),
-            Icon(
-              Icons.directions_walk_rounded,
-              color: MetricColors.current.steps,
-              size: 22,
-            ),
-            const SizedBox(height: 10),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(14),
-              child: SizedBox(
-                height: 26,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    LinearProgressIndicator(
-                      value: pct,
-                      minHeight: 26,
-                      backgroundColor:
-                          MetricColors.current.steps.withValues(alpha: 0.22),
-                      color: MetricColors.current.steps,
-                    ),
-                    Center(
-                      child: Text(
-                        pctLabel,
-                        style: TextStyle(
-                          color: MetricColors.current.steps
-                              .withValues(alpha: 0.95),
-                          fontWeight: FontWeight.w800,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ],
+          ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+              decoration: BoxDecoration(
+                color: mc.steps.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(99),
+              ),
+              child: Text(
+                '$pctLabel%',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: mc.steps,
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
-}
-
-class _MetricCol extends StatelessWidget {
-  final Color color;
-  final IconData icon;
-  final String label;
-  final String value;
-  final String goal;
-
-  const _MetricCol({
-    required this.color,
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.goal,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Icon(icon, color: color, size: 20),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: color,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: TextStyle(
-            fontWeight: FontWeight.w800,
-            fontSize: 15,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-        ),
-        Text(
-          '/ $goal',
-          style: TextStyle(
-            fontSize: 10,
-            color:
-                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45),
-          ),
-        ),
-      ],
     );
   }
 }

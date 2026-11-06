@@ -42,7 +42,8 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
 
   String get _lang => widget.language ?? MetaStore.language;
 
-  bool get _dirty => _paletteId != _savedPaletteId || _night != _savedNight;
+  bool get _dirty =>
+      _paletteId != _savedPaletteId || _night != _savedNight;
 
   List<HelsaPalette> get _palettes => HelsaPalette.all;
 
@@ -237,7 +238,8 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                         final appleSize = (w * 0.175).clamp(58.0, 76.0);
                         final orbitSize =
                             (math.min(w, h) * 0.52).clamp(220.0, 300.0);
-                        final cardSide = (w * 0.38).clamp(128.0, 160.0);
+                        final cardSide =
+                            (w * 0.38).clamp(128.0, 160.0);
 
                         return Column(
                           children: [
@@ -280,12 +282,13 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                             ),
                             SizedBox(height: context.vS * 0.45),
                             AppearanceHeartDock(
+                              // Real theme colors only — same as apples / app metrics.
                               colors: [
+                                metrics.steps,
+                                metrics.calories,
+                                metrics.active,
                                 cs.primary,
                                 cs.secondary,
-                                cs.tertiary,
-                                Color.lerp(cs.primary, cs.secondary, 0.5)!,
-                                Color.lerp(cs.tertiary, cs.primary, 0.4)!,
                               ],
                               width: w * 0.62,
                             ),
@@ -367,3 +370,4 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
     );
   }
 }
+

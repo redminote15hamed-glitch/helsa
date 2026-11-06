@@ -51,7 +51,13 @@ class StepTracker extends ChangeNotifier {
     }
   }
 
-  double get calories => _steps * GoalCalculator.kcalPerStep();
+  double get calories {
+    // Uses weight, height, sex (stride) + optional intensity from active time.
+    return GoalCalculator.caloriesForSteps(
+      _steps,
+      activeMinutes: _sensorActiveMinutes,
+    );
+  }
 
   double get caloriesGoal {
     final custom = StepsStore.customCaloriesGoal;
@@ -67,8 +73,16 @@ class StepTracker extends ChangeNotifier {
     return milliseconds;
   }
 
+  /// Raw walking time from sensor sessions only.
+  int get _sensorActiveMinutes =>
+      (activeMillisecondsForSync / 60000).floor();
+
+  /// Sensor walking time reconciled with step-implied duration.
   int get activeMinutes {
-    return (activeMillisecondsForSync / 60000).floor();
+    return GoalCalculator.reconcileActiveMinutes(
+      sensorMinutes: _sensorActiveMinutes,
+      steps: _steps,
+    );
   }
 
   int get activeMinutesGoal {
