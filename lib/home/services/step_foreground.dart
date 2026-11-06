@@ -119,7 +119,7 @@ class StepForeground {
     }
   }
 
-  Future<void> _sendTrackerState() async {
+  Future<void> _sendTrackerState({bool syncActivity = false}) async {
     try {
       if (!await FlutterForegroundTask.isRunningService) return;
       final tracker = StepTracker.instance;
@@ -128,8 +128,8 @@ class StepForeground {
         'dailySteps': tracker.steps,
         'stepsGoal': tracker.stepsGoal,
         'dayKey': tracker.currentDayKey,
-        'activeMs': tracker.activeMillisecondsForSync,
-        'isWalking': tracker.isWalking,
+        if (syncActivity) 'activeMs': tracker.activeMillisecondsForSync,
+        if (syncActivity) 'isWalking': tracker.isWalking,
         'isPaused': tracker.isPaused,
         'stepsLabel': HomeText.getString(_lang(), 'steps'),
         'notificationBody': _body(),
@@ -172,7 +172,7 @@ class StepForeground {
       tracker.setBackgroundActivityAuthority(true);
       _lastSteps = tracker.steps;
       _lastGoal = tracker.stepsGoal;
-      await _sendTrackerState();
+      await _sendTrackerState(syncActivity: true);
       await HomeWidgetBridge.instance.push(force: true);
     } else {
       debugPrint('StepForeground.start failed: $result');
@@ -486,15 +486,27 @@ class StepTaskHandler extends TaskHandler {
     _dailySteps = steps is num ? steps.toInt() : 0;
     _lastPersistedSteps = _dailySteps;
     _stepsGoal = goal is num ? goal.toInt() : _stepsGoal;
-    final activeMs = data['activeMs'];
-    if (activeMs is num && activeMs.toInt() >= _activeMs) {
-      _activeMs = activeMs.toInt();
+    final incomingPaused = data['isPaused'];
+    if (incomingPaused is bool) {
+      if (incomingPaused && !_paused && _isWalking) {
+        _finishWalkingSession(DateTime.now());
+      }
+      _paused = incomingPaused;
     }
-    _paused = data['isPaused'] == true;
-    final isWalking = data['isWalking'] == true && !_paused;
-    _isWalking = isWalking;
-    _walkStartedAt = isWalking ? DateTime.now() : null;
-    _lastStepAt = isWalking ? DateTime.now() : null;
+
+    final activeMs = data['activeMs'];
+    final incomingWalking = data['isWalking'];
+    if (activeMs is num && incomingWalking is bool) {
+      if (activeMs.toInt() >= _activeMs) _activeMs = activeMs.toInt();
+      final isWalking = incomingWalking && !_paused;
+      _isWalking = isWalking;
+      _walkStartedAt = isWalking ? DateTime.now() : null;
+      _lastStepAt = isWalking ? DateTime.now() : null;
+    } else if (_paused) {
+      _isWalking = false;
+      _walkStartedAt = null;
+      _lastStepAt = null;
+    }
     _stepsLabel = data['stepsLabel']?.toString() ?? _stepsLabel;
     _notificationBody =
         data['notificationBody']?.toString() ?? _notificationBody;
