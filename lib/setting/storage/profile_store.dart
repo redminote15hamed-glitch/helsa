@@ -80,6 +80,7 @@ class ProfileStore {
     try {
       await StepForeground.instance.resetForProfileClear();
     } finally {
+      await StepTracker.instance.stopForProfileClear();
       await StorageInit.clearAll();
       StepTracker.instance.resetInMemory();
     }
