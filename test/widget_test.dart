@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:helsa/home/services/goal_calculator.dart';
+import 'package:helsa/home/services/step_tracker.dart';
 import 'package:helsa/setting/storage/age_store.dart';
 import 'package:helsa/setting/storage/activity_store.dart';
 import 'package:helsa/setting/storage/steps_store.dart';
@@ -96,6 +97,22 @@ void main() {
     expect(StepsStore.customStepsGoal, isNull);
     expect(StepsStore.customCaloriesGoal, isNull);
     expect(StepsStore.customActiveGoal, isNull);
+  });
+
+  test('in-memory tracker reset drops live counters and sensor baseline', () async {
+    final tracker = StepTracker.instance;
+    tracker.ingestExternalDeviceSteps(100);
+    tracker.ingestExternalDeviceSteps(112);
+
+    expect(tracker.steps, 12);
+    expect(tracker.baseDeviceSteps, 100);
+
+    tracker.resetInMemory();
+
+    expect(tracker.steps, 0);
+    expect(tracker.baseDeviceSteps, isNull);
+    expect(tracker.activeMinutes, 0);
+    expect(tracker.isWalking, isFalse);
   });
 
   test('streak storage opens and records a completed goal', () async {
