@@ -177,7 +177,8 @@ class StepsStore {
 
   static Future<void> saveBaseDeviceSteps(int value) async {
     _ensureToday();
-    await _b.put('baseDeviceSteps', value < 0 ? 0 : value);
+    // Negative offsets are valid after the hardware counter resets on reboot.
+    await _b.put('baseDeviceSteps', value);
   }
 
   static Future<void> saveActiveMs(int value) async {
