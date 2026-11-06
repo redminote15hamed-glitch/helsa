@@ -85,7 +85,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _lastNotifGoal = goal;
       StepForeground.instance.refresh();
     }
-    HomeWidgetBridge.instance.push();
     if (mounted) setState(() {});
   }
 
