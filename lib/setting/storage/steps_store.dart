@@ -27,7 +27,7 @@ class StepsStore {
 
   /// Ensures daily values belong to the current local calendar day.
   /// The previous day's recap is archived exactly once before resetting.
-  static void _ensureToday() {
+  static void _ensureToday({int? liveSteps, int? liveActiveMs}) {
     final today = _todayKey();
     final savedDay = _b.get('day')?.toString();
 
@@ -41,11 +41,12 @@ class StepsStore {
       _b.put('last_day', savedDay);
       _b.put(
         'last_day_steps',
-        previousSteps is num ? previousSteps.toInt() : 0,
+        liveSteps ?? (previousSteps is num ? previousSteps.toInt() : 0),
       );
       _b.put(
         'last_day_active_ms',
-        previousActiveMs is num ? previousActiveMs.toInt() : 0,
+        liveActiveMs ??
+            (previousActiveMs is num ? previousActiveMs.toInt() : 0),
       );
       if (previousGoal is num) {
         _b.put('last_day_goal_steps', previousGoal.toInt());
@@ -58,6 +59,16 @@ class StepsStore {
     _b.put('activeMinutes', 0);
     _b.put('baseDeviceSteps', null);
     _b.put('activeMs', 0);
+  }
+
+  /// Rolls over using the tracker's latest in-memory totals, avoiding loss
+  /// of the final debounced steps or active-time seconds at midnight.
+  static String rolloverWithCurrentValues({
+    required int steps,
+    required int activeMs,
+  }) {
+    _ensureToday(liveSteps: steps, liveActiveMs: activeMs);
+    return _todayKey();
   }
 
   static String get currentDayKey {
