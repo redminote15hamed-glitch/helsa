@@ -73,9 +73,15 @@ class StreakStore {
         (activeMinutesGoal > 0 && activeMinutes >= activeMinutesGoal);
 
     if (reachedAnyGoal) {
-      await markTodayDone();
-    } else {
+      if (!todayDone) await markTodayDone();
+      return;
+    }
+
+    // Recompute once per local day, not on every sensor event.
+    final lastRecomputedDay = _b.get('last_recomputed_day')?.toString();
+    if (lastRecomputedDay != _today) {
       await _recompute();
+      await _b.put('last_recomputed_day', _today);
     }
   }
 
