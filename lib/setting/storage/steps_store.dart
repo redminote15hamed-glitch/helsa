@@ -11,70 +11,79 @@ class StepsStore {
   }
 
   static Box<dynamic> get _b {
-    final b = _box;
-    if (b == null || !b.isOpen) {
+    final box = _box;
+    if (box == null || !box.isOpen) {
       throw StateError('StepsStore.open() required');
     }
-    return b;
+    return box;
   }
 
   static String _todayKey() {
-    final n = DateTime.now();
-    return '${n.year.toString().padLeft(4, '0')}-'
-        '${n.month.toString().padLeft(2, '0')}-'
-        '${n.day.toString().padLeft(2, '0')}';
+    final now = DateTime.now();
+    return '${now.year.toString().padLeft(4, '0')}-'
+        '${now.month.toString().padLeft(2, '0')}-'
+        '${now.day.toString().padLeft(2, '0')}';
   }
 
-  /// قبل از ریست روز، خلاصهٔ روز قبلی را نگه می‌دارد (فقط آخرین روز)
+  /// Ensures daily values belong to the current local calendar day.
+  /// The previous day's recap is archived exactly once before resetting.
   static void _ensureToday() {
     final today = _todayKey();
-    final saved = _b.get('day')?.toString();
-    if (saved != today) {
-      if (saved != null && saved.isNotEmpty) {
-        final prevSteps = _b.get('steps');
-        final prevMs = _b.get('activeMs');
-        final goal = _b.get('goal_steps');
-        _b.put('last_day', saved);
-        _b.put(
-          'last_day_steps',
-          prevSteps is num ? prevSteps.toInt() : 0,
-        );
-        _b.put(
-          'last_day_active_ms',
-          prevMs is num ? prevMs.toInt() : 0,
-        );
-        if (goal is num) {
-          _b.put('last_day_goal_steps', goal.toInt());
-        }
-        // گزارش فقط یک‌بار تا وقتی کاربر ببیند
-        _b.put('pending_recap', true);
+    final savedDay = _b.get('day')?.toString();
+
+    if (savedDay == today) return;
+
+    if (savedDay != null && savedDay.isNotEmpty) {
+      final previousSteps = _b.get('steps');
+      final previousActiveMs = _b.get('activeMs');
+      final previousGoal = _b.get('goal_steps');
+
+      _b.put('last_day', savedDay);
+      _b.put(
+        'last_day_steps',
+        previousSteps is num ? previousSteps.toInt() : 0,
+      );
+      _b.put(
+        'last_day_active_ms',
+        previousActiveMs is num ? previousActiveMs.toInt() : 0,
+      );
+      if (previousGoal is num) {
+        _b.put('last_day_goal_steps', previousGoal.toInt());
       }
-      _b.put('day', today);
-      _b.put('steps', 0);
-      _b.put('activeMinutes', 0);
-      _b.put('baseDeviceSteps', null);
-      _b.put('activeMs', 0);
+      _b.put('pending_recap', true);
     }
+
+    _b.put('day', today);
+    _b.put('steps', 0);
+    _b.put('activeMinutes', 0);
+    _b.put('baseDeviceSteps', null);
+    _b.put('activeMs', 0);
   }
 
-  /// اگر گزارش دیده نشده باشد برمی‌گرداند و flag را پاک می‌کند
+  static String get currentDayKey {
+    _ensureToday();
+    return _todayKey();
+  }
+
   static Map<String, dynamic>? consumePendingRecap() {
     _ensureToday();
-    final pending = _b.get('pending_recap') == true;
-    if (!pending) return null;
+    if (_b.get('pending_recap') != true) return null;
+
     final day = _b.get('last_day')?.toString();
     if (day == null || day.isEmpty) {
       _b.put('pending_recap', false);
       return null;
     }
+
     final steps = _b.get('last_day_steps');
-    final ms = _b.get('last_day_active_ms');
+    final activeMs = _b.get('last_day_active_ms');
     final goal = _b.get('last_day_goal_steps');
     _b.put('pending_recap', false);
+
     return {
       'day': day,
       'steps': steps is num ? steps.toInt() : 0,
-      'activeMs': ms is num ? ms.toInt() : 0,
+      'activeMs': activeMs is num ? activeMs.toInt() : 0,
       'goalSteps': goal is num ? goal.toInt() : null,
     };
   }
@@ -88,76 +97,59 @@ class StepsStore {
     }
   }
 
-  /// آمار آخرین روز آرشیو شده (بدون مصرف recap)
   static int get lastDaySteps {
-    final v = _b.get('last_day_steps');
-    if (v is int) return v;
-    if (v is num) return v.toInt();
-    return 0;
+    final value = _b.get('last_day_steps');
+    return value is num ? value.toInt() : 0;
   }
 
   static int? get lastDayGoalSteps {
-    final v = _b.get('last_day_goal_steps');
-    if (v is int) return v;
-    if (v is num) return v.toInt();
-    return null;
+    final value = _b.get('last_day_goal_steps');
+    return value is num ? value.toInt() : null;
   }
 
   static String? get lastDayKey {
-    final v = _b.get('last_day')?.toString();
-    if (v == null || v.isEmpty) return null;
-    return v;
+    final value = _b.get('last_day')?.toString();
+    return value == null || value.isEmpty ? null : value;
   }
 
   static int get steps {
     _ensureToday();
-    final v = _b.get('steps');
-    if (v is int) return v;
-    if (v is num) return v.toInt();
-    return 0;
+    final value = _b.get('steps');
+    return value is num ? value.toInt() : 0;
   }
 
   static int? get baseDeviceSteps {
     _ensureToday();
-    final v = _b.get('baseDeviceSteps');
-    if (v is int) return v;
-    if (v is num) return v.toInt();
-    return null;
+    final value = _b.get('baseDeviceSteps');
+    return value is num ? value.toInt() : null;
   }
 
   static int get activeMs {
     _ensureToday();
-    final v = _b.get('activeMs');
-    if (v is int) return v;
-    if (v is num) return v.toInt();
-    return 0;
+    final value = _b.get('activeMs');
+    return value is num ? value.toInt() : 0;
   }
 
   static int? get customStepsGoal {
-    final v = _b.get('goal_steps');
-    if (v is int) return v;
-    if (v is num) return v.toInt();
-    return null;
+    final value = _b.get('goal_steps');
+    return value is num ? value.toInt() : null;
   }
 
   static int? get customCaloriesGoal {
-    final v = _b.get('goal_calories');
-    if (v is int) return v;
-    if (v is num) return v.toInt();
-    return null;
+    final value = _b.get('goal_calories');
+    return value is num ? value.toInt() : null;
   }
 
   static int? get customActiveGoal {
-    final v = _b.get('goal_active');
-    if (v is int) return v;
-    if (v is num) return v.toInt();
-    return null;
+    final value = _b.get('goal_active');
+    return value is num ? value.toInt() : null;
   }
 
   static DateTime? get pauseUntil {
-    final v = _b.get('pause_until');
-    if (v is int) return DateTime.fromMillisecondsSinceEpoch(v);
-    if (v is num) return DateTime.fromMillisecondsSinceEpoch(v.toInt());
+    final value = _b.get('pause_until');
+    if (value is num) {
+      return DateTime.fromMillisecondsSinceEpoch(value.toInt());
+    }
     return null;
   }
 
@@ -176,24 +168,23 @@ class StepsStore {
     await _b.put('pause_until', until.millisecondsSinceEpoch);
   }
 
-  static Future<void> clearPause() async {
-    await _b.delete('pause_until');
+  static Future<void> clearPause() => _b.delete('pause_until');
+
+  static Future<void> saveSteps(int value) async {
+    _ensureToday();
+    await _b.put('steps', value < 0 ? 0 : value);
   }
 
-  static Future<void> saveSteps(int steps) async {
+  static Future<void> saveBaseDeviceSteps(int value) async {
     _ensureToday();
-    await _b.put('steps', steps);
+    await _b.put('baseDeviceSteps', value < 0 ? 0 : value);
   }
 
-  static Future<void> saveBaseDeviceSteps(int base) async {
+  static Future<void> saveActiveMs(int value) async {
     _ensureToday();
-    await _b.put('baseDeviceSteps', base);
-  }
-
-  static Future<void> saveActiveMs(int ms) async {
-    _ensureToday();
-    await _b.put('activeMs', ms);
-    await _b.put('activeMinutes', (ms / 60000).floor());
+    final safeValue = value < 0 ? 0 : value;
+    await _b.put('activeMs', safeValue);
+    await _b.put('activeMinutes', (safeValue / 60000).floor());
   }
 
   static Future<void> saveStepsGoal(int value) =>
