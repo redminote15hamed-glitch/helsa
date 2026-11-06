@@ -150,9 +150,7 @@ class SleepWakeSetup extends StatelessWidget {
               ],
             ),
           ),
-
           SizedBox(height: context.vS),
-
           Displayer(
             index: 2,
             template: MotionTemplate.zoomFade,

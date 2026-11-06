@@ -43,8 +43,7 @@ class SummarySetup extends StatelessWidget {
     required this.wakeTime,
   });
 
-  String _dash(String? v) =>
-      (v == null || v.trim().isEmpty) ? '—' : v.trim();
+  String _dash(String? v) => (v == null || v.trim().isEmpty) ? '—' : v.trim();
 
   String _genderLabel() {
     if (gender == null) return '—';
@@ -165,9 +164,7 @@ class SummarySetup extends StatelessWidget {
       _SummaryRowData(
         Icons.bedtime_rounded,
         'summary_sleep',
-        sleepTime != null && wakeTime != null
-            ? '$sleepTime → $wakeTime'
-            : '—',
+        sleepTime != null && wakeTime != null ? '$sleepTime → $wakeTime' : '—',
       ),
     ];
 
@@ -203,8 +200,8 @@ class SummarySetup extends StatelessWidget {
                   if (i < rows.length - 1)
                     Divider(
                       height: 1,
-                      color: theme.colorScheme.onSurface
-                          .withValues(alpha: 0.08),
+                      color:
+                          theme.colorScheme.onSurface.withValues(alpha: 0.08),
                     ),
                 ],
               ],

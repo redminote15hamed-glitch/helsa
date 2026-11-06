@@ -14,9 +14,9 @@ class ThemeStore {
 
   static Box<dynamic>? _box;
 
-  static final ValueNotifier<String> paletteId =
-      ValueNotifier<String>('mint');
+  static final ValueNotifier<String> paletteId = ValueNotifier<String>('mint');
   static final ValueNotifier<bool> night = ValueNotifier<bool>(false);
+
   /// Bumps on every apply so MaterialApp rebuilds ThemeData.
   static final ValueNotifier<int> revision = ValueNotifier<int>(0);
 

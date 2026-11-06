@@ -37,6 +37,7 @@ class StepTracker extends ChangeNotifier {
     _syncCalendarDay();
     return _trackedDayKey ?? StepsStore.currentDayKey;
   }
+
   bool get isWalking => _isWalking;
   bool get permissionGranted => _permissionGranted;
 
@@ -85,7 +86,6 @@ class StepTracker extends ChangeNotifier {
       _baseDevice = StepsStore.baseDeviceSteps;
       _activeMs = StepsStore.activeMs;
       _trackedDayKey = StepsStore.currentDayKey;
-
     } catch (error, stackTrace) {
       debugPrint('StepTracker storage init failed: $error\n$stackTrace');
     }
@@ -157,8 +157,8 @@ class StepTracker extends ChangeNotifier {
   }
 
   void setBackgroundActivityAuthority(bool enabled) {
-    final changed = _backgroundActivityAuthority != enabled ||
-        (!enabled && _isWalking);
+    final changed =
+        _backgroundActivityAuthority != enabled || (!enabled && _isWalking);
     _backgroundActivityAuthority = enabled;
     if (!enabled) {
       _walkStartedAt = null;
@@ -286,7 +286,8 @@ class StepTracker extends ChangeNotifier {
       _finishWalkingSession(now);
     }
 
-    if (_isWalking && _walkStartedAt != null &&
+    if (_isWalking &&
+        _walkStartedAt != null &&
         now.difference(_lastActivePersistAt).inSeconds >= 30) {
       final liveActiveMs =
           _activeMs + now.difference(_walkStartedAt!).inMilliseconds;

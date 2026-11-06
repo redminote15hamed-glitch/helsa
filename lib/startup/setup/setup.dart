@@ -72,9 +72,8 @@ class _SetupScreenState extends State<SetupScreen> {
   }
 
   void _validateNameFields() {
-    final bool currentlyFilled =
-        _firstNameController.text.trim().isNotEmpty &&
-            _lastNameController.text.trim().isNotEmpty;
+    final bool currentlyFilled = _firstNameController.text.trim().isNotEmpty &&
+        _lastNameController.text.trim().isNotEmpty;
     if (_isNameFilled != currentlyFilled) {
       setState(() => _isNameFilled = currentlyFilled);
     }

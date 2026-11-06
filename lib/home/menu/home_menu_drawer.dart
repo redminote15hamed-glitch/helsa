@@ -79,9 +79,15 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
     if (raw.isEmpty) {
       // Both titles with slash → not selected / deleted
       title = HomeText.getString(lang, 'menu_title_neutral');
-    } else if (g.startsWith('f') || g.contains('female') || g.contains('زن') || g.contains('خانم')) {
+    } else if (g.startsWith('f') ||
+        g.contains('female') ||
+        g.contains('زن') ||
+        g.contains('خانم')) {
       title = HomeText.getString(lang, 'menu_title_female');
-    } else if (g.startsWith('m') || g.contains('male') || g.contains('مرد') || g.contains('آقا')) {
+    } else if (g.startsWith('m') ||
+        g.contains('male') ||
+        g.contains('مرد') ||
+        g.contains('آقا')) {
       title = HomeText.getString(lang, 'menu_title_male');
     } else {
       title = HomeText.getString(lang, 'menu_title_neutral');
@@ -293,15 +299,13 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
                           end: Alignment.bottomRight,
                           colors: isDark
                               ? [
-                                  cs.primary
-                                      .withValues(alpha: 0.28),
+                                  cs.primary.withValues(alpha: 0.28),
                                   MetricColors.current.active
                                       .withValues(alpha: 0.12),
                                   Colors.transparent,
                                 ]
                               : [
-                                  cs.primary
-                                      .withValues(alpha: 0.18),
+                                  cs.primary.withValues(alpha: 0.18),
                                   MetricColors.current.active
                                       .withValues(alpha: 0.08),
                                   Colors.transparent,
@@ -425,8 +429,8 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
                             children: [
                               _DockItem(
                                 icon: Icons.widgets_rounded,
-                                label: HomeText.getString(
-                                    language, 'menu_widget'),
+                                label:
+                                    HomeText.getString(language, 'menu_widget'),
                                 language: language,
                                 tint: MetricColors.current.active,
                                 pulse: _pulse,
@@ -563,8 +567,7 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
                   child: ColoredBox(
-                    color:
-                        Colors.black.withValues(alpha: isDark ? 0.45 : 0.32),
+                    color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.32),
                   ),
                 ),
               );

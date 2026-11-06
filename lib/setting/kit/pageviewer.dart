@@ -159,14 +159,13 @@ class _PageViewerState extends State<PageViewer> {
           child: LayoutBuilder(
             builder: (context, constraints) {
               final Size screen = MediaQuery.sizeOf(context);
-              final double maxW = constraints.maxWidth.isFinite &&
-                      constraints.maxWidth > 0
-                  ? constraints.maxWidth
-                  : screen.width;
+              final double maxW =
+                  constraints.maxWidth.isFinite && constraints.maxWidth > 0
+                      ? constraints.maxWidth
+                      : screen.width;
               final double maxH = screen.height * 0.62;
               double side = math.min(maxW * 0.96, maxH);
-              if (constraints.maxHeight.isFinite &&
-                  constraints.maxHeight > 0) {
+              if (constraints.maxHeight.isFinite && constraints.maxHeight > 0) {
                 final double byParent = constraints.maxHeight * 0.95;
                 side = math.min(math.max(side, byParent * 0.85), byParent);
                 side = math.min(side, maxW * 0.96);
@@ -237,8 +236,7 @@ class _PageViewerState extends State<PageViewer> {
                                             template: TextTemplate.title,
                                             textAlign: TextAlign.center,
                                             customStyle: TextStyle(
-                                              color: theme
-                                                  .colorScheme.onPrimary
+                                              color: theme.colorScheme.onPrimary
                                                   .withValues(alpha: 0.85),
                                               fontSize:
                                                   context.baseScale * 1.35,
@@ -254,10 +252,8 @@ class _PageViewerState extends State<PageViewer> {
                                           itemBuilder: (context, index) {
                                             return _TagsGrid(
                                               items: pages[index],
-                                              currentLang:
-                                                  widget.currentLang,
-                                              selected:
-                                                  widget.selectedIds,
+                                              currentLang: widget.currentLang,
+                                              selected: widget.selectedIds,
                                               onToggle: _toggle,
                                             );
                                           },
@@ -277,8 +273,8 @@ class _PageViewerState extends State<PageViewer> {
                       children: List.generate(pages.length, (i) {
                         final on = i == _page;
                         return Padding(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: context.hX4s),
+                          padding:
+                              EdgeInsets.symmetric(horizontal: context.hX4s),
                           child: GestureDetector(
                             behavior: HitTestBehavior.opaque,
                             onTap: () {
@@ -404,12 +400,10 @@ class _TagChip extends StatelessWidget {
     final double radius = context.x2s;
 
     // Selected → primary | Unselected → surface (inverted vs previous)
-    final Color bg = selected
-        ? theme.colorScheme.primary
-        : theme.colorScheme.surface;
-    final Color fg = selected
-        ? theme.colorScheme.onPrimary
-        : theme.colorScheme.onSurface;
+    final Color bg =
+        selected ? theme.colorScheme.primary : theme.colorScheme.surface;
+    final Color fg =
+        selected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface;
     final Color borderColor = selected
         ? theme.colorScheme.onPrimary.withValues(alpha: 0.55)
         : theme.colorScheme.onSurface.withValues(alpha: 0.22);
@@ -454,8 +448,7 @@ class _TagChip extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   customStyle: TextStyle(
                     fontSize: context.m * 0.95,
-                    fontWeight:
-                        selected ? FontWeight.w700 : FontWeight.w500,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                     color: fg,
                     height: 1.15,
                   ),

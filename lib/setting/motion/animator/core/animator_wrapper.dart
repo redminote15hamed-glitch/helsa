@@ -185,15 +185,14 @@ class _AnimatorWrapperState extends State<AnimatorWrapper>
         final touchFactor = lerpDouble(1.0, widget.touchScale, touchT)!;
         final scale = baseScale * touchFactor;
 
-        final opacity =
-            lerpDouble(widget.startOpacity, widget.endOpacity, t)!.clamp(0.0, 1.0);
+        final opacity = lerpDouble(widget.startOpacity, widget.endOpacity, t)!
+            .clamp(0.0, 1.0);
 
         final offsetX = lerpDouble(widget.startOffsetX, widget.endOffsetX, t)!;
         final offsetY = lerpDouble(widget.startOffsetY, widget.endOffsetY, t)!;
 
-        final blur = allowHeavy
-            ? lerpDouble(widget.startBlur, widget.endBlur, t)!
-            : 0.0;
+        final blur =
+            allowHeavy ? lerpDouble(widget.startBlur, widget.endBlur, t)! : 0.0;
 
         final transform = Matrix4.identity();
         if (allowHeavy) {

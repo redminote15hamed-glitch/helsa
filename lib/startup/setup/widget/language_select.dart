@@ -46,9 +46,7 @@ class LanguageSelect extends StatelessWidget {
             ),
           ),
         ),
-
         SizedBox(height: gapSubtitle),
-
         Displayer(
           index: 3,
           template: MotionTemplate.bottomSlide,
@@ -60,7 +58,6 @@ class LanguageSelect extends StatelessWidget {
           ),
         ),
         SizedBox(height: gapButtons),
-
         Displayer(
           index: 4,
           template: MotionTemplate.bottomSlide,
@@ -72,7 +69,6 @@ class LanguageSelect extends StatelessWidget {
           ),
         ),
         SizedBox(height: gapButtons),
-
         Displayer(
           index: 5,
           template: MotionTemplate.bottomSlide,

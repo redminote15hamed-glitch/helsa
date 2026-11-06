@@ -18,7 +18,8 @@ class MetaStore {
     return b;
   }
 
-  static bool get isSetupDone => _b.get('setupDone', defaultValue: false) == true;
+  static bool get isSetupDone =>
+      _b.get('setupDone', defaultValue: false) == true;
 
   static String get language {
     final v = _b.get('language')?.toString() ?? 'en';

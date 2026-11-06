@@ -74,10 +74,10 @@ class AppTheme {
         ),
       ),
       textTheme: TextTheme(
-        titleLarge: TextStyle(
-            color: onSurf, fontWeight: FontWeight.bold, fontSize: 20),
-        titleMedium: TextStyle(
-            color: onSurf, fontWeight: FontWeight.w600, fontSize: 16),
+        titleLarge:
+            TextStyle(color: onSurf, fontWeight: FontWeight.bold, fontSize: 20),
+        titleMedium:
+            TextStyle(color: onSurf, fontWeight: FontWeight.w600, fontSize: 16),
         bodyLarge: TextStyle(color: onSurf, fontSize: 15),
         bodyMedium: TextStyle(color: sub, fontSize: 14),
         bodySmall: TextStyle(color: sub, fontSize: 12),

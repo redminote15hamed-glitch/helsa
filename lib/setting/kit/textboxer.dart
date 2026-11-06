@@ -216,16 +216,14 @@ class _TextBoxerState extends State<TextBoxer> {
                   : context.vXs,
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius:
-                  BorderRadius.circular(config.borderRadius(context)),
+              borderRadius: BorderRadius.circular(config.borderRadius(context)),
               borderSide: BorderSide(
                 color: config.enabledBorderColor(theme),
                 width: 0.8,
               ),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius:
-                  BorderRadius.circular(config.borderRadius(context)),
+              borderRadius: BorderRadius.circular(config.borderRadius(context)),
               borderSide: BorderSide(
                 color: config.focusedBorderColor(theme),
                 width: 1.5,

@@ -197,8 +197,8 @@ class SetupHeader extends StatelessWidget {
                                                 'support_copy',
                                               ),
                                               style: TextStyle(
-                                                color: theme
-                                                    .colorScheme.onPrimary,
+                                                color:
+                                                    theme.colorScheme.onPrimary,
                                                 fontWeight: FontWeight.w700,
                                                 fontSize: context.s,
                                               ),

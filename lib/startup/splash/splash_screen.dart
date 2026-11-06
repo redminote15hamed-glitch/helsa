@@ -46,9 +46,8 @@ class _SplashScreenState extends State<SplashScreen> {
     });
 
     // اگر setup قبلاً در Hive تمام شده → خانه؛ وگرنه → setup
-    final Widget nextPage = ProfileStore.isSetupDone
-        ? const HomeScreen()
-        : const SetupScreen();
+    final Widget nextPage =
+        ProfileStore.isSetupDone ? const HomeScreen() : const SetupScreen();
 
     await Navigator.of(context).pushReplacement(
       Transitioner.createRoute(

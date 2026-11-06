@@ -5,7 +5,8 @@ import 'package:helsa/setting/responsive/responsive_utils.dart';
 
 /// Theme description card + Light/Dark mode pills.
 class AppearanceThemeInfoCard extends StatelessWidget {
-  const AppearanceThemeInfoCard({super.key, 
+  const AppearanceThemeInfoCard({
+    super.key,
     required this.palette,
     required this.night,
     required this.lang,
@@ -152,7 +153,8 @@ class AppearanceThemeInfoCard extends StatelessWidget {
 }
 
 class AppearanceModePill extends StatelessWidget {
-  const AppearanceModePill({super.key, 
+  const AppearanceModePill({
+    super.key,
     required this.selected,
     required this.icon,
     required this.label,
@@ -220,7 +222,5 @@ class AppearanceModePill extends StatelessWidget {
     );
   }
 }
-
-
 
 /// Bottom Continue / Apply button shown when theme is dirty.

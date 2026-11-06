@@ -57,8 +57,10 @@ class _SetupTabletVerticalState extends State<SetupTabletVertical> {
                 template: TextTemplate.body,
                 textAlign: TextAlign.center,
                 customStyle: TextStyle(
-                  color:
-                      Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.60),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.60),
                 ),
               ),
               SizedBox(height: context.vX2l),

@@ -28,15 +28,15 @@ class Transitioner {
     required Widget page,
     TransitionTemplate template = TransitionTemplate.slideRight,
     Duration duration = const Duration(milliseconds: 500),
+
     /// Source rect for [TransitionTemplate.expandTwoPhase]
     /// (e.g. menu row via [Transitioner.rectOf]).
     Rect? origin,
   }) {
-    final effectiveDuration =
-        template == TransitionTemplate.expandTwoPhase &&
-                duration.inMilliseconds == 500
-            ? const Duration(milliseconds: 1300)
-            : duration;
+    final effectiveDuration = template == TransitionTemplate.expandTwoPhase &&
+            duration.inMilliseconds == 500
+        ? const Duration(milliseconds: 1300)
+        : duration;
 
     return PageRouteBuilder<T>(
       opaque: template != TransitionTemplate.expandTwoPhase,

@@ -25,8 +25,7 @@ class StepForeground {
   static final StepForeground instance = StepForeground._();
 
   static const int _serviceId = 4202;
-  static const String _iconMeta =
-      'com.example.helsa.service.NOTIFICATION_ICON';
+  static const String _iconMeta = 'com.example.helsa.service.NOTIFICATION_ICON';
 
   static const NotificationIcon _notifIcon = NotificationIcon(
     metaDataName: _iconMeta,
@@ -336,9 +335,7 @@ class StepTaskHandler extends TaskHandler {
       _walkStartedAt = DateTime.now();
     }
 
-    if (_baseDeviceSteps == null) {
-      _baseDeviceSteps = event.steps - _dailySteps;
-    }
+    _baseDeviceSteps ??= event.steps - _dailySteps;
 
     if (event.steps < _baseDeviceSteps!) {
       // Preserve today's accumulated steps when the hardware counter restarts.
@@ -353,8 +350,7 @@ class StepTaskHandler extends TaskHandler {
       'deviceSteps': event.steps,
       'dayKey': _dayKey,
     });
-    if (_lastPersistedSteps < 0 ||
-        _dailySteps - _lastPersistedSteps >= 10) {
+    if (_lastPersistedSteps < 0 || _dailySteps - _lastPersistedSteps >= 10) {
       _lastPersistedSteps = _dailySteps;
       unawaited(_persistState());
     }
@@ -363,7 +359,8 @@ class StepTaskHandler extends TaskHandler {
 
     if (_lastNotifiedSteps < 0 ||
         _dailySteps - _lastNotifiedSteps >= 10 ||
-        (_stepsGoal > 0 && _dailySteps >= _stepsGoal &&
+        (_stepsGoal > 0 &&
+            _dailySteps >= _stepsGoal &&
             _lastNotifiedSteps < _stepsGoal)) {
       _lastNotifiedSteps = _dailySteps;
       FlutterForegroundTask.updateService(
@@ -478,7 +475,8 @@ class StepTaskHandler extends TaskHandler {
 
   @override
   void onRepeatEvent(DateTime timestamp) {
-    if (_isWalking && _lastStepAt != null &&
+    if (_isWalking &&
+        _lastStepAt != null &&
         timestamp.difference(_lastStepAt!).inSeconds > 12) {
       _finishWalkingSession(timestamp);
     }

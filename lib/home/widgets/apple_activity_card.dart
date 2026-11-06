@@ -230,48 +230,47 @@ class _AppleActivityCardState extends State<AppleActivityCard>
       child: Opacity(
         opacity: nightDim,
         child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (int i = 0; i < items.length; i++) ...[
-            if (i > 0) const SizedBox(width: 4),
-            Expanded(
-              child: Center(
-                child: SizedBox(
-                  width: unit,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(unit * 0.18),
-                    onTap: () =>
-                        _editGoal(items[i].kind, items[i].goalValue),
-                    child: items[i].id == 'steps'
-                        ? WalkAura(
-                            steps: widget.steps,
-                            isWalking: widget.isWalking,
-                            color: items[i].color,
-                            child: _AppleMetric(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (int i = 0; i < items.length; i++) ...[
+              if (i > 0) const SizedBox(width: 4),
+              Expanded(
+                child: Center(
+                  child: SizedBox(
+                    width: unit,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(unit * 0.18),
+                      onTap: () => _editGoal(items[i].kind, items[i].goalValue),
+                      child: items[i].id == 'steps'
+                          ? WalkAura(
+                              steps: widget.steps,
+                              isWalking: widget.isWalking,
+                              color: items[i].color,
+                              child: _AppleMetric(
+                                spec: items[i],
+                                wave: _wave,
+                                burst: _burst.animation,
+                                playBurst: _burst.isBursting(items[i].id),
+                                unit: unit,
+                                ghostProgress: 0,
+                                isWalking: widget.isWalking,
+                              ),
+                            )
+                          : _AppleMetric(
                               spec: items[i],
                               wave: _wave,
                               burst: _burst.animation,
                               playBurst: _burst.isBursting(items[i].id),
                               unit: unit,
-                              ghostProgress: 0,
                               isWalking: widget.isWalking,
                             ),
-                          )
-                        : _AppleMetric(
-                            spec: items[i],
-                            wave: _wave,
-                            burst: _burst.animation,
-                            playBurst: _burst.isBursting(items[i].id),
-                            unit: unit,
-                            isWalking: widget.isWalking,
-                          ),
+                    ),
                   ),
                 ),
               ),
-            ),
+            ],
           ],
-        ],
-      ),
+        ),
       ),
     );
   }
@@ -338,7 +337,8 @@ class _AppleMetric extends StatelessWidget {
     final bodyH = unit * 0.90;
     final percentSize = (unit * 0.135).clamp(11.0, 16.0);
     final detailSize = (unit * 0.10).clamp(9.5, 12.5);
-    final topBlock = iconSize + gapIconName + nameSize + 4 + nameSize + gapNameBody;
+    final topBlock =
+        iconSize + gapIconName + nameSize + 4 + nameSize + gapNameBody;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -469,10 +469,8 @@ class _AppleMetric extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
             fontSize: detailSize,
-            color: Theme.of(context)
-                .colorScheme
-                .onSurface
-                .withValues(alpha: 0.55),
+            color:
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
           ),
         ),
       ],
@@ -559,8 +557,6 @@ class _ApplePainter extends CustomPainter {
         ..style = PaintingStyle.fill,
     );
 
-
-
     // —— مایع داخل شیشه ——
     if (progress > 0.001) {
       canvas.save();
@@ -598,7 +594,8 @@ class _ApplePainter extends CustomPainter {
             end: Alignment.topCenter,
             colors: [deep, mid.withValues(alpha: 0.95)],
             stops: const [0.0, 1.0],
-          ).createShader(Rect.fromLTRB(b.left, fillTop - amp, b.right, b.bottom))
+          ).createShader(
+              Rect.fromLTRB(b.left, fillTop - amp, b.right, b.bottom))
           ..style = PaintingStyle.fill,
       );
 
@@ -650,7 +647,8 @@ class _ApplePainter extends CustomPainter {
               bright.withValues(alpha: 0.55),
               bright.withValues(alpha: 0.0),
             ],
-          ).createShader(Rect.fromLTRB(b.left, fillTop - amp, b.right, fillTop + fillH * 0.25))
+          ).createShader(Rect.fromLTRB(
+              b.left, fillTop - amp, b.right, fillTop + fillH * 0.25))
           ..style = PaintingStyle.fill,
       );
 

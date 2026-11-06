@@ -85,8 +85,10 @@ class SplashObject extends StatelessWidget {
                 text: SplashText.getString(currentLang, 'version'),
                 template: TextTemplate.caption,
                 customStyle: TextStyle(
-                  color:
-                      Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.50),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.50),
                 ),
               ),
             ),

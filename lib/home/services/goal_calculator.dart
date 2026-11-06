@@ -17,8 +17,12 @@ class GoalCalculator {
   static bool get isProfileComplete {
     final age = AgeStore.age;
     final activity = ActivityStore.activityLevel;
-    return age != null && age >= 6 && age <= 120 &&
-        activity != null && activity >= 0 && activity <= 4;
+    return age != null &&
+        age >= 6 &&
+        age <= 120 &&
+        activity != null &&
+        activity >= 0 &&
+        activity <= 4;
   }
 
   /// 0 sedentary … 4 very active (from setup).

@@ -59,7 +59,8 @@ class _AmbientBackgroundState extends State<AmbientBackground>
     if (isDark) {
       base = cs.surface.withValues(alpha: 1.0);
       // Prefer deep surface; fallback if surface is mid-tone
-      base = Color.alphaBlend(const Color(0xFF0A0E14).withValues(alpha: 0.92), cs.surface);
+      base = Color.alphaBlend(
+          const Color(0xFF0A0E14).withValues(alpha: 0.92), cs.surface);
       blobA = cs.primary.withValues(alpha: 0.10);
       blobB = const Color(0xFF1A2740).withValues(alpha: 0.45);
       blobC = cs.secondary.withValues(alpha: 0.08);

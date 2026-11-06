@@ -17,7 +17,8 @@ class HomeWidgetBridge {
   static final HomeWidgetBridge instance = HomeWidgetBridge._();
 
   static const String _mainQualified = 'com.example.helsa.HelsaWidgetProvider';
-  static const String _stepsQualified = 'com.example.helsa.HelsaStepsWidgetProvider';
+  static const String _stepsQualified =
+      'com.example.helsa.HelsaStepsWidgetProvider';
   static const String _mainName = 'HelsaWidgetProvider';
   static const String _stepsName = 'HelsaStepsWidgetProvider';
 

@@ -155,8 +155,7 @@ class MenuPrivacyPage extends StatelessWidget {
                               style: TextStyle(
                                 height: 1.4,
                                 fontSize: context.s,
-                                color:
-                                    cs.onSurface.withValues(alpha: 0.75),
+                                color: cs.onSurface.withValues(alpha: 0.75),
                               ),
                             ),
                           ),
@@ -372,9 +371,7 @@ class _DeleteDataSheetState extends State<_DeleteDataSheet> {
           ? cs.primary.withValues(alpha: selected ? 0.32 : 0.18)
           : cs.surfaceContainerHighest.withValues(alpha: 0.95);
       final fg = danger ? cs.primary : cs.onSurface;
-      final border = danger
-          ? cs.primary
-          : cs.outline.withValues(alpha: 0.22);
+      final border = danger ? cs.primary : cs.outline.withValues(alpha: 0.22);
 
       return Material(
         color: Colors.transparent,

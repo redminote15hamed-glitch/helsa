@@ -36,7 +36,8 @@ class MenuAvatarPicker {
         );
       },
       transitionBuilder: (ctx, anim, sec, child) {
-        final curved = CurvedAnimation(parent: anim, curve: Curves.easeOutCubic);
+        final curved =
+            CurvedAnimation(parent: anim, curve: Curves.easeOutCubic);
         return FadeTransition(
           opacity: curved,
           child: ScaleTransition(
@@ -186,7 +187,8 @@ class _AvatarSheetState extends State<_AvatarSheet> {
                       ),
                       IconButton(
                         onPressed: () =>
-                            Navigator.of(context, rootNavigator: true).pop(false),
+                            Navigator.of(context, rootNavigator: true)
+                                .pop(false),
                         icon: Icon(Icons.close_rounded, color: cs.onSurface),
                       ),
                     ],
@@ -218,15 +220,15 @@ class _AvatarSheetState extends State<_AvatarSheet> {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: AvatarPresets.all.length,
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 4,
                       mainAxisSpacing: 12,
                       crossAxisSpacing: 12,
                     ),
                     itemBuilder: (context, i) {
                       final p = AvatarPresets.all[i];
-                      final selected =
-                          _path.isEmpty && _preset == p.id;
+                      final selected = _path.isEmpty && _preset == p.id;
                       return InkWell(
                         borderRadius: BorderRadius.circular(40),
                         onTap: _busy
@@ -293,11 +295,13 @@ class _AvatarSheetState extends State<_AvatarSheet> {
                           ? const SizedBox(
                               width: 22,
                               height: 22,
-                              child: CircularProgressIndicator(strokeWidth: 2.2),
+                              child:
+                                  CircularProgressIndicator(strokeWidth: 2.2),
                             )
                           : Text(
                               HomeText.getString(_lang, 'confirm'),
-                              style: const TextStyle(fontWeight: FontWeight.w800),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w800),
                             ),
                     ),
                   ),

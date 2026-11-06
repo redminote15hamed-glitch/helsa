@@ -42,7 +42,11 @@ class RestrictionSetup extends StatelessWidget {
     // —— نسبتاً شایع / برچسب‌گذاری رسمی
     {'id': 12, 'icon': Icons.science_rounded, 'title': 'restrict_mustard'},
     {'id': 13, 'icon': Icons.eco_rounded, 'title': 'restrict_celery'},
-    {'id': 14, 'icon': Icons.bubble_chart_rounded, 'title': 'restrict_sulfites'},
+    {
+      'id': 14,
+      'icon': Icons.bubble_chart_rounded,
+      'title': 'restrict_sulfites'
+    },
     {'id': 15, 'icon': Icons.local_florist_rounded, 'title': 'restrict_lupin'},
     {'id': 32, 'icon': Icons.waves_rounded, 'title': 'restrict_oyster'},
     {'id': 33, 'icon': Icons.water_outlined, 'title': 'restrict_clam'},
@@ -56,16 +60,28 @@ class RestrictionSetup extends StatelessWidget {
     {'id': 36, 'icon': Icons.favorite_rounded, 'title': 'restrict_strawberry'},
     {'id': 37, 'icon': Icons.brightness_5_rounded, 'title': 'restrict_citrus'},
     {'id': 38, 'icon': Icons.emoji_nature_rounded, 'title': 'restrict_kiwi'},
-    {'id': 39, 'icon': Icons.sentiment_satisfied_rounded, 'title': 'restrict_banana'},
+    {
+      'id': 39,
+      'icon': Icons.sentiment_satisfied_rounded,
+      'title': 'restrict_banana'
+    },
     {'id': 40, 'icon': Icons.spa, 'title': 'restrict_avocado'},
     {'id': 41, 'icon': Icons.filter_vintage_rounded, 'title': 'restrict_peach'},
     {'id': 42, 'icon': Icons.apple, 'title': 'restrict_apple'},
     // —— غلات و حبوبات
     {'id': 16, 'icon': Icons.agriculture_rounded, 'title': 'restrict_corn'},
     {'id': 63, 'icon': Icons.grass_outlined, 'title': 'restrict_oat'},
-    {'id': 64, 'icon': Icons.horizontal_split_rounded, 'title': 'restrict_barley'},
+    {
+      'id': 64,
+      'icon': Icons.horizontal_split_rounded,
+      'title': 'restrict_barley'
+    },
     {'id': 65, 'icon': Icons.view_week_rounded, 'title': 'restrict_rye'},
-    {'id': 66, 'icon': Icons.change_history_rounded, 'title': 'restrict_buckwheat'},
+    {
+      'id': 66,
+      'icon': Icons.change_history_rounded,
+      'title': 'restrict_buckwheat'
+    },
     {'id': 62, 'icon': Icons.ramen_dining_rounded, 'title': 'restrict_rice'},
     {'id': 57, 'icon': Icons.grain_outlined, 'title': 'restrict_legumes'},
     {'id': 58, 'icon': Icons.circle, 'title': 'restrict_chickpea'},
@@ -76,16 +92,32 @@ class RestrictionSetup extends StatelessWidget {
     // —— ادویه و حساسیت‌های خاص
     {'id': 52, 'icon': Icons.spa_rounded, 'title': 'restrict_garlic'},
     {'id': 53, 'icon': Icons.radio_button_checked, 'title': 'restrict_onion'},
-    {'id': 54, 'icon': Icons.local_fire_department_rounded, 'title': 'restrict_pepper'},
+    {
+      'id': 54,
+      'icon': Icons.local_fire_department_rounded,
+      'title': 'restrict_pepper'
+    },
     {'id': 55, 'icon': Icons.whatshot_rounded, 'title': 'restrict_chili'},
     {'id': 56, 'icon': Icons.cloud_rounded, 'title': 'restrict_mushroom'},
     {'id': 49, 'icon': Icons.restaurant_rounded, 'title': 'restrict_fodmap'},
     {'id': 50, 'icon': Icons.water_drop_outlined, 'title': 'restrict_fructose'},
     {'id': 48, 'icon': Icons.bloodtype_rounded, 'title': 'restrict_histamine'},
-    {'id': 51, 'icon': Icons.warning_amber_rounded, 'title': 'restrict_histamine_rich'},
+    {
+      'id': 51,
+      'icon': Icons.warning_amber_rounded,
+      'title': 'restrict_histamine_rich'
+    },
     // —— گوشت و پروتئین
-    {'id': 68, 'icon': Icons.kebab_dining_rounded, 'title': 'restrict_red_meat'},
-    {'id': 69, 'icon': Icons.breakfast_dining_rounded, 'title': 'restrict_pork'},
+    {
+      'id': 68,
+      'icon': Icons.kebab_dining_rounded,
+      'title': 'restrict_red_meat'
+    },
+    {
+      'id': 69,
+      'icon': Icons.breakfast_dining_rounded,
+      'title': 'restrict_pork'
+    },
     {'id': 70, 'icon': Icons.lunch_dining_rounded, 'title': 'restrict_beef'},
     {'id': 71, 'icon': Icons.fastfood_rounded, 'title': 'restrict_chicken'},
     // —— افزودنی‌ها و متفرقه
@@ -98,12 +130,24 @@ class RestrictionSetup extends StatelessWidget {
     {'id': 74, 'icon': Icons.cookie_rounded, 'title': 'restrict_gelatin'},
     {'id': 75, 'icon': Icons.science, 'title': 'restrict_msg'},
     {'id': 76, 'icon': Icons.medication_rounded, 'title': 'restrict_aspartame'},
-    {'id': 77, 'icon': Icons.inventory_2_rounded, 'title': 'restrict_preservatives'},
-    {'id': 78, 'icon': Icons.palette_rounded, 'title': 'restrict_food_coloring'},
+    {
+      'id': 77,
+      'icon': Icons.inventory_2_rounded,
+      'title': 'restrict_preservatives'
+    },
+    {
+      'id': 78,
+      'icon': Icons.palette_rounded,
+      'title': 'restrict_food_coloring'
+    },
     {'id': 79, 'icon': Icons.cloud_queue_rounded, 'title': 'restrict_sulfur'},
     {'id': 80, 'icon': Icons.local_bar_rounded, 'title': 'restrict_alcohol'},
     {'id': 81, 'icon': Icons.opacity, 'title': 'restrict_vinegar'},
-    {'id': 82, 'icon': Icons.scatter_plot_rounded, 'title': 'restrict_spice_mix'},
+    {
+      'id': 82,
+      'icon': Icons.scatter_plot_rounded,
+      'title': 'restrict_spice_mix'
+    },
   ];
 
   static List<PageViewerItem> get pageItems =>

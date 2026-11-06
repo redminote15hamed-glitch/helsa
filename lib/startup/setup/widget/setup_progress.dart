@@ -17,8 +17,7 @@ class SetupProgress extends StatelessWidget {
     final theme = Theme.of(context);
 
     final int safeTotal = totalSteps < 1 ? 1 : totalSteps;
-    final double progress =
-        ((currentStep + 1).clamp(0, safeTotal)) / safeTotal;
+    final double progress = ((currentStep + 1).clamp(0, safeTotal)) / safeTotal;
 
     return Container(
       width: double.infinity,

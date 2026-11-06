@@ -89,10 +89,7 @@ abstract class HardwareProfiler {
         if (freeMB != null && freeMB > 0) {
           _freeStorageGB = freeMB / 1024;
         }
-        if (freeMB != null &&
-            totalMB != null &&
-            freeMB > 0 &&
-            totalMB > 0) {
+        if (freeMB != null && totalMB != null && freeMB > 0 && totalMB > 0) {
           _freeStorageRatio = freeMB / totalMB;
         }
       } catch (_) {}
@@ -107,8 +104,7 @@ abstract class HardwareProfiler {
     if (_isLowEndOverride) return DeviceTier.low;
 
     // وب / دسکتاپ: بدون رم اندروید → high (مکعب برای تست)
-    final bool desktopLike = kIsWeb ||
-        (!Platform.isAndroid && !Platform.isIOS);
+    final bool desktopLike = kIsWeb || (!Platform.isAndroid && !Platform.isIOS);
     if (!_initialized) {
       return desktopLike ? DeviceTier.high : DeviceTier.low;
     }

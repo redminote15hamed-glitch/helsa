@@ -58,7 +58,8 @@ class HomeText {
       'menu_privacy': 'حریم خصوصی',
       'privacy_on_device_badge': 'اطلاعات فقط روی همین گوشی ذخیره می‌شود',
       'privacy_title': 'سیاست اطلاعات Helsa',
-      'privacy_body': 'Helsa برای کمک به سلامت شما طراحی شده و اصل ما این است که داده‌های شخصی‌تان روی خود دستگاه بماند. ما این داده‌ها را به سرور ارسال نمی‌کنیم و برای نمایش، محاسبه و پیشنهادهای داخل اپ فقط از اطلاعات ذخیره‌شده روی گوشی شما استفاده می‌کنیم. شما هر زمان می‌توانید بخش‌هایی از داده را پاک کنید؛ نام شما در حذف کامل نگه داشته می‌شود مگر اینکه خودتان پروفایل را ویرایش کنید.',
+      'privacy_body':
+          'Helsa برای کمک به سلامت شما طراحی شده و اصل ما این است که داده‌های شخصی‌تان روی خود دستگاه بماند. ما این داده‌ها را به سرور ارسال نمی‌کنیم و برای نمایش، محاسبه و پیشنهادهای داخل اپ فقط از اطلاعات ذخیره‌شده روی گوشی شما استفاده می‌کنیم. شما هر زمان می‌توانید بخش‌هایی از داده را پاک کنید؛ نام شما در حذف کامل نگه داشته می‌شود مگر اینکه خودتان پروفایل را ویرایش کنید.',
       'privacy_points_title': 'تعهد ما',
       'privacy_point_local': 'ذخیره‌سازی محلی روی دستگاه شما',
       'privacy_point_encrypt': 'رمزنگاری سخت برای داده‌های حساس در سطح دستگاه',
@@ -87,17 +88,23 @@ class HomeText {
       'appearance_preview_cal': 'کالری',
       'appearance_preview_time': 'زمان',
       'palette_mint': 'نعناع',
-      'palette_mint_desc': 'تم کلاسیک Helsa؛ سبز تازه و آرام برای پیگیری روزانه سلامت. رنگ‌ها ملایم‌اند تا چشم خسته نشود و حس تازگی و انرژی پایدار در طول روز بماند.',
+      'palette_mint_desc':
+          'تم کلاسیک Helsa؛ سبز تازه و آرام برای پیگیری روزانه سلامت. رنگ‌ها ملایم‌اند تا چشم خسته نشود و حس تازگی و انرژی پایدار در طول روز بماند.',
       'palette_ocean': 'اقیانوس',
-      'palette_ocean_desc': 'آبی‌های عمیق و خنک برای تمرکز، تنفس عمیق و آرامش ذهنی. فضایی آرام می‌سازد که برای ریکاوری بعد از فعالیت و پیاده‌روی ذهنی مناسب است.',
+      'palette_ocean_desc':
+          'آبی‌های عمیق و خنک برای تمرکز، تنفس عمیق و آرامش ذهنی. فضایی آرام می‌سازد که برای ریکاوری بعد از فعالیت و پیاده‌روی ذهنی مناسب است.',
       'palette_forest': 'جنگل',
-      'palette_forest_desc': 'سبز جنگلی و طبیعی با ته‌رنگ خاکی. حس طبیعت و تعادل را می‌آورد و برای عادت‌های پایدار، حرکت در فضای باز و زندگی آرام‌تر طراحی شده است.',
+      'palette_forest_desc':
+          'سبز جنگلی و طبیعی با ته‌رنگ خاکی. حس طبیعت و تعادل را می‌آورد و برای عادت‌های پایدار، حرکت در فضای باز و زندگی آرام‌تر طراحی شده است.',
       'palette_sunrise': 'طلوع',
-      'palette_sunrise_desc': 'گرمای ملایم صبحگاهی برای شروع پرانرژی روز. نارنجی و هلویی امیدبخش‌اند بدون اینکه تند یا خسته‌کننده به نظر برسند؛ مناسب انگیزهٔ اول صبح.',
+      'palette_sunrise_desc':
+          'گرمای ملایم صبحگاهی برای شروع پرانرژی روز. نارنجی و هلویی امیدبخش‌اند بدون اینکه تند یا خسته‌کننده به نظر برسند؛ مناسب انگیزهٔ اول صبح.',
       'palette_lavender': 'اسطوخودوس',
-      'palette_lavender_desc': 'بنفش نرم برای آرامش شب، ریکاوری ذهن و کاهش تنش. مناسب ساعاتی که می‌خواهی از هیاهو فاصله بگیری و بدن را برای استراحت آماده کنی.',
+      'palette_lavender_desc':
+          'بنفش نرم برای آرامش شب، ریکاوری ذهن و کاهش تنش. مناسب ساعاتی که می‌خواهی از هیاهو فاصله بگیری و بدن را برای استراحت آماده کنی.',
       'palette_slate': 'اسلیت',
-      'palette_slate_desc': 'خاکستری‌سبز مینیمال با حس کلینیک تمیز و مدرن. تمرکز روی خوانایی و سادگی است تا داده‌های سلامت واضح و بدون شلوغی بصری دیده شوند.',
+      'palette_slate_desc':
+          'خاکستری‌سبز مینیمال با حس کلینیک تمیز و مدرن. تمرکز روی خوانایی و سادگی است تا داده‌های سلامت واضح و بدون شلوغی بصری دیده شوند.',
       'menu_title_male': 'آقای',
       'menu_title_female': 'بانو',
       'menu_title_neutral': 'آقای / بانو',
@@ -109,7 +116,6 @@ class HomeText {
       'support_copy': 'کپی',
       'support_copied': 'کپی شد',
       'support_hint': 'ارسال مشکلات و پیشنهادات',
-
       'profile_section': '{n}. {t}',
       'profile_name': 'نام',
       'profile_first': 'نام',
@@ -138,9 +144,9 @@ class HomeText {
       'profile_weight_helper': 'کیلوگرم (مثلاً ۶۵)',
       'profile_waist_helper': 'سانتی‌متر (مثلاً ۸۰)',
       'profile_saved': 'تغییرات ذخیره شد',
-      'widget_hub_hint': 'اگر افزودن خودکار کار نکرد، از منوی ویجت‌های گوشی Helsa را اضافه کنید',
+      'widget_hub_hint':
+          'اگر افزودن خودکار کار نکرد، از منوی ویجت‌های گوشی Helsa را اضافه کنید',
       'profile_save_hint': 'پس از تغییر، تیک بالا را بزنید تا ذخیره شود',
-
       'notif_body': 'قدم زدن برای سلامتی عالیه، حتی کم',
     },
     'en': {
@@ -197,7 +203,8 @@ class HomeText {
       'menu_privacy': 'Privacy',
       'privacy_on_device_badge': 'Your data stays only on this phone',
       'privacy_title': 'Helsa information policy',
-      'privacy_body': 'Helsa is built to support your health while keeping personal data on your device. We do not upload this data to our servers. Calculations and in-app guidance use only what is stored locally. You can delete any section anytime; your name is kept when you clear everything else, unless you edit the profile yourself.',
+      'privacy_body':
+          'Helsa is built to support your health while keeping personal data on your device. We do not upload this data to our servers. Calculations and in-app guidance use only what is stored locally. You can delete any section anytime; your name is kept when you clear everything else, unless you edit the profile yourself.',
       'privacy_points_title': 'Our commitments',
       'privacy_point_local': 'Local storage on your device',
       'privacy_point_encrypt': 'Strong on-device encryption for sensitive data',
@@ -226,17 +233,23 @@ class HomeText {
       'appearance_preview_cal': 'Calories',
       'appearance_preview_time': 'Time',
       'palette_mint': 'Mint',
-      'palette_mint_desc': 'Classic Helsa — a fresh, calm green for everyday health tracking. Soft tones keep the eye comfortable while still feeling lively and motivational throughout the day.',
+      'palette_mint_desc':
+          'Classic Helsa — a fresh, calm green for everyday health tracking. Soft tones keep the eye comfortable while still feeling lively and motivational throughout the day.',
       'palette_ocean': 'Ocean',
-      'palette_ocean_desc': 'Cool deep blues for focus, deep breathing and a quiet mind. Builds a calm space that fits recovery after activity and mindful walking.',
+      'palette_ocean_desc':
+          'Cool deep blues for focus, deep breathing and a quiet mind. Builds a calm space that fits recovery after activity and mindful walking.',
       'palette_forest': 'Forest',
-      'palette_forest_desc': 'Natural forest greens with earthy undertones. Brings balance and a grounded mood for long-term habits and outdoor movement.',
+      'palette_forest_desc':
+          'Natural forest greens with earthy undertones. Brings balance and a grounded mood for long-term habits and outdoor movement.',
       'palette_sunrise': 'Sunrise',
-      'palette_sunrise_desc': 'Gentle morning warmth to start the day with energy. Soft coral and peach feel hopeful without becoming harsh or noisy — ideal first-light motivation.',
+      'palette_sunrise_desc':
+          'Gentle morning warmth to start the day with energy. Soft coral and peach feel hopeful without becoming harsh or noisy — ideal first-light motivation.',
       'palette_lavender': 'Lavender',
-      'palette_lavender_desc': 'Soft violet for evening calm, mental recovery and less stress. Best when you want distance from noise and a softer wind-down before rest.',
+      'palette_lavender_desc':
+          'Soft violet for evening calm, mental recovery and less stress. Best when you want distance from noise and a softer wind-down before rest.',
       'palette_slate': 'Slate',
-      'palette_slate_desc': 'Minimal grey-green with a clean clinical feel. Built for clarity so your health numbers stay readable and uncluttered.',
+      'palette_slate_desc':
+          'Minimal grey-green with a clean clinical feel. Built for clarity so your health numbers stay readable and uncluttered.',
       'menu_title_male': 'Mr.',
       'menu_title_female': 'Ms.',
       'menu_title_neutral': 'Mr. / Ms.',
@@ -248,7 +261,6 @@ class HomeText {
       'support_copy': 'Copy',
       'support_copied': 'Copied',
       'support_hint': 'Send issues and suggestions',
-
       'profile_section': '{n}. {t}',
       'profile_name': 'Your name',
       'profile_first': 'First name',
@@ -277,9 +289,9 @@ class HomeText {
       'profile_weight_helper': 'Kilograms (e.g. 65)',
       'profile_waist_helper': 'Centimetres (e.g. 80)',
       'profile_saved': 'Changes saved',
-      'widget_hub_hint': 'If auto-add fails, add Helsa from your phone widget picker',
+      'widget_hub_hint':
+          'If auto-add fails, add Helsa from your phone widget picker',
       'profile_save_hint': 'After changes, tap the check mark to save',
-
       'notif_body': 'A few steps each day keeps the doctor away',
     },
     'fr': {
@@ -334,14 +346,18 @@ class HomeText {
       'menu_appearance': 'Apparence',
       'menu_coming_soon': 'Sera ajouté à l\'avenir',
       'menu_privacy': 'Confidentialité',
-      'privacy_on_device_badge': 'Vos données restent uniquement sur cet appareil',
+      'privacy_on_device_badge':
+          'Vos données restent uniquement sur cet appareil',
       'privacy_title': 'Politique d\'information Helsa',
-      'privacy_body': 'Helsa est conçu pour soutenir votre santé en gardant les données personnelles sur votre appareil. Nous n\'envoyons pas ces données sur nos serveurs. Les calculs et conseils dans l\'app utilisent uniquement le stockage local. Vous pouvez supprimer chaque section à tout moment ; votre nom est conservé si vous effacez le reste, sauf si vous modifiez le profil vous-même.',
+      'privacy_body':
+          'Helsa est conçu pour soutenir votre santé en gardant les données personnelles sur votre appareil. Nous n\'envoyons pas ces données sur nos serveurs. Les calculs et conseils dans l\'app utilisent uniquement le stockage local. Vous pouvez supprimer chaque section à tout moment ; votre nom est conservé si vous effacez le reste, sauf si vous modifiez le profil vous-même.',
       'privacy_points_title': 'Nos engagements',
       'privacy_point_local': 'Stockage local sur votre appareil',
-      'privacy_point_encrypt': 'Chiffrement fort des données sensibles sur l\'appareil',
+      'privacy_point_encrypt':
+          'Chiffrement fort des données sensibles sur l\'appareil',
       'privacy_point_control': 'Contrôle total : suppression sélective',
-      'privacy_point_no_cloud': 'Pas de compte cloud requis pour les données de santé',
+      'privacy_point_no_cloud':
+          'Pas de compte cloud requis pour les données de santé',
       'privacy_delete_data': 'Supprimer les données',
       'privacy_delete_sheet_title': 'Que supprimer ?',
       'privacy_delete_sheet_hint': 'Votre nom ne sera pas supprimé',
@@ -353,7 +369,8 @@ class HomeText {
       'privacy_del_favorites': 'Aliments préférés',
       'privacy_del_restrictions': 'Allergies et restrictions alimentaires',
       'privacy_del_all_except_name': 'Tout supprimer (sauf le nom)',
-      'appearance_hint': 'Choisissez l’apparence. Les changements sont immédiats.',
+      'appearance_hint':
+          'Choisissez l’apparence. Les changements sont immédiats.',
       'appearance_system': 'Par défaut système',
       'appearance_system_sub': 'Suivre le thème du téléphone',
       'appearance_light': 'Clair',
@@ -365,17 +382,23 @@ class HomeText {
       'appearance_preview_cal': 'Calories',
       'appearance_preview_time': 'Temps',
       'palette_mint': 'Menthe',
-      'palette_mint_desc': 'Helsa classique — un vert frais et calme pour le suivi santé au quotidien. Des tons doux qui restent motivants sans fatiguer le regard.',
+      'palette_mint_desc':
+          'Helsa classique — un vert frais et calme pour le suivi santé au quotidien. Des tons doux qui restent motivants sans fatiguer le regard.',
       'palette_ocean': 'Océan',
-      'palette_ocean_desc': 'Bleus profonds et froids pour la concentration, la respiration et l’esprit calme. Un espace tranquille, idéal après l’effort et pour la marche consciente.',
+      'palette_ocean_desc':
+          'Bleus profonds et froids pour la concentration, la respiration et l’esprit calme. Un espace tranquille, idéal après l’effort et pour la marche consciente.',
       'palette_forest': 'Forêt',
-      'palette_forest_desc': 'Verts forestiers naturels aux sous-tons terreux. Apporte équilibre et stabilité pour des habitudes durables et le plein air.',
+      'palette_forest_desc':
+          'Verts forestiers naturels aux sous-tons terreux. Apporte équilibre et stabilité pour des habitudes durables et le plein air.',
       'palette_sunrise': 'Aurore',
-      'palette_sunrise_desc': 'Chaleur douce du matin pour démarrer la journée avec énergie. Corail et pêche restent lumineux sans agressivité — motivation du premier réveil.',
+      'palette_sunrise_desc':
+          'Chaleur douce du matin pour démarrer la journée avec énergie. Corail et pêche restent lumineux sans agressivité — motivation du premier réveil.',
       'palette_lavender': 'Lavande',
-      'palette_lavender_desc': 'Violet doux pour le calme du soir, la récupération mentale et moins de stress. Idéal pour ralentir et préparer le repos.',
+      'palette_lavender_desc':
+          'Violet doux pour le calme du soir, la récupération mentale et moins de stress. Idéal pour ralentir et préparer le repos.',
       'palette_slate': 'Ardoise',
-      'palette_slate_desc': 'Gris-vert minimal au rendu clinique et moderne. Pensé pour la lisibilité des données, sans surcharge visuelle.',
+      'palette_slate_desc':
+          'Gris-vert minimal au rendu clinique et moderne. Pensé pour la lisibilité des données, sans surcharge visuelle.',
       'menu_title_male': 'M.',
       'menu_title_female': 'Mme',
       'menu_title_neutral': 'M. / Mme',
@@ -387,7 +410,6 @@ class HomeText {
       'support_copy': 'Copier',
       'support_copied': 'Copié',
       'support_hint': 'Envoyez problèmes et suggestions',
-
       'profile_section': '{n}. {t}',
       'profile_name': 'Votre nom',
       'profile_first': 'Prénom',
@@ -416,9 +438,10 @@ class HomeText {
       'profile_weight_helper': 'Kilogrammes (ex. 65)',
       'profile_waist_helper': 'Centimètres (ex. 80)',
       'profile_saved': 'Modifications enregistrées',
-      'widget_hub_hint': "Si l'ajout auto échoue, ajoutez Helsa depuis le menu widgets",
-      'profile_save_hint': 'Après modification, appuyez sur la coche pour enregistrer',
-
+      'widget_hub_hint':
+          "Si l'ajout auto échoue, ajoutez Helsa depuis le menu widgets",
+      'profile_save_hint':
+          'Après modification, appuyez sur la coche pour enregistrer',
       'notif_body': 'Quelques pas chaque jour éloignent le médecin',
     },
   };

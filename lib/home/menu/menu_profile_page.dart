@@ -204,7 +204,14 @@ class _ProfileEditorState extends State<_ProfileEditor> {
   List<int> _restrictions = [];
   List<int> _favorites = [];
 
-  late String _sFirst, _sLast, _sAge, _sHeight, _sWeight, _sWaist, _sSleep, _sWake;
+  late String _sFirst,
+      _sLast,
+      _sAge,
+      _sHeight,
+      _sWeight,
+      _sWaist,
+      _sSleep,
+      _sWake;
   late String? _sGender;
   late int? _sActivity, _sDiet;
   late List<int> _sRestrictions, _sFavorites;
@@ -268,7 +275,16 @@ class _ProfileEditorState extends State<_ProfileEditor> {
     _restrictions = List<int>.from(_sRestrictions);
     _favorites = List<int>.from(_sFavorites);
 
-    for (final c in [_first, _last, _age, _height, _weight, _waist, _sleep, _wake]) {
+    for (final c in [
+      _first,
+      _last,
+      _age,
+      _height,
+      _weight,
+      _waist,
+      _sleep,
+      _wake
+    ]) {
       c.addListener(() => setState(() {}));
     }
   }
@@ -468,248 +484,251 @@ class _ProfileEditorState extends State<_ProfileEditor> {
         data: widget.theme,
         duration: Duration.zero,
         child: Column(
-        children: [
-          // App bar
-          Padding(
-            padding: EdgeInsets.fromLTRB(
-              context.hX2s,
-              top + context.vX2s,
-              context.hX2s,
-              context.vX2s,
+          children: [
+            // App bar
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                context.hX2s,
+                top + context.vX2s,
+                context.hX2s,
+                context.vX2s,
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: widget.onRequestClose,
+                    icon: Icon(Icons.close_rounded, color: cs.onSurface),
+                  ),
+                  Expanded(
+                    child: TextFielder(
+                      text: HomeText.getString(_lang, 'menu_profile'),
+                      languageCode: _lang,
+                      template: TextTemplate.subtitle,
+                      textAlign: TextAlign.center,
+                      customStyle: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: cs.onSurface,
+                      ),
+                    ),
+                  ),
+                  AnimatedOpacity(
+                    opacity: _dirty ? 1 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: IgnorePointer(
+                      ignoring: !_dirty,
+                      child: IconButton(
+                        onPressed: _dirty ? _save : null,
+                        icon: Icon(
+                          Icons.check_rounded,
+                          color: cs.primary,
+                          size: 28,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            child: Row(
-              children: [
-                IconButton(
-                  onPressed: widget.onRequestClose,
-                  icon: Icon(Icons.close_rounded, color: cs.onSurface),
+            Divider(
+                height: 1, color: cs.outlineVariant.withValues(alpha: 0.35)),
+            Expanded(
+              child: ListView(
+                controller: _scroll,
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: EdgeInsets.fromLTRB(
+                  context.hS,
+                  context.vX2s,
+                  context.hS,
+                  bottom + keyboard + 88,
                 ),
-                Expanded(
-                  child: TextFielder(
-                    text: HomeText.getString(_lang, 'menu_profile'),
+                children: [
+                  // 1 Name — clear boxes
+                  _sectionTitle(1, 'profile_name'),
+                  _labeledField(c: _first, labelKey: 'profile_first'),
+                  SizedBox(height: context.vX2s),
+                  _labeledField(c: _last, labelKey: 'profile_last'),
+
+                  // 2 Gender
+                  _sectionTitle(2, 'profile_gender'),
+                  _chipBlock(
+                    child: GenderSetup(
+                      currentLang: _lang,
+                      selectedGender: _gender,
+                      onGenderSelected: (g) => setState(() => _gender = g),
+                    ),
+                  ),
+
+                  // 3 Age — min 10
+                  _sectionTitle(3, 'profile_age'),
+                  _labeledField(
+                    c: _age,
+                    labelKey: 'profile_age_hint',
+                    helperKey: 'profile_age_helper',
+                    keyboard: TextInputType.number,
+                    formatters: [FilteringTextInputFormatter.digitsOnly],
+                  ),
+
+                  // 4 Body — height, waist, weight
+                  _sectionTitle(4, 'profile_body'),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: _labeledField(
+                          c: _height,
+                          labelKey: 'profile_height',
+                          helperKey: 'profile_height_helper',
+                          keyboard: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: context.hX2s),
+                      Expanded(
+                        child: _labeledField(
+                          c: _weight,
+                          labelKey: 'profile_weight',
+                          helperKey: 'profile_weight_helper',
+                          keyboard: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: context.vX2s),
+                  _labeledField(
+                    c: _waist,
+                    labelKey: 'profile_waist',
+                    helperKey: 'profile_waist_helper',
+                    keyboard: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                  ),
+
+                  // 5 Activity — natural height, not cramped fixed box
+                  _sectionTitle(5, 'profile_activity'),
+                  _chipBlock(
+                    child: ActivitySetup(
+                      currentLang: _lang,
+                      selectedLevel: _activity,
+                      onActivitySelected: (v) => setState(() => _activity = v),
+                    ),
+                  ),
+
+                  // 6 Diet
+                  _sectionTitle(6, 'profile_diet'),
+                  _chipBlock(
+                    child: DietSetup(
+                      currentLang: _lang,
+                      selectedDiet: _diet,
+                      onDietSelected: (v) => setState(() => _diet = v),
+                    ),
+                  ),
+
+                  // 7 Restrictions — NO fixed 42% height (was causing overlap)
+                  _sectionTitle(7, 'profile_restrictions'),
+                  _chipBlock(
+                    child: RestrictionSetup(
+                      currentLang: _lang,
+                      selectedRestrictions: _restrictions,
+                      onChanged: (v) {
+                        setState(() {
+                          _restrictions = List<int>.from(v);
+                          final hidden = FavoriteFoodSetup.hiddenFavoriteIds(
+                              _restrictions);
+                          _favorites = _favorites
+                              .where((id) => !hidden.contains(id))
+                              .toList();
+                        });
+                      },
+                    ),
+                  ),
+
+                  // 8 Favorites
+                  _sectionTitle(8, 'profile_favorites'),
+                  _chipBlock(
+                    child: FavoriteFoodSetup(
+                      currentLang: _lang,
+                      selectedFoods: _favorites,
+                      selectedRestrictions: _restrictions,
+                      onChanged: (v) {
+                        setState(() => _favorites = List<int>.from(v));
+                      },
+                    ),
+                  ),
+
+                  // 9 Sleep
+                  _sectionTitle(9, 'profile_sleep'),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: _labeledField(
+                          c: _sleep,
+                          labelKey: 'profile_sleep_time',
+                        ),
+                      ),
+                      SizedBox(width: context.hX2s),
+                      Expanded(
+                        child: _labeledField(
+                          c: _wake,
+                          labelKey: 'profile_wake_time',
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  SizedBox(height: context.vS),
+                  TextFielder(
+                    text: HomeText.getString(_lang, 'profile_save_hint'),
                     languageCode: _lang,
-                    template: TextTemplate.subtitle,
+                    template: TextTemplate.caption,
                     textAlign: TextAlign.center,
                     customStyle: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      color: cs.onSurface,
+                      color: cs.onSurface.withValues(alpha: 0.45),
                     ),
                   ),
-                ),
-                AnimatedOpacity(
-                  opacity: _dirty ? 1 : 0,
-                  duration: const Duration(milliseconds: 200),
-                  child: IgnorePointer(
-                    ignoring: !_dirty,
-                    child: IconButton(
-                      onPressed: _dirty ? _save : null,
-                      icon: Icon(
-                        Icons.check_rounded,
-                        color: cs.primary,
-                        size: 28,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Divider(height: 1, color: cs.outlineVariant.withValues(alpha: 0.35)),
-          Expanded(
-            child: ListView(
-              controller: _scroll,
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              padding: EdgeInsets.fromLTRB(
-                context.hS,
-                context.vX2s,
-                context.hS,
-                bottom + keyboard + 88,
+                  SizedBox(height: context.vS),
+                ],
               ),
-              children: [
-                // 1 Name — clear boxes
-                _sectionTitle(1, 'profile_name'),
-                _labeledField(c: _first, labelKey: 'profile_first'),
-                SizedBox(height: context.vX2s),
-                _labeledField(c: _last, labelKey: 'profile_last'),
-
-                // 2 Gender
-                _sectionTitle(2, 'profile_gender'),
-                _chipBlock(
-                  child: GenderSetup(
-                    currentLang: _lang,
-                    selectedGender: _gender,
-                    onGenderSelected: (g) => setState(() => _gender = g),
-                  ),
-                ),
-
-                // 3 Age — min 10
-                _sectionTitle(3, 'profile_age'),
-                _labeledField(
-                  c: _age,
-                  labelKey: 'profile_age_hint',
-                  helperKey: 'profile_age_helper',
-                  keyboard: TextInputType.number,
-                  formatters: [FilteringTextInputFormatter.digitsOnly],
-                ),
-
-                // 4 Body — height, waist, weight
-                _sectionTitle(4, 'profile_body'),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: _labeledField(
-                        c: _height,
-                        labelKey: 'profile_height',
-                        helperKey: 'profile_height_helper',
-                        keyboard: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: context.hX2s),
-                    Expanded(
-                      child: _labeledField(
-                        c: _weight,
-                        labelKey: 'profile_weight',
-                        helperKey: 'profile_weight_helper',
-                        keyboard: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: context.vX2s),
-                _labeledField(
-                  c: _waist,
-                  labelKey: 'profile_waist',
-                  helperKey: 'profile_waist_helper',
-                  keyboard: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                ),
-
-                // 5 Activity — natural height, not cramped fixed box
-                _sectionTitle(5, 'profile_activity'),
-                _chipBlock(
-                  child: ActivitySetup(
-                    currentLang: _lang,
-                    selectedLevel: _activity,
-                    onActivitySelected: (v) => setState(() => _activity = v),
-                  ),
-                ),
-
-                // 6 Diet
-                _sectionTitle(6, 'profile_diet'),
-                _chipBlock(
-                  child: DietSetup(
-                    currentLang: _lang,
-                    selectedDiet: _diet,
-                    onDietSelected: (v) => setState(() => _diet = v),
-                  ),
-                ),
-
-                // 7 Restrictions — NO fixed 42% height (was causing overlap)
-                _sectionTitle(7, 'profile_restrictions'),
-                _chipBlock(
-                  child: RestrictionSetup(
-                    currentLang: _lang,
-                    selectedRestrictions: _restrictions,
-                    onChanged: (v) {
-                      setState(() {
-                        _restrictions = List<int>.from(v);
-                        final hidden =
-                            FavoriteFoodSetup.hiddenFavoriteIds(_restrictions);
-                        _favorites = _favorites
-                            .where((id) => !hidden.contains(id))
-                            .toList();
-                      });
-                    },
-                  ),
-                ),
-
-                // 8 Favorites
-                _sectionTitle(8, 'profile_favorites'),
-                _chipBlock(
-                  child: FavoriteFoodSetup(
-                    currentLang: _lang,
-                    selectedFoods: _favorites,
-                    selectedRestrictions: _restrictions,
-                    onChanged: (v) {
-                      setState(() => _favorites = List<int>.from(v));
-                    },
-                  ),
-                ),
-
-                // 9 Sleep
-                _sectionTitle(9, 'profile_sleep'),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: _labeledField(
-                        c: _sleep,
-                        labelKey: 'profile_sleep_time',
-                      ),
-                    ),
-                    SizedBox(width: context.hX2s),
-                    Expanded(
-                      child: _labeledField(
-                        c: _wake,
-                        labelKey: 'profile_wake_time',
-                      ),
-                    ),
-                  ],
-                ),
-
-                SizedBox(height: context.vS),
-                TextFielder(
-                  text: HomeText.getString(_lang, 'profile_save_hint'),
-                  languageCode: _lang,
-                  template: TextTemplate.caption,
-                  textAlign: TextAlign.center,
-                  customStyle: TextStyle(
-                    color: cs.onSurface.withValues(alpha: 0.45),
-                  ),
-                ),
-                SizedBox(height: context.vS),
-              ],
             ),
-          ),
 
-          // Sticky save bar when dirty — visible while scrolling
-          AnimatedSlide(
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeOutCubic,
-            offset: _dirty ? Offset.zero : const Offset(0, 1.1),
-            child: AnimatedOpacity(
-              duration: const Duration(milliseconds: 180),
-              opacity: _dirty ? 1 : 0,
-              child: Material(
-                elevation: 12,
-                color: cs.surface,
-                child: SafeArea(
-                  top: false,
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      context.hS,
-                      context.vX2s,
-                      context.hS,
-                      context.vX2s + (keyboard > 0 ? 0 : 0),
-                    ),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: FilledButton.icon(
-                        onPressed: _dirty ? _save : null,
-                        icon: const Icon(Icons.check_rounded),
-                        label: Text(
-                          HomeText.getString(_lang, 'confirm'),
-                          style: const TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                        style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+            // Sticky save bar when dirty — visible while scrolling
+            AnimatedSlide(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              offset: _dirty ? Offset.zero : const Offset(0, 1.1),
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 180),
+                opacity: _dirty ? 1 : 0,
+                child: Material(
+                  elevation: 12,
+                  color: cs.surface,
+                  child: SafeArea(
+                    top: false,
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        context.hS,
+                        context.vX2s,
+                        context.hS,
+                        context.vX2s + (keyboard > 0 ? 0 : 0),
+                      ),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: _dirty ? _save : null,
+                          icon: const Icon(Icons.check_rounded),
+                          label: Text(
+                            HomeText.getString(_lang, 'confirm'),
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                          style: FilledButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                           ),
                         ),
                       ),
@@ -718,9 +737,8 @@ class _ProfileEditorState extends State<_ProfileEditor> {
                 ),
               ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }

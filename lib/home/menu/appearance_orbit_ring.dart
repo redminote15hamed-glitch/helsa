@@ -5,7 +5,8 @@ import 'package:helsa/setting/color/theme_palette.dart';
 
 /// Dual-ring theme selector with heart burst open/close.
 class AppearanceOrbitRing extends StatelessWidget {
-  const AppearanceOrbitRing({super.key, 
+  const AppearanceOrbitRing({
+    super.key,
     required this.palettes,
     required this.selectedIndex,
     required this.angle,
@@ -19,6 +20,7 @@ class AppearanceOrbitRing extends StatelessWidget {
   final int selectedIndex;
   final double angle;
   final double pulse;
+
   /// 0 = icons stacked in center heart, 1 = icons on ring.
   final double burst;
   final Color accent;
@@ -41,9 +43,11 @@ class AppearanceOrbitRing extends StatelessWidget {
         final midR = (outerR + innerR) / 2;
 
         // Heart fades as icons leave (mostly gone by ~0.7)
-        final heartT = (1.0 - Curves.easeIn.transform(
-          (burst / 0.72).clamp(0.0, 1.0),
-        )).clamp(0.0, 1.0);
+        final heartT = (1.0 -
+                Curves.easeIn.transform(
+                  (burst / 0.72).clamp(0.0, 1.0),
+                ))
+            .clamp(0.0, 1.0);
         final heartSize = size * (0.20 + 0.04 * (1 - heartT));
 
         // Ring tracks fade in with burst
@@ -108,8 +112,8 @@ class AppearanceOrbitRing extends StatelessWidget {
                     final x = cx + r * math.cos(a);
                     final y = cy + r * math.sin(a);
                     final selected = i == selectedIndex;
-                    final node = (selected ? nodeSel : nodeBase) *
-                        (0.55 + 0.45 * t);
+                    final node =
+                        (selected ? nodeSel : nodeBase) * (0.55 + 0.45 * t);
                     final color = palettes[i].swatch;
                     final iconOpacity = (t * 1.15).clamp(0.0, 1.0);
 

@@ -55,7 +55,8 @@ class TextFielder extends StatelessWidget {
   });
 
   /// حروف فارسی / عربی در خود متن
-  static final RegExp _rtlScript = RegExp(r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]');
+  static final RegExp _rtlScript =
+      RegExp(r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]');
 
   @override
   Widget build(BuildContext context) {

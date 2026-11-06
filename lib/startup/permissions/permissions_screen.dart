@@ -35,7 +35,8 @@ class _PermissionsScreenState extends State<PermissionsScreen>
     const m = {
       'fa': {
         'title': 'دسترسی‌ها',
-        'subtitle': 'برای کار درست قدم‌شمار و اعلان‌ها، این دسترسی‌ها لازم است.',
+        'subtitle':
+            'برای کار درست قدم‌شمار و اعلان‌ها، این دسترسی‌ها لازم است.',
         'activity': 'فعالیت بدنی',
         'activity_desc': 'شمارش قدم و تشخیص پیاده‌روی',
         'notification': 'اعلان‌ها',
@@ -410,8 +411,7 @@ class _PermTile extends StatelessWidget {
           ),
           SizedBox(width: context.hX3s),
           if (showCheck)
-            Icon(Icons.check_circle_rounded,
-                color: accent, size: 28)
+            Icon(Icons.check_circle_rounded, color: accent, size: 28)
           else
             TextButton(
               onPressed: onAction,

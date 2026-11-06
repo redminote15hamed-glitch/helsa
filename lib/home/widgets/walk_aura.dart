@@ -29,8 +29,10 @@ class _WalkAuraState extends State<WalkAura> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _lastSteps = widget.steps;
-    _c1 = AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
-    _c2 = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200));
+    _c1 = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 900));
+    _c2 = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1200));
   }
 
   @override

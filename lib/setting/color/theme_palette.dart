@@ -5,12 +5,15 @@ import 'package:flutter/material.dart';
 class HelsaPalette {
   final String id;
   final IconData icon;
+
   /// Swatch shown as heart on the morph dock.
   final Color swatch;
   final ColorScheme light;
   final ColorScheme dark;
+
   /// Metric accents (steps / calories / active) — day
   final Color stepsL, calL, timeL;
+
   /// Metric accents — night
   final Color stepsD, calD, timeD;
 

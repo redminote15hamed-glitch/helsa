@@ -88,8 +88,7 @@ class ActivitySetup extends StatelessWidget {
                   items: activities.map((item) {
                     return {
                       'icon': item['icon'],
-                      'title':
-                          SetupText.getString(currentLang, item['title']),
+                      'title': SetupText.getString(currentLang, item['title']),
                       'desc': SetupText.getString(currentLang, item['desc']),
                     };
                   }).toList(),

@@ -98,12 +98,14 @@ class Buttoner extends StatelessWidget {
   ButtonConfig _getButtonMatrix(ButtonTemplate template) {
     // تابع کمکی برای استایل‌های Primary و Square
     ButtonConfig primaryBase = ButtonConfig(
-      backgroundColor: (t, s) =>
-          s ? t.colorScheme.primary : t.colorScheme.primary.withValues(alpha: 0.09),
+      backgroundColor: (t, s) => s
+          ? t.colorScheme.primary
+          : t.colorScheme.primary.withValues(alpha: 0.09),
       textColor: (t, s) => s ? t.colorScheme.onPrimary : t.colorScheme.primary,
       border: (t, s) => Border.all(
-        color:
-            s ? t.colorScheme.primary : t.colorScheme.primary.withValues(alpha: 0.2),
+        color: s
+            ? t.colorScheme.primary
+            : t.colorScheme.primary.withValues(alpha: 0.2),
         width: s ? 1.5 : 0.8,
       ),
       width: (c) => c.screenWidth * 0.75,

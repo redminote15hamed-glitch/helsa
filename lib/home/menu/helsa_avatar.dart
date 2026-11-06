@@ -95,7 +95,8 @@ class HelsaAvatar extends StatelessWidget {
     this.showBorder = false,
   });
 
-  factory HelsaAvatar.fromStore({Key? key, double radius = 28, bool showBorder = false}) {
+  factory HelsaAvatar.fromStore(
+      {Key? key, double radius = 28, bool showBorder = false}) {
     return HelsaAvatar(
       key: key,
       radius: radius,
@@ -114,7 +115,8 @@ class HelsaAvatar extends StatelessWidget {
     if (hasFile) {
       core = CircleAvatar(
         radius: radius,
-        backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+        backgroundColor:
+            Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
         backgroundImage: FileImage(File(path)),
       );
     } else {

@@ -397,8 +397,7 @@ class _WidgetEditorState extends State<_WidgetEditor>
                   SizedBox(height: context.vS),
                   _PreviewCard(
                     title: HomeText.getString(_lang, 'widget_hub_main_title'),
-                    subtitle:
-                        HomeText.getString(_lang, 'widget_hub_main_desc'),
+                    subtitle: HomeText.getString(_lang, 'widget_hub_main_desc'),
                     busy: _busyMain,
                     addLabel: HomeText.getString(_lang, 'widget_add'),
                     onAdd: () => _pin(stepsOnly: false),
@@ -619,9 +618,7 @@ class _StepsPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pct = stepsGoal <= 0
-        ? 0.0
-        : (steps / stepsGoal).clamp(0.0, 1.0);
+    final pct = stepsGoal <= 0 ? 0.0 : (steps / stepsGoal).clamp(0.0, 1.0);
     final pctLabel = '${(pct * 100).round()}%';
     // Match real Android steps widget: tall card, big number, label, icon, capsule %.
     return Center(
@@ -680,14 +677,16 @@ class _StepsPreview extends StatelessWidget {
                     LinearProgressIndicator(
                       value: pct,
                       minHeight: 26,
-                      backgroundColor: MetricColors.current.steps.withValues(alpha: 0.22),
+                      backgroundColor:
+                          MetricColors.current.steps.withValues(alpha: 0.22),
                       color: MetricColors.current.steps,
                     ),
                     Center(
                       child: Text(
                         pctLabel,
                         style: TextStyle(
-                          color: MetricColors.current.steps.withValues(alpha: 0.95),
+                          color: MetricColors.current.steps
+                              .withValues(alpha: 0.95),
                           fontWeight: FontWeight.w800,
                           fontSize: 12,
                         ),
@@ -748,10 +747,8 @@ class _MetricCol extends StatelessWidget {
           '/ $goal',
           style: TextStyle(
             fontSize: 10,
-            color: Theme.of(context)
-                .colorScheme
-                .onSurface
-                .withValues(alpha: 0.45),
+            color:
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45),
           ),
         ),
       ],

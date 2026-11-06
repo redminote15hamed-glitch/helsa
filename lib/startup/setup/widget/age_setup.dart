@@ -54,9 +54,7 @@ class AgeSetup extends StatelessWidget {
             ),
           ),
         ),
-
         SizedBox(height: gapAfterSubtitle),
-
         Displayer(
           index: 3,
           template: MotionTemplate.zoomFade,

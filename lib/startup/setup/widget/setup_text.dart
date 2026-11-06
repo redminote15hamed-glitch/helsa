@@ -47,11 +47,9 @@ class SetupText extends StatelessWidget {
       'support_copy': 'کپی',
       'support_copied': 'کپی شد',
       'support_hint': 'ارسال مشکلات و پیشنهادات',
-      'perm_activity': 'برای فعال شدن شمارش قدم، دسترسی به فعالیت‌های بدنی را بدهید.',
+      'perm_activity':
+          'برای فعال شدن شمارش قدم، دسترسی به فعالیت‌های بدنی را بدهید.',
       'perm_grant': 'اجازه دسترسی',
-
-
-
       'search_hint': 'جستجو...',
       'search_no_results': 'بدون نتیجه',
       'familiarity_title': 'نام شما',
@@ -192,7 +190,6 @@ class SetupText extends StatelessWidget {
       'restrict_alcohol': 'الکل',
       'restrict_vinegar': 'سرکه',
       'restrict_spice_mix': 'ادویه ترکیبی',
-      
       'favorite_food_title': 'غذاهای مورد علاقه',
       'favorite_food_subtitle': 'غذاهایی که بیشتر دوست دارید را انتخاب کنید.',
       'err_favorite_food': 'لطفاً حداقل یک غذای مورد علاقه انتخاب کنید.',
@@ -260,8 +257,6 @@ class SetupText extends StatelessWidget {
       'fav_dates': 'خرما',
       'fav_honey_comb': 'موم عسل',
       'fav_olive_oil': 'روغن زیتون',
-
-
       'sleep_title': 'زمان خواب و بیداری',
       'sleep_subtitle': 'ساعات استراحت و خواب خود را مشخص کنید',
       'sleep_time_label': 'زمان خواب',
@@ -296,11 +291,9 @@ class SetupText extends StatelessWidget {
       'support_copy': 'Copy',
       'support_copied': 'Copied',
       'support_hint': 'Send issues and suggestions',
-      'perm_activity': 'To enable step counting, allow access to physical activity.',
+      'perm_activity':
+          'To enable step counting, allow access to physical activity.',
       'perm_grant': 'Allow access',
-
-
-
       'search_hint': 'Search...',
       'search_no_results': 'No results',
       'familiarity_title': 'Your Name',
@@ -441,7 +434,6 @@ class SetupText extends StatelessWidget {
       'restrict_alcohol': 'Alcohol',
       'restrict_vinegar': 'Vinegar',
       'restrict_spice_mix': 'Mixed spices',
-      
       'favorite_food_title': 'Favorite Foods',
       'favorite_food_subtitle': 'Pick the foods you enjoy most.',
       'err_favorite_food': 'Please select at least one favorite food.',
@@ -509,8 +501,6 @@ class SetupText extends StatelessWidget {
       'fav_dates': 'Dates',
       'fav_honey_comb': 'Honeycomb',
       'fav_olive_oil': 'Olive oil',
-
-
       'sleep_title': 'Sleep & Wake Time',
       'sleep_subtitle': 'Configure your resting and sleeping hours',
       'sleep_time_label': 'Sleep time',
@@ -544,11 +534,9 @@ class SetupText extends StatelessWidget {
       'support_copy': 'Copier',
       'support_copied': 'Copié',
       'support_hint': 'Envoyer problèmes et suggestions',
-      'perm_activity': 'Pour activer le compteur de pas, autorisez l\'accès à l\'activité physique.',
+      'perm_activity':
+          'Pour activer le compteur de pas, autorisez l\'accès à l\'activité physique.',
       'perm_grant': 'Autoriser',
-
-
-
       'search_hint': 'Rechercher...',
       'search_no_results': 'Aucun résultat',
       'familiarity_title': 'Votre Nom',
@@ -689,9 +677,9 @@ class SetupText extends StatelessWidget {
       'restrict_alcohol': 'Alcool',
       'restrict_vinegar': 'Vinaigre',
       'restrict_spice_mix': 'Épices mélangées',
-      
       'favorite_food_title': 'Plats préférés',
-      'favorite_food_subtitle': 'Choisissez les aliments que vous aimez le plus.',
+      'favorite_food_subtitle':
+          'Choisissez les aliments que vous aimez le plus.',
       'err_favorite_food': 'Veuillez sélectionner au moins un aliment préféré.',
       'fav_rice': 'Riz',
       'fav_chicken': 'Poulet',
@@ -757,8 +745,6 @@ class SetupText extends StatelessWidget {
       'fav_dates': 'Dattes',
       'fav_honey_comb': 'Rayon de miel',
       'fav_olive_oil': 'Huile d’olive',
-
-
       'sleep_title': 'Temps de sommeil et de réveil',
       'sleep_subtitle': 'Configurez vos heures de repos et de sommeil',
       'sleep_time_label': 'Heure de sommeil',

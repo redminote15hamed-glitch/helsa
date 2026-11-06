@@ -67,8 +67,7 @@ class StreakStore {
     required int activeMinutes,
     required int activeMinutesGoal,
   }) async {
-    final reachedAnyGoal =
-        (stepsGoal > 0 && steps >= stepsGoal) ||
+    final reachedAnyGoal = (stepsGoal > 0 && steps >= stepsGoal) ||
         (caloriesGoal > 0 && calories >= caloriesGoal) ||
         (activeMinutesGoal > 0 && activeMinutes >= activeMinutesGoal);
 

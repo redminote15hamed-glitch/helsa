@@ -13,7 +13,6 @@ class WalkingNotification {
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
 
-
   Future<void> init() async {
     if (kIsWeb) {
       return;

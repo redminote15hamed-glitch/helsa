@@ -84,8 +84,7 @@ class SetupMobileVertical extends StatelessWidget {
                           physics: const BouncingScrollPhysics(
                             parent: AlwaysScrollableScrollPhysics(),
                           ),
-                          padding:
-                              EdgeInsets.symmetric(horizontal: context.hS),
+                          padding: EdgeInsets.symmetric(horizontal: context.hS),
                           child: ConstrainedBox(
                             constraints: BoxConstraints(
                               minHeight: constraints.maxHeight,

@@ -32,7 +32,8 @@ void main() {
     await StreakStore.clear();
   });
 
-  test('teen step goals depend on activity band, not body measurements', () async {
+  test('teen step goals depend on activity band, not body measurements',
+      () async {
     const expected = [5000, 6000, 7000, 8000, 9000];
 
     for (var activity = 0; activity < expected.length; activity++) {
@@ -41,7 +42,8 @@ void main() {
     }
   });
 
-  test('movement calorie estimate and target stay independent of body weight', () async {
+  test('movement calorie estimate and target stay independent of body weight',
+      () async {
     await AgeStore.save(14);
     await ActivityStore.save(4);
 

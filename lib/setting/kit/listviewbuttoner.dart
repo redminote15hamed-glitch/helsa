@@ -262,19 +262,16 @@ class _CardBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasDesc =
-        item['desc'] != null && item['desc'].toString().isNotEmpty;
+    final hasDesc = item['desc'] != null && item['desc'].toString().isNotEmpty;
 
     final double pad = context.s * density;
-    final double fontBoost =
-        context.shortestSide >= 600 ? 1.25 : 1.55;
+    final double fontBoost = context.shortestSide >= 600 ? 1.25 : 1.55;
     final double descSize = context.s * density * fontBoost;
     final double titleSize = context.m * density * fontBoost;
     final int maxLines = density < 0.85 ? 4 : 5;
 
-    final Color onCard = isSelected
-        ? theme.colorScheme.onPrimary
-        : theme.colorScheme.primary;
+    final Color onCard =
+        isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.primary;
 
     final Color descBoxBg = isSelected
         ? theme.colorScheme.onPrimary.withValues(alpha: 0.18)
@@ -298,9 +295,8 @@ class _CardBody extends StatelessWidget {
                 scale: 1.4,
                 child: Iconer(
                   icon: item['icon'],
-                  template: density < 0.8
-                      ? IconTemplate.medium
-                      : IconTemplate.large,
+                  template:
+                      density < 0.8 ? IconTemplate.medium : IconTemplate.large,
                   customColor: isSelected
                       ? theme.colorScheme.onPrimary
                       : theme.colorScheme.primary,

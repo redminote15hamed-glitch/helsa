@@ -26,7 +26,8 @@ class IdentityStore {
   }
 
   /// preset id (e.g. "mint") or empty when custom file is used
-  static String get avatarPreset => _b.get('avatarPreset')?.toString() ?? 'mint';
+  static String get avatarPreset =>
+      _b.get('avatarPreset')?.toString() ?? 'mint';
 
   /// absolute path to gallery image; empty if using preset
   static String get avatarPath => _b.get('avatarPath')?.toString() ?? '';

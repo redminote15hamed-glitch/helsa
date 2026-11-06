@@ -5,7 +5,8 @@ import 'package:helsa/setting/responsive/responsive_utils.dart';
 
 /// Apple metric previews + heart color dock for Appearance.
 class AppearancePreviewApple extends StatelessWidget {
-  const AppearancePreviewApple({super.key, 
+  const AppearancePreviewApple({
+    super.key,
     required this.label,
     required this.color,
     required this.fill,
@@ -176,7 +177,8 @@ class AppearanceApplePainter extends CustomPainter {
 }
 
 class AppearanceHeartDock extends StatelessWidget {
-  const AppearanceHeartDock({super.key, required this.colors, required this.width});
+  const AppearanceHeartDock(
+      {super.key, required this.colors, required this.width});
 
   final List<Color> colors;
   final double width;
@@ -214,4 +216,3 @@ class AppearanceHeartDock extends StatelessWidget {
     );
   }
 }
-

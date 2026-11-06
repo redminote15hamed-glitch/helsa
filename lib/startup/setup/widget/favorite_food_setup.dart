@@ -40,7 +40,11 @@ class FavoriteFoodSetup extends StatelessWidget {
     {'id': 19, 'icon': Icons.cookie_rounded, 'title': 'fav_pastry'},
     {'id': 20, 'icon': Icons.cake_rounded, 'title': 'fav_dessert'},
     {'id': 21, 'icon': Icons.coffee_rounded, 'title': 'fav_coffee_tea'},
-    {'id': 22, 'icon': Icons.emoji_food_beverage_rounded, 'title': 'fav_herbal_tea'},
+    {
+      'id': 22,
+      'icon': Icons.emoji_food_beverage_rounded,
+      'title': 'fav_herbal_tea'
+    },
     {'id': 23, 'icon': Icons.water_drop_rounded, 'title': 'fav_smoothie'},
     {'id': 24, 'icon': Icons.fastfood_rounded, 'title': 'fav_sandwich'},
     {'id': 25, 'icon': Icons.tapas_rounded, 'title': 'fav_appetizer'},
@@ -160,8 +164,7 @@ class FavoriteFoodSetup extends StatelessWidget {
   Widget build(BuildContext context) {
     // Drop any previously selected fav that is now hidden
     final hidden = hiddenFavoriteIds(selectedRestrictions);
-    final cleaned =
-        selectedFoods.where((id) => !hidden.contains(id)).toList();
+    final cleaned = selectedFoods.where((id) => !hidden.contains(id)).toList();
     if (cleaned.length != selectedFoods.length) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         onChanged(cleaned);
