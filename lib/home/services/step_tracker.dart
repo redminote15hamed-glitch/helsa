@@ -168,6 +168,7 @@ class StepTracker extends ChangeNotifier {
     if (!enabled) {
       _walkStartedAt = null;
       _lastStepAt = null;
+      _isWalking = false;
     }
     notifyListeners();
   }
