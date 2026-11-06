@@ -35,11 +35,15 @@ class StepForeground {
 
   bool _listening = false;
   bool _taskDataAttached = false;
+  bool _initialized = false;
   int _lastSteps = -1;
   int _lastGoal = -1;
 
   void init() {
     if (kIsWeb || !Platform.isAndroid) return;
+
+    if (_initialized) return;
+    _initialized = true;
 
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
@@ -55,7 +59,7 @@ class StepForeground {
         playSound: false,
       ),
       foregroundTaskOptions: ForegroundTaskOptions(
-        eventAction: ForegroundTaskEventAction.repeat(3000),
+        eventAction: ForegroundTaskEventAction.nothing(),
         autoRunOnBoot: true,
         autoRunOnMyPackageReplaced: true,
         allowWakeLock: true,
@@ -83,11 +87,11 @@ class StepForeground {
 
   void _onTrackerChanged() {
     final tracker = StepTracker.instance;
-    if (tracker.steps != _lastSteps || tracker.stepsGoal != _lastGoal) {
-      _lastSteps = tracker.steps;
-      _lastGoal = tracker.stepsGoal;
-      unawaited(refresh(force: true));
+    if (tracker.steps == _lastSteps && tracker.stepsGoal == _lastGoal) {
+      return;
     }
+    _lastSteps = tracker.steps;
+    _lastGoal = tracker.stepsGoal;
     unawaited(_sendTrackerState());
   }
 
@@ -231,6 +235,7 @@ class StepTaskHandler extends TaskHandler {
   int _dailySteps = 0;
   int _stepsGoal = GoalCalculatorFallback.steps;
   int _lastNotifiedSteps = -1;
+  int _lastPersistedSteps = -1;
   String _dayKey = '';
   String _stepsLabel = 'steps';
   String _notificationBody = 'Helsa is tracking activity';
@@ -310,7 +315,11 @@ class StepTaskHandler extends TaskHandler {
       'deviceSteps': event.steps,
       'dayKey': _dayKey,
     });
-    unawaited(_persistState());
+    if (_lastPersistedSteps < 0 ||
+        _dailySteps - _lastPersistedSteps >= 10) {
+      _lastPersistedSteps = _dailySteps;
+      unawaited(_persistState());
+    }
 
     if (_lastNotifiedSteps < 0 ||
         _dailySteps - _lastNotifiedSteps >= 10 ||
@@ -352,6 +361,7 @@ class StepTaskHandler extends TaskHandler {
     _dayKey = incomingDay!;
     _baseDeviceSteps = base is num ? base.toInt() : null;
     _dailySteps = steps is num ? steps.toInt() : 0;
+    _lastPersistedSteps = _dailySteps;
     _stepsGoal = goal is num ? goal.toInt() : _stepsGoal;
     _stepsLabel = data['stepsLabel']?.toString() ?? _stepsLabel;
     _notificationBody =
