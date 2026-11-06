@@ -1,10 +1,10 @@
 // lib/home/services/daily_recap.dart
-// گزارش روز قبل — TextFielder + جهت درست عدد/متن
+// Previous-day recap dialog.
 import 'package:flutter/material.dart';
 import 'package:helsa/home/home_text.dart';
 import 'package:helsa/setting/kit/textfielder.dart';
-import 'package:helsa/setting/storage/body_store.dart';
 import 'package:helsa/setting/storage/steps_store.dart';
+import 'package:helsa/home/services/goal_calculator.dart';
 
 class DailyRecap {
   DailyRecap._();
@@ -21,22 +21,18 @@ class DailyRecap {
     final steps = data['steps'] as int? ?? 0;
     final activeMs = data['activeMs'] as int? ?? 0;
     final goal = data['goalSteps'] as int?;
-    final mins = (activeMs / 60000).floor();
-    double cal = steps * 0.04;
-    try {
-      final w = BodyStore.weight ?? 70.0;
-      cal = steps * 0.04 * (w / 70.0);
-    } catch (_) {}
+    final minutes = (activeMs / 60000).floor();
+    final estimatedMovementCalories = steps * GoalCalculator.kcalPerStep();
 
-    final goalPct = (goal != null && goal > 0)
+    final goalPercent = (goal != null && goal > 0)
         ? ((steps / goal) * 100).clamp(0, 999).toStringAsFixed(0)
         : null;
 
     await showDialog<void>(
       context: context,
       barrierDismissible: true,
-      builder: (ctx) {
-        final cs = Theme.of(ctx).colorScheme;
+      builder: (dialogContext) {
+        final colorScheme = Theme.of(dialogContext).colorScheme;
         final isRtl = language.toLowerCase().startsWith('fa') ||
             language.toLowerCase().startsWith('ar');
 
@@ -48,7 +44,7 @@ class DailyRecap {
             ),
             title: Row(
               children: [
-                Icon(Icons.auto_awesome, color: cs.primary),
+                Icon(Icons.auto_awesome, color: colorScheme.primary),
                 const SizedBox(width: 8),
                 Expanded(
                   child: TextFielder(
@@ -71,7 +67,7 @@ class DailyRecap {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       _metricLine(
-                        ctx,
+                        dialogContext,
                         language,
                         Icons.directions_walk,
                         value: '$steps',
@@ -79,27 +75,27 @@ class DailyRecap {
                       ),
                       const SizedBox(height: 10),
                       _metricLine(
-                        ctx,
+                        dialogContext,
                         language,
                         Icons.local_fire_department,
-                        value: cal.toStringAsFixed(0),
+                        value: estimatedMovementCalories.toStringAsFixed(0),
                         label: HomeText.getString(language, 'recap_cal'),
                       ),
                       const SizedBox(height: 10),
                       _metricLine(
-                        ctx,
+                        dialogContext,
                         language,
                         Icons.timer_outlined,
-                        value: '$mins',
+                        value: '$minutes',
                         label: HomeText.getString(language, 'recap_active'),
                       ),
-                      if (goalPct != null) ...[
+                      if (goalPercent != null) ...[
                         const SizedBox(height: 10),
                         _metricLine(
-                          ctx,
+                          dialogContext,
                           language,
                           Icons.flag_outlined,
-                          value: '$goalPct%',
+                          value: '$goalPercent%',
                           label: HomeText.getString(language, 'recap_goal'),
                         ),
                       ],
@@ -107,7 +103,7 @@ class DailyRecap {
                   ),
             actions: [
               FilledButton(
-                onPressed: () => Navigator.of(ctx).pop(),
+                onPressed: () => Navigator.of(dialogContext).pop(),
                 child: TextFielder(
                   text: HomeText.getString(language, 'recap_ok'),
                   languageCode: language,
@@ -122,7 +118,6 @@ class DailyRecap {
     );
   }
 
-  /// عدد و برچسب جدا تا در RTL جابه‌جا نشوند.
   static Widget _metricLine(
     BuildContext context,
     String language,
@@ -130,10 +125,10 @@ class DailyRecap {
     required String value,
     required String label,
   }) {
-    final cs = Theme.of(context).colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       children: [
-        Icon(icon, size: 20, color: cs.primary),
+        Icon(icon, size: 20, color: colorScheme.primary),
         const SizedBox(width: 10),
         Expanded(
           child: Row(
