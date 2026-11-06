@@ -75,6 +75,7 @@ class StorageInit {
     await RestrictionStore.clear();
     await FavoriteStore.clear();
     await SleepStore.clear();
+    await StepsStore.clear();
     await StreakStore.clear();
   }
 }
