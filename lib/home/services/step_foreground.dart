@@ -46,25 +46,25 @@ class StepForeground {
     if (!_initialized) {
       _initialized = true;
       FlutterForegroundTask.init(
-      androidNotificationOptions: AndroidNotificationOptions(
+        androidNotificationOptions: AndroidNotificationOptions(
         channelId: 'helsa_step_service_v3',
         channelName: 'Helsa Steps',
         channelDescription: 'Live step counting',
         channelImportance: NotificationChannelImportance.LOW,
         priority: NotificationPriority.LOW,
         onlyAlertOnce: true,
-      ),
-      iosNotificationOptions: const IOSNotificationOptions(
+        ),
+        iosNotificationOptions: const IOSNotificationOptions(
         showNotification: false,
         playSound: false,
-      ),
-      foregroundTaskOptions: ForegroundTaskOptions(
+        ),
+        foregroundTaskOptions: ForegroundTaskOptions(
         eventAction: ForegroundTaskEventAction.repeat(3000),
         autoRunOnBoot: true,
         autoRunOnMyPackageReplaced: true,
         allowWakeLock: true,
         allowWifiLock: false,
-      ),
+        ),
       );
     }
 
@@ -158,6 +158,7 @@ class StepForeground {
     }
 
     final tracker = StepTracker.instance;
+    tracker.setBackgroundActivityAuthority(false);
     final result = await FlutterForegroundTask.startService(
       serviceId: _serviceId,
       notificationTitle: _title(tracker.steps, tracker.stepsGoal),
@@ -186,6 +187,7 @@ class StepForeground {
         StepTracker.instance.setBackgroundActivityAuthority(false);
         await start();
       } else {
+        StepTracker.instance.setBackgroundActivityAuthority(true);
         await _sendTrackerState();
         await refresh(force: true);
       }
@@ -207,6 +209,7 @@ class StepForeground {
 
     try {
       if (!await FlutterForegroundTask.isRunningService) {
+        tracker.setBackgroundActivityAuthority(false);
         await start();
         return;
       }
@@ -461,6 +464,18 @@ class StepTaskHandler extends TaskHandler {
 
     final incomingDay = data['dayKey']?.toString();
     if (incomingDay != _todayKey()) return;
+    if (_dayKey != incomingDay) {
+      _dayKey = incomingDay!;
+      _baseDeviceSteps = null;
+      _dailySteps = 0;
+      _activeMs = 0;
+      _isWalking = false;
+      _paused = false;
+      _walkStartedAt = null;
+      _lastStepAt = null;
+      _lastNotifiedSteps = -1;
+      _lastPersistedSteps = -1;
+    }
 
     final base = data['baseDeviceSteps'];
     final steps = data['dailySteps'];
