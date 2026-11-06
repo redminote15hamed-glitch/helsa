@@ -121,10 +121,10 @@ class HomeWidgetBridge {
       final now = DateTime.now();
       if (!force && unchanged) return;
       final elapsedMs = now.difference(_lastPush).inMilliseconds;
-      if (!force && elapsedMs < 600) {
+      if (!force && elapsedMs < 1500) {
         _retryTimer?.cancel();
         _retryTimer = Timer(
-          Duration(milliseconds: 600 - elapsedMs),
+          Duration(milliseconds: 1500 - elapsedMs),
           () => unawaited(push()),
         );
         return;
