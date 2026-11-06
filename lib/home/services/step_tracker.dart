@@ -95,7 +95,7 @@ class StepTracker extends ChangeNotifier {
       return;
     }
 
-    final activityPermission = await Permission.activityRecognition.request();
+    final activityPermission = await Permission.activityRecognition.status;
     _permissionGranted = activityPermission.isGranted;
 
     if (!_permissionGranted) {
@@ -138,7 +138,7 @@ class StepTracker extends ChangeNotifier {
   }) {
     _backgroundActivityAuthority = true;
     final previousMinute = activeMinutes;
-    final previousWalking = isWalking;
+    final previousWalking = _isWalking;
     final now = DateTime.now();
     final activeChanged = activeMs > _activeMs;
     if (activeChanged) _activeMs = activeMs;
