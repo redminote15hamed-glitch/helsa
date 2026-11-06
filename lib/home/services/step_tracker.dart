@@ -32,7 +32,10 @@ class StepTracker extends ChangeNotifier {
 
   int get steps => _steps;
   int? get baseDeviceSteps => _baseDevice;
-  String get currentDayKey => StepsStore.currentDayKey;
+  String get currentDayKey {
+    _syncCalendarDay();
+    return _trackedDayKey ?? StepsStore.currentDayKey;
+  }
   bool get isWalking => _isWalking && !isPaused;
   bool get permissionGranted => _permissionGranted;
 
@@ -169,25 +172,44 @@ class StepTracker extends ChangeNotifier {
     notifyListeners();
   }
 
+  String _localDayKey() {
+    final now = DateTime.now();
+    return '${now.year.toString().padLeft(4, '0')}-'
+        '${now.month.toString().padLeft(2, '0')}-'
+        '${now.day.toString().padLeft(2, '0')}';
+  }
+
+  void _syncCalendarDay() {
+    final today = _localDayKey();
+    if (_trackedDayKey == null) {
+      _trackedDayKey = StepsStore.currentDayKey;
+      return;
+    }
+    if (_trackedDayKey == today) return;
+
+    _saveTimer?.cancel();
+    _dirty = false;
+    StepsStore.rolloverWithCurrentValues(
+      steps: _steps,
+      activeMs: activeMillisecondsForSync,
+    );
+    _trackedDayKey = today;
+    _steps = StepsStore.steps;
+    _baseDevice = StepsStore.baseDeviceSteps;
+    _activeMs = StepsStore.activeMs;
+    _isWalking = false;
+    _walkStartedAt = null;
+    _lastStepAt = null;
+    _lastActivePersistAt = DateTime.now();
+    notifyListeners();
+  }
+
   /// Accepts sensor counts from either the UI isolate or the foreground-task
   /// isolate. Duplicate events are harmless because the raw counter is monotonic.
   void ingestExternalDeviceSteps(int rawDeviceSteps) {
     if (rawDeviceSteps < 0) return;
 
-    final dayKey = StepsStore.currentDayKey;
-    if (_trackedDayKey != dayKey) {
-      // StepsStore has already archived yesterday and reset today's values.
-      _trackedDayKey = dayKey;
-      _steps = StepsStore.steps;
-      _activeMs = StepsStore.activeMs;
-      _baseDevice = rawDeviceSteps;
-      _isWalking = false;
-      _walkStartedAt = null;
-      _lastStepAt = null;
-      unawaited(StepsStore.saveBaseDeviceSteps(rawDeviceSteps));
-      notifyListeners();
-      return;
-    }
+    _syncCalendarDay();
 
     if (_baseDevice == null) {
       _baseDevice = rawDeviceSteps - _steps;
@@ -224,6 +246,7 @@ class StepTracker extends ChangeNotifier {
   }
 
   void _onTick() {
+    _syncCalendarDay();
     if (_paused && !StepsStore.isCountingPaused) {
       _paused = false;
       notifyListeners();
