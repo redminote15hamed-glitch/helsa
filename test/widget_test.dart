@@ -62,13 +62,19 @@ void main() {
 
   test('daily rollover archives yesterday before resetting counters', () async {
     final box = Hive.box(StepsStore.boxName);
-    await box.put('day', '2026-11-05');
-    await box.put('steps', 4321);
-    await box.put('activeMs', 120000);
+    final now = DateTime.now();
+    final yesterday = DateTime(now.year, now.month, now.day - 1);
+    final yesterdayKey = '${yesterday.year.toString().padLeft(4, '0')}-'
+        '${yesterday.month.toString().padLeft(2, '0')}-'
+        '${yesterday.day.toString().padLeft(2, '0')}';
+    await box.put('day', yesterdayKey);
+    await box.put('steps', 1000);
+    await box.put('activeMs', 60000);
     await box.put('goal_steps', 7000);
 
+    StepsStore.rolloverWithCurrentValues(steps: 4321, activeMs: 120000);
     expect(StepsStore.steps, 0);
-    expect(StepsStore.lastDayKey, '2026-11-05');
+    expect(StepsStore.lastDayKey, yesterdayKey);
     expect(StepsStore.lastDaySteps, 4321);
     expect(StepsStore.activeMs, 0);
   });
