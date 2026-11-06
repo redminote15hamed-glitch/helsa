@@ -20,6 +20,7 @@ class StepTracker extends ChangeNotifier {
   bool _isWalking = false;
   bool _permissionGranted = false;
   bool _paused = false;
+  bool _backgroundActivityAuthority = false;
 
   DateTime? _walkStartedAt;
   int _activeMs = 0;
@@ -60,12 +61,16 @@ class StepTracker extends ChangeNotifier {
     return GoalCalculator.caloriesGoal();
   }
 
-  int get activeMinutes {
+  int get activeMillisecondsForSync {
     var milliseconds = _activeMs;
     if (_walkStartedAt != null && !isPaused) {
       milliseconds += DateTime.now().difference(_walkStartedAt!).inMilliseconds;
     }
-    return (milliseconds / 60000).floor();
+    return milliseconds;
+  }
+
+  int get activeMinutes {
+    return (activeMillisecondsForSync / 60000).floor();
   }
 
   int get activeMinutesGoal {
@@ -135,6 +140,30 @@ class StepTracker extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Receives the foreground isolate's authoritative walking-duration state.
+  void ingestBackgroundActivity({
+    required int activeMs,
+    required bool isWalking,
+  }) {
+    _backgroundActivityAuthority = true;
+    if (activeMs > _activeMs) _activeMs = activeMs;
+    _walkStartedAt = isWalking ? DateTime.now() : null;
+    _isWalking = isWalking;
+    _lastStepAt = isWalking ? DateTime.now() : null;
+    _lastActivePersistAt = DateTime.now();
+    unawaited(StepsStore.saveActiveMs(_activeMs));
+    notifyListeners();
+  }
+
+  void setBackgroundActivityAuthority(bool enabled) {
+    _backgroundActivityAuthority = enabled;
+    if (!enabled) {
+      _walkStartedAt = null;
+      _lastStepAt = null;
+    }
+    notifyListeners();
+  }
+
   /// Accepts sensor counts from either the UI isolate or the foreground-task
   /// isolate. Duplicate events are harmless because the raw counter is monotonic.
   void ingestExternalDeviceSteps(int rawDeviceSteps) {
@@ -174,7 +203,7 @@ class StepTracker extends ChangeNotifier {
 
     if (nextSteps > _steps) {
       _lastStepAt = DateTime.now();
-      if (!_isWalking) {
+      if (!_backgroundActivityAuthority && !_isWalking) {
         _isWalking = true;
         _walkStartedAt = DateTime.now();
       }
@@ -196,6 +225,10 @@ class StepTracker extends ChangeNotifier {
       return;
     }
     if (isPaused) return;
+    if (_backgroundActivityAuthority) {
+      notifyListeners();
+      return;
+    }
 
     final now = DateTime.now();
 
@@ -235,6 +268,7 @@ class StepTracker extends ChangeNotifier {
   }
 
   void _onStatus(PedestrianStatus event) {
+    if (_backgroundActivityAuthority) return;
     if (isPaused) {
       _isWalking = false;
       return;
