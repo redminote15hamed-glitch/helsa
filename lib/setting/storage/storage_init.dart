@@ -10,8 +10,10 @@ import 'package:helsa/setting/storage/diet_store.dart';
 import 'package:helsa/setting/storage/restriction_store.dart';
 import 'package:helsa/setting/storage/favorite_store.dart';
 import 'package:helsa/setting/storage/sleep_store.dart';
+import 'package:helsa/setting/storage/steps_store.dart';
+import 'package:helsa/setting/storage/streak_store.dart';
 
-/// Open all boxes once at app start (main / splash).
+/// Open all Hive boxes once during application startup.
 class StorageInit {
   StorageInit._();
 
@@ -28,10 +30,11 @@ class StorageInit {
       RestrictionStore.open(),
       FavoriteStore.open(),
       SleepStore.open(),
+      StepsStore.open(),
+      StreakStore.open(),
     ]);
   }
 
-  /// Called when user taps Start on summary.
   static Future<void> saveFullSetup({
     required String language,
     required String firstName,
@@ -72,5 +75,6 @@ class StorageInit {
     await RestrictionStore.clear();
     await FavoriteStore.clear();
     await SleepStore.clear();
+    await StreakStore.clear();
   }
 }
