@@ -335,6 +335,19 @@ class StepTracker extends ChangeNotifier {
     );
   }
 
+  /// Cancels pending writes and sensor listeners before the persistent stores are cleared.
+  Future<void> stopForProfileClear() async {
+    _saveTimer?.cancel();
+    _saveTimer = null;
+    _dirty = false;
+    _tick?.cancel();
+    _tick = null;
+    await _stepSub?.cancel();
+    await _statusSub?.cancel();
+    _stepSub = null;
+    _statusSub = null;
+  }
+
   /// Resets in-memory counters after the persisted profile and step stores are cleared.
   /// Sensor subscriptions stay active so counting can resume after setup is completed.
   void resetInMemory() {
