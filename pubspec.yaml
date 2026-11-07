@@ -1,5 +1,5 @@
 name: helsa
-description: "A new Flutter project."
+description: "Helsa — on-device health companion for steps, activity and wellbeing."
 publish_to: 'none'
 
 version: 1.0.0+3

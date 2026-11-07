@@ -258,6 +258,15 @@ class StepTaskHandler extends TaskHandler {
   DateTime? _walkStartedAt;
   DateTime? _lastStepAt;
   DateTime _lastPersistAt = DateTime.fromMillisecondsSinceEpoch(0);
+  /// Match UI StepTracker gates — avoid phantom active time in background.
+  static const int _gapSeconds = 10;
+  static const int _minStepsToStart = 4;
+  static const int _startWindowSeconds = 8;
+  static const int _minSessionSteps = 8;
+  static const int _minSessionSeconds = 20;
+  final List<DateTime> _recentStepEvents = <DateTime>[];
+  int _stepsAtSessionStart = 0;
+  bool _statusSaysWalking = false;
   String _dayKey = '';
   String _stepsLabel = 'steps';
   String _notificationBody = 'Helsa is tracking activity';
@@ -326,15 +335,11 @@ class StepTaskHandler extends TaskHandler {
       _walkStartedAt = null;
       _lastStepAt = null;
       _isWalking = false;
+      _recentStepEvents.clear();
       _lastPersistedSteps = -1;
     }
 
-    _lastStepAt = DateTime.now();
-    if (!_isWalking) {
-      _isWalking = true;
-      _walkStartedAt = DateTime.now();
-    }
-
+    final now = DateTime.now();
     _baseDeviceSteps ??= event.steps - _dailySteps;
 
     if (event.steps < _baseDeviceSteps!) {
@@ -344,7 +349,16 @@ class StepTaskHandler extends TaskHandler {
 
     final calculated = event.steps - _baseDeviceSteps!;
     final nextSteps = calculated < 0 ? 0 : calculated;
-    if (nextSteps > _dailySteps) _dailySteps = nextSteps;
+    if (nextSteps > _dailySteps) {
+      final gained = nextSteps - _dailySteps;
+      _dailySteps = nextSteps;
+      _lastStepAt = now;
+      for (var i = 0; i < gained && i < 20; i++) {
+        _recentStepEvents.add(now);
+      }
+      _pruneRecentSteps(now);
+      _tryStartWalkingSession(now);
+    }
 
     FlutterForegroundTask.sendDataToMain({
       'deviceSteps': event.steps,
@@ -370,19 +384,38 @@ class StepTaskHandler extends TaskHandler {
     }
   }
 
+  void _pruneRecentSteps(DateTime now) {
+    _recentStepEvents.removeWhere(
+      (t) => now.difference(t).inSeconds > _startWindowSeconds,
+    );
+  }
+
+  bool _hasStepBurst(DateTime now) {
+    _pruneRecentSteps(now);
+    return _recentStepEvents.length >= _minStepsToStart;
+  }
+
+  void _tryStartWalkingSession(DateTime now) {
+    if (_isWalking) return;
+    if (!_hasStepBurst(now)) return;
+    _isWalking = true;
+    _walkStartedAt = now;
+    _stepsAtSessionStart = _dailySteps;
+  }
+
   void _onPedestrianStatus(PedestrianStatus event) {
     final now = DateTime.now();
     final walking = event.status.toLowerCase() == 'walking';
+    _statusSaysWalking = walking;
 
-    if (walking) {
-      _lastStepAt = now;
-      if (!_isWalking) {
-        _isWalking = true;
-        _walkStartedAt = now;
+    if (walking && !_isWalking) {
+      // Status alone is not enough — need a real step burst.
+      if (_hasStepBurst(now)) {
+        _tryStartWalkingSession(now);
       }
-    } else if (_isWalking) {
+    } else if (!walking && _isWalking) {
       final lastStep = _lastStepAt;
-      if (lastStep == null || now.difference(lastStep).inSeconds > 15) {
+      if (lastStep == null || now.difference(lastStep).inSeconds > _gapSeconds) {
         _finishWalkingSession(now);
       }
     }
@@ -392,11 +425,21 @@ class StepTaskHandler extends TaskHandler {
   void _finishWalkingSession(DateTime now) {
     final startedAt = _walkStartedAt;
     if (startedAt != null) {
-      _activeMs += now.difference(startedAt).inMilliseconds;
+      final elapsed = now.difference(startedAt).inMilliseconds;
+      final sessionSteps = _dailySteps - _stepsAtSessionStart;
+      final elapsedSec = elapsed / 1000.0;
+      final credible = sessionSteps >= _minSessionSteps &&
+          elapsedSec >= _minSessionSeconds &&
+          sessionSteps / (elapsedSec / 60.0).clamp(0.2, 999) >= 50;
+      if (credible && elapsed > 0) {
+        final maxMsBySteps = (sessionSteps / 90.0 * 60000).round();
+        final credited = elapsed.clamp(0, maxMsBySteps);
+        _activeMs += credited;
+      }
     }
     _walkStartedAt = null;
     _isWalking = false;
-    _lastStepAt = null;
+    _recentStepEvents.clear();
     unawaited(_persistState());
     _sendActivityState();
   }
@@ -477,7 +520,7 @@ class StepTaskHandler extends TaskHandler {
   void onRepeatEvent(DateTime timestamp) {
     if (_isWalking &&
         _lastStepAt != null &&
-        timestamp.difference(_lastStepAt!).inSeconds > 12) {
+        timestamp.difference(_lastStepAt!).inSeconds > _gapSeconds) {
       _finishWalkingSession(timestamp);
     }
     _sendActivityState();
