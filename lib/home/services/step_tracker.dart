@@ -31,6 +31,18 @@ class StepTracker extends ChangeNotifier {
   int _lastNotifiedActiveMinute = -1;
   bool? _lastNotifiedWalking;
 
+  /// Stricter session gates — reduce phantom active time.
+  static const int _gapSeconds = 10;
+  static const int _minStepsToStart = 4;
+  static const int _startWindowSeconds = 8;
+  static const int _minSessionSteps = 8;
+  static const int _minSessionSeconds = 20;
+
+  /// Recent step bursts used to confirm real walking before starting the timer.
+  final List<DateTime> _recentStepEvents = <DateTime>[];
+  int _stepsAtSessionStart = 0;
+  bool _statusSaysWalking = false;
+
   int get steps => _steps;
   int? get baseDeviceSteps => _baseDevice;
   String get currentDayKey {
@@ -52,10 +64,10 @@ class StepTracker extends ChangeNotifier {
   }
 
   double get calories {
-    // Uses weight, height, sex (stride) + optional intensity from active time.
+    // Prefer reconciled minutes so phantom sensor time does not inflate kcal.
     return GoalCalculator.caloriesForSteps(
       _steps,
-      activeMinutes: _sensorActiveMinutes,
+      activeMinutes: activeMinutes,
     );
   }
 
@@ -73,11 +85,9 @@ class StepTracker extends ChangeNotifier {
     return milliseconds;
   }
 
-  /// Raw walking time from sensor sessions only.
   int get _sensorActiveMinutes =>
       (activeMillisecondsForSync / 60000).floor();
 
-  /// Sensor walking time reconciled with step-implied duration.
   int get activeMinutes {
     return GoalCalculator.reconcileActiveMinutes(
       sensorMinutes: _sensorActiveMinutes,
@@ -145,7 +155,6 @@ class StepTracker extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Receives the foreground isolate's authoritative walking-duration state.
   void ingestBackgroundActivity({
     required int activeMs,
     required bool isWalking,
@@ -178,6 +187,7 @@ class StepTracker extends ChangeNotifier {
       _walkStartedAt = null;
       _lastStepAt = null;
       _isWalking = false;
+      _recentStepEvents.clear();
     }
     if (changed) notifyListeners();
   }
@@ -228,12 +238,12 @@ class StepTracker extends ChangeNotifier {
     _isWalking = false;
     _walkStartedAt = null;
     _lastStepAt = null;
+    _recentStepEvents.clear();
+    _stepsAtSessionStart = 0;
     _lastActivePersistAt = DateTime.now();
     notifyListeners();
   }
 
-  /// Accepts sensor counts from either the UI isolate or the foreground-task
-  /// isolate. Duplicate events are harmless because the raw counter is monotonic.
   void ingestExternalDeviceSteps(int rawDeviceSteps) {
     if (rawDeviceSteps < 0) return;
 
@@ -244,8 +254,6 @@ class StepTracker extends ChangeNotifier {
       unawaited(StepsStore.saveBaseDeviceSteps(_baseDevice!));
     }
 
-    // The hardware counter resets after a device reboot. A negative offset
-    // preserves today's already-counted steps while the sensor starts again.
     if (rawDeviceSteps < _baseDevice!) {
       _baseDevice = rawDeviceSteps - _steps;
       unawaited(StepsStore.saveBaseDeviceSteps(_baseDevice!));
@@ -257,16 +265,41 @@ class StepTracker extends ChangeNotifier {
     if (nextSteps == _steps) return;
 
     if (nextSteps > _steps) {
-      _lastStepAt = DateTime.now();
-      if (!_backgroundActivityAuthority && !_isWalking) {
-        _isWalking = true;
-        _walkStartedAt = DateTime.now();
+      final now = DateTime.now();
+      final gained = nextSteps - _steps;
+      _lastStepAt = now;
+      for (var i = 0; i < gained && i < 20; i++) {
+        _recentStepEvents.add(now);
+      }
+      _pruneRecentSteps(now);
+      if (!_backgroundActivityAuthority) {
+        _tryStartWalkingSession(now);
       }
     }
 
     _steps = nextSteps;
     _scheduleSave();
     notifyListeners();
+  }
+
+  void _pruneRecentSteps(DateTime now) {
+    _recentStepEvents.removeWhere(
+      (t) => now.difference(t).inSeconds > _startWindowSeconds,
+    );
+  }
+
+  bool _hasStepBurst(DateTime now) {
+    _pruneRecentSteps(now);
+    return _recentStepEvents.length >= _minStepsToStart;
+  }
+
+  void _tryStartWalkingSession(DateTime now) {
+    if (_isWalking || _backgroundActivityAuthority) return;
+    // Need a real burst of steps — not a single jiggle.
+    if (!_hasStepBurst(now)) return;
+    _isWalking = true;
+    _walkStartedAt = now;
+    _stepsAtSessionStart = _steps;
   }
 
   void _onStepCount(StepCount event) {
@@ -286,17 +319,21 @@ class StepTracker extends ChangeNotifier {
     }
 
     final now = DateTime.now();
+    _pruneRecentSteps(now);
 
-    if (_lastStepAt != null &&
-        now.difference(_lastStepAt!).inSeconds <= 8 &&
-        !_isWalking) {
-      _isWalking = true;
-      _walkStartedAt ??= now;
-    }
+    // Do NOT auto-start from tick alone — only from step burst / confirmed status.
 
     if (_isWalking &&
         _lastStepAt != null &&
-        now.difference(_lastStepAt!).inSeconds > 12) {
+        now.difference(_lastStepAt!).inSeconds > _gapSeconds) {
+      _finishWalkingSession(now);
+    }
+
+    // If status still says walking but no steps for gap — stop.
+    if (_isWalking &&
+        _lastStepAt != null &&
+        !_statusSaysWalking &&
+        now.difference(_lastStepAt!).inSeconds > (_gapSeconds ~/ 2)) {
       _finishWalkingSession(now);
     }
 
@@ -318,12 +355,27 @@ class StepTracker extends ChangeNotifier {
   void _finishWalkingSession(DateTime now) {
     final startedAt = _walkStartedAt;
     if (startedAt != null) {
-      _activeMs += now.difference(startedAt).inMilliseconds;
-      unawaited(StepsStore.saveActiveMs(_activeMs));
-      _lastActivePersistAt = now;
+      final elapsed = now.difference(startedAt).inMilliseconds;
+      final sessionSteps = _steps - _stepsAtSessionStart;
+      final elapsedSec = elapsed / 1000.0;
+
+      // Credit time only if the session looked like real walking.
+      final credible = sessionSteps >= _minSessionSteps &&
+          elapsedSec >= _minSessionSeconds &&
+          sessionSteps / (elapsedSec / 60.0).clamp(0.2, 999) >= 50;
+
+      if (credible && elapsed > 0) {
+        // Cap credited ms by step cadence (~max 1 min per 90 steps in session).
+        final maxMsBySteps = (sessionSteps / 90.0 * 60000).round();
+        final credited = elapsed.clamp(0, maxMsBySteps);
+        _activeMs += credited;
+        unawaited(StepsStore.saveActiveMs(_activeMs));
+        _lastActivePersistAt = now;
+      }
       _walkStartedAt = null;
     }
     _isWalking = false;
+    _recentStepEvents.clear();
   }
 
   void _onStatus(PedestrianStatus event) {
@@ -332,14 +384,17 @@ class StepTracker extends ChangeNotifier {
     final previousWalking = isWalking;
     final walking = event.status.toLowerCase() == 'walking';
     final now = DateTime.now();
+    _statusSaysWalking = walking;
 
     if (walking && !_isWalking) {
-      _isWalking = true;
-      _walkStartedAt = now;
-      _lastStepAt = now;
+      // Status alone is not enough — still need a step burst.
+      if (_hasStepBurst(now)) {
+        _tryStartWalkingSession(now);
+      }
     } else if (!walking && _isWalking) {
       final lastStep = _lastStepAt;
-      if (lastStep == null || now.difference(lastStep).inSeconds > 15) {
+      if (lastStep == null ||
+          now.difference(lastStep).inSeconds > _gapSeconds) {
         _finishWalkingSession(now);
       }
     }
@@ -350,7 +405,6 @@ class StepTracker extends ChangeNotifier {
     );
   }
 
-  /// Call after profile body/activity/age changes so listeners recalculate goals.
   void profileChanged() => notifyListeners();
 
   Future<void> setStepsGoal(int value) async {

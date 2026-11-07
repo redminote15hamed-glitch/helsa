@@ -40,6 +40,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   void initState() {
+    MetaStore.revision.addListener(_onMetaRevision);
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _tracker.addListener(_onUpdate);
@@ -88,8 +89,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (mounted) setState(() {});
   }
 
+  void _onMetaRevision() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void dispose() {
+    MetaStore.revision.removeListener(_onMetaRevision);
     WidgetsBinding.instance.removeObserver(this);
     _tracker.removeListener(_onUpdate);
     super.dispose();

@@ -1,4 +1,5 @@
 // lib/setting/storage/meta_store.dart
+import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:helsa/setting/storage/secure_hive.dart';
 
@@ -6,6 +7,9 @@ class MetaStore {
   MetaStore._();
   static const String boxName = 'helsa_meta';
   static Box<dynamic>? _box;
+
+  /// Bumps when language (or other meta) changes so UI can rebuild.
+  static final ValueNotifier<int> revision = ValueNotifier<int>(0);
 
   static Future<void> open() async {
     _box ??= await SecureHive.openBox(boxName);
@@ -30,7 +34,13 @@ class MetaStore {
     return 'en';
   }
 
-  static Future<void> setLanguage(String lang) => _b.put('language', lang);
+  static Future<void> setLanguage(String lang) async {
+    final c = lang.toLowerCase();
+    final normalized =
+        c.startsWith('fa') ? 'fa' : (c.startsWith('fr') ? 'fr' : 'en');
+    await _b.put('language', normalized);
+    revision.value++;
+  }
 
   static Future<void> setSetupDone(bool value) async {
     await _b.put('setupDone', value);
@@ -41,7 +51,6 @@ class MetaStore {
 
   static String? get savedAt => _b.get('savedAt')?.toString();
 
-  /// User closed the home-screen widget promo banner — do not show again.
   static bool get widgetPromoDismissed =>
       _b.get('widgetPromoDismissed', defaultValue: false) == true;
 

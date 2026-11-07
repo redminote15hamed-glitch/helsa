@@ -13,6 +13,7 @@ import 'package:helsa/home/menu/menu_widget_page.dart';
 import 'package:helsa/home/menu/menu_expand_host.dart';
 import 'package:helsa/home/menu/menu_appearance_page.dart';
 import 'package:helsa/home/menu/menu_privacy_page.dart';
+import 'package:helsa/home/menu/menu_settings_page.dart';
 import 'package:helsa/setting/color/metric_colors.dart';
 import 'package:helsa/setting/kit/textfielder.dart';
 import 'package:helsa/setting/motion/animator/animator.dart';
@@ -177,6 +178,13 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
     return _openFromRow(
       rowCtx,
       builder: (ctx) => MenuAppearancePage(language: widget.language),
+    );
+  }
+
+  Future<void> _openSettings(BuildContext rowCtx) {
+    return _openFromRow(
+      rowCtx,
+      builder: (ctx) => MenuSettingsPage(language: widget.language),
     );
   }
 
@@ -434,6 +442,16 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
                           _GroupCard(
                             isDark: isDark,
                             children: [
+                              _DockItem(
+                                icon: Icons.settings_rounded,
+                                label: HomeText.getString(
+                                    language, 'menu_settings'),
+                                language: language,
+                                tint: const Color(0xFF5C6BC0),
+                                pulse: _pulse,
+                                pulseKind: _PulseKind.none,
+                                onTap: (ctx) => _openSettings(ctx),
+                              ),
                               _DockItem(
                                 icon: Icons.format_paint_rounded,
                                 label: HomeText.getString(

@@ -46,7 +46,7 @@ class GoalCalculator {
 
   static bool get isMale {
     final raw = (GenderStore.gender ?? '').trim().toLowerCase();
-    if (raw.isEmpty) return true; // neutral default for stride tables
+    if (raw.isEmpty) return true;
     if (raw.startsWith('f') ||
         raw.contains('female') ||
         raw.contains('زن') ||
@@ -65,7 +65,6 @@ class GoalCalculator {
   static double get weightKg {
     final w = BodyStore.weight;
     if (w != null && w >= 25 && w <= 300) return w;
-    // Population-ish defaults by sex when weight not entered
     return isMale ? 75.0 : 65.0;
   }
 
@@ -78,7 +77,7 @@ class GoalCalculator {
   /// Walking stride length (meters) from height × sex factor.
   static double strideLengthMeters() {
     final factor = isMale ? 0.415 : 0.413;
-    return (heightCm * factor) / 100.0;
+    return (heightCm * factor / 100.0).clamp(0.45, 0.95);
   }
 
   // ---- steps goal ------------------------------------------------------
@@ -86,92 +85,110 @@ class GoalCalculator {
   static int stepsGoal() {
     if (!isProfileComplete) return standardStepsGoal;
 
-    const childAndTeenBands = [5000, 6000, 7000, 8000, 9000];
-    const adultBands = [4000, 5500, 7500, 9500, 11000];
+    const bases = [4000, 5500, 7500, 9500, 11000];
+    var goal = bases[_activityIndex].toDouble();
 
-    final bands = _age < 18 ? childAndTeenBands : adultBands;
-    return bands[_activityIndex].clamp(3000, 12000).toInt();
-  }
-
-  // ---- calories (distance + optional intensity from active time) --------
-
-  /// MET for level walking by estimated speed (km/h). Compendium-inspired bands.
-  static double metFromWalkingSpeedKmh(double kmh) {
-    if (kmh <= 0) return 2.5;
-    if (kmh < 3.2) return 2.0; // very slow
-    if (kmh < 4.0) return 2.8;
-    if (kmh < 4.8) return 3.5; // moderate
-    if (kmh < 5.6) return 4.3;
-    if (kmh < 6.4) return 5.0; // brisk
-    if (kmh < 8.0) return 6.5; // jog transition
-    return 8.0;
-  }
-
-  /// Energy for [steps], optionally refined with measured active minutes.
-  static double caloriesForSteps(int steps, {int? activeMinutes}) {
-    final safeSteps = steps < 0 ? 0 : steps;
-    if (safeSteps == 0) return 0;
-
-    final w = weightKg;
-    final distKm = safeSteps * strideLengthMeters() / 1000.0;
-
-    final minutes = activeMinutes;
-    if (minutes != null && minutes > 0 && distKm > 0) {
-      final hours = minutes / 60.0;
-      final speed = distKm / hours;
-      final met = metFromWalkingSpeedKmh(speed);
-      // kcal ≈ MET × body mass (kg) × hours
-      return (met * w * hours).clamp(0.0, 2500.0);
+    if (_age >= 65) {
+      goal *= 0.88;
+    } else if (_age >= 50) {
+      goal *= 0.94;
+    } else if (_age < 18) {
+      goal *= 1.05;
     }
 
-    // Distance-only fallback (~0.57 kcal per kg per km for level walking)
-    return (distKm * w * 0.57).clamp(0.0, 2500.0);
+    final rounded = ((goal / 100).round() * 100);
+    return rounded.clamp(2500, 15000);
   }
 
-  /// Backward-compatible average kcal/step (for simple displays).
-  static double kcalPerStep() {
-    // One step at current body profile, no active-time intensity.
-    return caloriesForSteps(1);
+  // ---- calories --------------------------------------------------------
+
+  /// MET for level walking by speed (km/h). Conservative band.
+  static double metFromWalkingSpeedKmh(double speedKmh) {
+    if (speedKmh < 2.0) return 2.0;
+    if (speedKmh < 3.2) return 2.5;
+    if (speedKmh < 4.0) return 3.0;
+    if (speedKmh < 5.0) return 3.5;
+    if (speedKmh < 6.0) return 4.3;
+    return 5.0;
   }
 
-  /// Daily calorie movement target from step goal + body profile.
+  /// Energy for [steps] using body metrics.
+  ///
+  /// Prefers **distance × weight** (stable). MET path only applies when
+  /// active minutes look consistent with steps (not inflated idle time).
+  static double caloriesForSteps(int steps, {int? activeMinutes}) {
+    if (steps <= 0) return 0.0;
+
+    final w = weightKg;
+    final stride = strideLengthMeters();
+    final distKm = (steps * stride) / 1000.0;
+
+    // Primary: distance-based (~0.5 kcal per kg per km — slightly conservative)
+    final distanceKcal = distKm * w * 0.50;
+
+    final minutes = activeMinutes;
+    if (minutes != null && minutes >= 2 && distKm > 0) {
+      // Reject impossible "long time / few steps" (timer noise).
+      final maxReasonableMin = estimatedActiveMinutesFromSteps(steps);
+      final usableMin = math.min(minutes, math.max(maxReasonableMin, 1));
+
+      final hours = usableMin / 60.0;
+      if (hours > 0) {
+        final speed = distKm / hours;
+        // Only trust MET when cadence is in a walking band.
+        final stepsPerMin = steps / usableMin;
+        if (stepsPerMin >= 60 && stepsPerMin <= 140 && speed >= 2.0 && speed <= 7.5) {
+          final met = metFromWalkingSpeedKmh(speed);
+          final metKcal = met * w * hours;
+          // Blend toward distance estimate so time noise cannot explode kcal.
+          return ((metKcal * 0.45) + (distanceKcal * 0.55)).clamp(0.0, 2000.0);
+        }
+      }
+    }
+
+    return distanceKcal.clamp(0.0, 2000.0);
+  }
+
+  static double kcalPerStep() => caloriesForSteps(1);
+
   static double caloriesGoal() {
     final steps = stepsGoal();
-    // Assume moderate pace (~3.5 MET equivalent via typical active-minute goal).
     final mins = activeMinutesGoal();
     final fromProfile = caloriesForSteps(steps, activeMinutes: mins);
-    return fromProfile.clamp(150.0, 900.0);
+    return fromProfile.clamp(150.0, 800.0);
   }
 
   // ---- active minutes --------------------------------------------------
 
-  /// Implied walking minutes from step count (cadence ≈ 110 steps/min).
+  /// Implied walking minutes from step count (cadence ≈ 110–120 steps/min).
   static int estimatedActiveMinutesFromSteps(int steps) {
     if (steps <= 0) return 0;
-    // Cadence rises slightly for younger / more active users.
-    var cadence = 110.0;
+    var cadence = 112.0;
     if (_age < 18) {
-      cadence = 115.0;
+      cadence = 118.0;
     } else if (_age >= 65) {
       cadence = 100.0;
     }
-    cadence += (_activityIndex - 2) * 3.0; // sedentary slower, very active faster
-    cadence = cadence.clamp(95.0, 125.0);
+    cadence += (_activityIndex - 2) * 2.5;
+    cadence = cadence.clamp(100.0, 125.0);
     return (steps / cadence).floor().clamp(0, 24 * 60);
   }
 
-  /// Combine sensor walking time with step-implied time (never under-count movement).
+  /// Sensor time capped by step-implied duration — never inflate above movement.
   static int reconcileActiveMinutes({
     required int sensorMinutes,
     required int steps,
   }) {
     final fromSteps = estimatedActiveMinutesFromSteps(steps);
     final s = sensorMinutes < 0 ? 0 : sensorMinutes;
-    if (s <= 0) return fromSteps;
-    if (fromSteps <= 0) return s;
-    // Sensor is primary; step estimate floors a lower bound (75%).
-    final floorFromSteps = (fromSteps * 0.75).round();
-    return math.max(s, floorFromSteps);
+    if (steps <= 0) return 0;
+    if (s <= 0) {
+      // No reliable sensor session: use a *reduced* step estimate only.
+      return (fromSteps * 0.85).round().clamp(0, fromSteps);
+    }
+    // Cap sensor by step ceiling (cannot walk 30 min on 200 steps).
+    final ceiling = math.max(fromSteps, (steps / 90).floor());
+    return math.min(s, ceiling).clamp(0, 24 * 60);
   }
 
   static int activeMinutesGoal() {

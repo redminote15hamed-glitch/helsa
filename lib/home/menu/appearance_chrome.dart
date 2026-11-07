@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:helsa/home/home_text.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
 
-/// Back arrow for Appearance (RTL-aware).
+/// Back arrow (RTL-aware).
 class AppearanceBackButton extends StatelessWidget {
   const AppearanceBackButton({
     super.key,
@@ -26,7 +26,7 @@ class AppearanceBackButton extends StatelessWidget {
   }
 }
 
-/// Tick (check) — only when theme selection is dirty.
+/// Tick (check) — only when dirty.
 class AppearanceTickButton extends StatelessWidget {
   const AppearanceTickButton({
     super.key,
@@ -57,6 +57,7 @@ class AppearanceTopBar extends StatelessWidget {
     required this.isRtl,
     required this.onBack,
     required this.onSave,
+    this.titleKey = 'menu_appearance',
   });
 
   final String lang;
@@ -64,6 +65,7 @@ class AppearanceTopBar extends StatelessWidget {
   final bool isRtl;
   final VoidCallback onBack;
   final VoidCallback? onSave;
+  final String titleKey;
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +83,7 @@ class AppearanceTopBar extends StatelessWidget {
           if (!isRtl) back else save,
           Expanded(
             child: Text(
-              HomeText.getString(lang, 'menu_appearance'),
+              HomeText.getString(lang, titleKey),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontWeight: FontWeight.w700,
@@ -97,7 +99,7 @@ class AppearanceTopBar extends StatelessWidget {
   }
 }
 
-/// Bottom Continue / Apply when theme is dirty.
+/// Bottom Continue / Apply when dirty.
 class AppearanceApplyBar extends StatelessWidget {
   const AppearanceApplyBar({
     super.key,
@@ -112,6 +114,7 @@ class AppearanceApplyBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 220),
       child: visible
@@ -127,6 +130,8 @@ class AppearanceApplyBar extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
+                    backgroundColor: cs.primary,
+                    foregroundColor: cs.onPrimary,
                   ),
                   child: Text(
                     HomeText.getString(lang, 'appearance_continue'),
@@ -138,10 +143,7 @@ class AppearanceApplyBar extends StatelessWidget {
                 ),
               ),
             )
-          : SizedBox(
-              key: const ValueKey('gap'),
-              height: context.vS * 1.6,
-            ),
+          : const SizedBox(key: ValueKey('no-apply'), height: 0),
     );
   }
 }
