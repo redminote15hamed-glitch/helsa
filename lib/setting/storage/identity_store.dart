@@ -1,4 +1,7 @@
 // lib/setting/storage/identity_store.dart
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:helsa/setting/storage/secure_hive.dart';
 
@@ -44,19 +47,47 @@ class IdentityStore {
   }
 
   static Future<void> saveAvatarPreset(String presetId) async {
+    await _deleteAvatarFileIfAny(avatarPath);
     await _b.put('avatarPreset', presetId);
     await _b.put('avatarPath', '');
   }
 
   static Future<void> saveAvatarFile(String absolutePath) async {
+    final previous = avatarPath;
     await _b.put('avatarPath', absolutePath);
     await _b.put('avatarPreset', '');
+    if (previous.isNotEmpty && previous != absolutePath) {
+      await _deleteAvatarFileIfAny(previous);
+    }
   }
 
   static Future<void> clearAvatar() async {
+    await _deleteAvatarFileIfAny(avatarPath);
     await _b.put('avatarPath', '');
     await _b.put('avatarPreset', 'mint');
   }
 
-  static Future<void> clear() => _b.clear();
+  /// Clears identity box and removes custom avatar file from disk.
+  static Future<void> clear() async {
+    try {
+      final path = avatarPath;
+      await _b.clear();
+      await _deleteAvatarFileIfAny(path);
+    } catch (e, st) {
+      debugPrint('IdentityStore.clear: $e\n$st');
+      await _b.clear();
+    }
+  }
+
+  static Future<void> _deleteAvatarFileIfAny(String path) async {
+    if (path.isEmpty) return;
+    try {
+      final f = File(path);
+      if (await f.exists()) {
+        await f.delete();
+      }
+    } catch (e, st) {
+      debugPrint('IdentityStore delete avatar file: $e\n$st');
+    }
+  }
 }

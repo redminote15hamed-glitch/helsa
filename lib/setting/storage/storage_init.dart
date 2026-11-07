@@ -1,5 +1,9 @@
 // lib/setting/storage/storage_init.dart
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:helsa/setting/storage/secure_hive.dart';
 import 'package:helsa/setting/storage/meta_store.dart';
 import 'package:helsa/setting/storage/identity_store.dart';
@@ -66,7 +70,16 @@ class StorageInit {
     await MetaStore.setSetupDone(true);
   }
 
+  /// Full personal wipe: all profile/activity Hive boxes + avatar files on disk.
+  /// Theme preferences are intentionally kept (not personal health data).
   static Future<void> clearAll() async {
+    // Capture path before identity box is cleared.
+    String avatarPath = '';
+    try {
+      await IdentityStore.open();
+      avatarPath = IdentityStore.avatarPath;
+    } catch (_) {}
+
     await MetaStore.clear();
     await IdentityStore.clear();
     await GenderStore.clear();
@@ -79,5 +92,20 @@ class StorageInit {
     await SleepStore.clear();
     await StepsStore.clear();
     await StreakStore.clear();
+
+    // Extra safety: wipe avatars folder if present.
+    try {
+      if (avatarPath.isNotEmpty) {
+        final f = File(avatarPath);
+        if (await f.exists()) await f.delete();
+      }
+      final docs = await getApplicationDocumentsDirectory();
+      final folder = Directory('${docs.path}${Platform.pathSeparator}avatars');
+      if (await folder.exists()) {
+        await folder.delete(recursive: true);
+      }
+    } catch (e, st) {
+      debugPrint('StorageInit.clearAll avatar files: $e\n$st');
+    }
   }
 }
