@@ -371,10 +371,10 @@ class HomeText {
       'menu_coming_soon': 'Sera ajouté à l\'avenir',
       'menu_privacy': 'Confidentialité',
       'privacy_on_device_badge':
+          'Vos données restent uniquement sur cet appareil',
       'privacy_policy_title': 'Politique de confidentialité Helsa',
       'privacy_policy_body': 'Helsa est une appli santé qui garde vos données sur ce téléphone.\n\n• Ce qui est stocké : nom, sexe, âge, taille, poids, tour de taille, activité, régime, allergies, aliments préférés, horaires de sommeil, pas, temps actif, calories estimées, série, thème et avatar.\n• Où : uniquement sur cet appareil (Hive chiffré).\n• Chiffrement : AES-256 au repos ; la clé reste dans Android Keystore / iOS Keychain.\n• Serveurs : pas d’envoi de vos données santé. Pas de compte cloud obligatoire.\n• Contrôle : supprimez chaque section ou toutes les données.\n• Capteurs : l’activité sert seulement au comptage des pas sur l’appareil.\n\nEn utilisant Helsa, vous acceptez que les données restent locales.',
       'privacy_point_transparent': 'Transparence : nous disons clairement ce qui est stocké ou non',
-          'Vos données restent uniquement sur cet appareil',
       'privacy_title': 'Politique d\'information Helsa',
       'privacy_body': 'Helsa est conçu pour soutenir votre santé. Les données personnelles restent sur cet appareil, chiffrées au repos en AES-256. La clé est conservée uniquement dans le stockage sécurisé du système (Android Keystore / iOS Keychain). Nous n’envoyons pas vos données sur un serveur. Vous pouvez supprimer des parties de vos données à tout moment. Votre nom est conservé après un effacement complet sauf si vous modifiez vous-même le profil.',
       'privacy_points_title': 'Nos engagements',
