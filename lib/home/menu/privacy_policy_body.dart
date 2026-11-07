@@ -1,5 +1,4 @@
 // lib/home/menu/privacy_policy_body.dart
-// Policy text + commitment chips for the Privacy page.
 import 'package:flutter/material.dart';
 import 'package:helsa/home/home_text.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
@@ -28,8 +27,8 @@ class PrivacyPolicyBody extends StatelessWidget {
                 HomeText.getString(_lang, key),
                 style: TextStyle(
                   fontSize: context.s,
-                  height: 1.35,
-                  color: cs.onSurface.withValues(alpha: 0.82),
+                  height: 1.4,
+                  color: cs.onSurface.withValues(alpha: 0.85),
                 ),
               ),
             ),
@@ -79,15 +78,16 @@ class PrivacyPolicyBody extends StatelessWidget {
           HomeText.getString(_lang, 'privacy_policy_body'),
           style: TextStyle(
             fontSize: context.s,
-            height: 1.45,
-            color: cs.onSurface.withValues(alpha: 0.78),
+            height: 1.5,
+            color: cs.onSurface.withValues(alpha: 0.82),
           ),
         ),
         SizedBox(height: context.vM),
         point(Icons.lock_rounded, 'privacy_point_encrypt'),
         point(Icons.cloud_off_rounded, 'privacy_point_no_cloud'),
         point(Icons.tune_rounded, 'privacy_point_control'),
-        point(Icons.visibility_rounded, 'privacy_point_transparent'),
+        point(Icons.visibility_outlined, 'privacy_point_transparent'),
+        point(Icons.smartphone_rounded, 'privacy_point_local'),
       ],
     );
   }

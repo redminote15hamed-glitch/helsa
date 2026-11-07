@@ -6,7 +6,6 @@ import 'package:helsa/setting/responsive/responsive_utils.dart';
 /// Theme description card + Light/Dark mode pills.
 class AppearanceThemeInfoCard extends StatelessWidget {
   const AppearanceThemeInfoCard({
-    super.key,
     required this.palette,
     required this.night,
     required this.lang,
@@ -44,13 +43,13 @@ class AppearanceThemeInfoCard extends StatelessWidget {
               onTap: onDay,
             ),
           ),
-          SizedBox(width: context.hXs),
+          SizedBox(width: context.hS),
           Container(
             width: side,
-            height: side * 1.0,
+            height: side * 1.08,
             padding: EdgeInsets.symmetric(
-              horizontal: context.hXs,
-              vertical: context.vX3s,
+              horizontal: context.hS,
+              vertical: context.vXs,
             ),
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -102,17 +101,22 @@ class AppearanceThemeInfoCard extends StatelessWidget {
                       ),
                       child: LayoutBuilder(
                         builder: (context, box) {
-                          final fs = (box.maxHeight / 10.5)
-                              .clamp(9.5, context.s * 1.0);
+                          final fs = (box.maxHeight / 9.2)
+                              .clamp(11.0, context.m * 1.05);
+                          final isRtl = lang == 'fa' ||
+                              Directionality.of(context) ==
+                                  TextDirection.rtl;
                           return Text(
                             desc,
                             textAlign: TextAlign.center,
-                            maxLines: 7,
-                            overflow: TextOverflow.fade,
+                            textDirection:
+                                isRtl ? TextDirection.rtl : TextDirection.ltr,
+                            maxLines: 8,
+                            overflow: TextOverflow.ellipsis,
                             softWrap: true,
                             style: TextStyle(
                               fontSize: fs,
-                              height: 1.30,
+                              height: 1.38,
                               fontWeight: FontWeight.w500,
                               color: cs.onSurface.withValues(alpha: 0.92),
                             ),
@@ -126,6 +130,9 @@ class AppearanceThemeInfoCard extends StatelessWidget {
                 Text(
                   name,
                   textAlign: TextAlign.center,
+                  textDirection: (lang == 'fa')
+                      ? TextDirection.rtl
+                      : TextDirection.ltr,
                   style: TextStyle(
                     fontSize: context.m,
                     fontWeight: FontWeight.w800,
@@ -135,7 +142,7 @@ class AppearanceThemeInfoCard extends StatelessWidget {
               ],
             ),
           ),
-          SizedBox(width: context.hXs),
+          SizedBox(width: context.hS),
           Directionality(
             textDirection: TextDirection.ltr,
             child: AppearanceModePill(
@@ -154,7 +161,6 @@ class AppearanceThemeInfoCard extends StatelessWidget {
 
 class AppearanceModePill extends StatelessWidget {
   const AppearanceModePill({
-    super.key,
     required this.selected,
     required this.icon,
     required this.label,
@@ -222,5 +228,7 @@ class AppearanceModePill extends StatelessWidget {
     );
   }
 }
+
+
 
 /// Bottom Continue / Apply button shown when theme is dirty.

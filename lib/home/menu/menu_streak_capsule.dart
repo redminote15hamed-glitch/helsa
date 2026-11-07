@@ -84,7 +84,11 @@ class _MenuStreakCapsuleState extends State<MenuStreakCapsule>
           ),
           SizedBox(width: context.hX3s),
           Flexible(
-            child: TextFielder(
+            child: Directionality(
+              textDirection: widget.language.toLowerCase().startsWith('fa')
+                  ? TextDirection.rtl
+                  : TextDirection.ltr,
+              child: TextFielder(
               text: HomeText.streakLabel(widget.language, n),
               languageCode: widget.language,
               template: TextTemplate.caption,
@@ -96,6 +100,7 @@ class _MenuStreakCapsuleState extends State<MenuStreakCapsule>
                 color: border,
                 fontSize: context.s,
               ),
+            ),
             ),
           ),
         ],

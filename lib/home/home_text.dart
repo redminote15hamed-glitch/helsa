@@ -57,6 +57,9 @@ class HomeText {
       'menu_coming_soon': 'در آینده اضافه می‌شود',
       'menu_privacy': 'حریم خصوصی',
       'privacy_on_device_badge': 'اطلاعات فقط روی همین گوشی ذخیره می‌شود',
+      'privacy_policy_title': 'سیاست حریم خصوصی Helsa',
+      'privacy_policy_body': 'Helsa یک اپ سلامت است که دادهٔ شما را روی خودِ گوشی نگه می‌دارد.\n\n• چه چیزی ذخیره می‌شود: نام، جنسیت، سن، قد، وزن، دور کمر، سطح فعالیت، رژیم، حساسیت‌ها، غذاهای مورد علاقه، ساعت خواب، تعداد قدم، زمان حرکت، کالری تخمینی، استریک، تم ظاهری و آواتار.\n• کجا: فقط حافظهٔ داخلی همین دستگاه (Hive رمزنگاری‌شده).\n• رمزنگاری: AES-۲۵۶ در حالت سکون؛ کلید فقط در Android Keystore / iOS Keychain.\n• ارسال به سرور: انجام نمی‌شود. حساب ابری اجباری نیست.\n• کنترل شما: می‌توانید هر بخش را جدا پاک کنید یا همهٔ داده‌های اپ را حذف کنید.\n• سنسور: دسترسی فعالیت فقط برای شمارش قدم و تشخیص راه رفتن روی دستگاه است.\n\nبا استفاده از Helsa می‌پذیرید که این داده‌ها محلی‌اند و مسئولیت نگهداری گوشی و پشتیبان‌گیری با شماست.',
+      'privacy_point_transparent': 'شفافیت: دقیقاً می‌گوییم چه چیزی ذخیره می‌شود و چه چیزی نه',
       'privacy_title': 'سیاست اطلاعات Helsa',
       'privacy_body': 'Helsa برای کمک به سلامت شما طراحی شده. داده‌های شخصی روی خود دستگاه می‌مانند، با رمزنگاری AES-۲۵۶ در حالت سکون ذخیره می‌شوند و کلید رمز فقط در فضای امن سیستم‌عامل (Android Keystore / iOS Keychain) نگه داشته می‌شود. ما این داده‌ها را به سرور ارسال نمی‌کنیم. شما هر زمان می‌توانید بخش‌هایی از داده را پاک کنید؛ در حذف کامل، نام نگه داشته می‌شود مگر اینکه خودتان پروفایل را ویرایش کنید.',
       'privacy_points_title': 'تعهد ما',
@@ -125,7 +128,7 @@ class HomeText {
       'support_copy': 'کپی',
       'support_copied': 'کپی شد',
       'support_hint': 'ارسال مشکلات و پیشنهادات',
-      'profile_section': '{n}. {t}',
+      'profile_section': '{n} — {t}',
       'profile_name': 'نام',
       'profile_first': 'نام',
       'profile_last': 'نام خانوادگی',
@@ -211,6 +214,9 @@ class HomeText {
       'menu_coming_soon': 'Will be added in the future',
       'menu_privacy': 'Privacy',
       'privacy_on_device_badge': 'Your data stays only on this phone',
+      'privacy_policy_title': 'Helsa Privacy Policy',
+      'privacy_policy_body': 'Helsa is a health app that keeps your data on this phone.\n\n• What we store: name, gender, age, height, weight, waist, activity level, diet, allergies/restrictions, favorite foods, sleep times, steps, active time, estimated calories, streak, appearance theme, and avatar.\n• Where: only on this device (encrypted Hive storage).\n• Encryption: AES-256 at rest; the key stays in Android Keystore / iOS Keychain.\n• Servers: we do not upload your health data. No mandatory cloud account.\n• Your control: delete any section, or wipe all app data.\n• Sensors: activity permission is only used on-device for steps and walking detection.\n\nBy using Helsa you accept that data is local and that protecting your device is your responsibility.',
+      'privacy_point_transparent': 'Transparency: we say clearly what is stored and what is not',
       'privacy_title': 'Helsa information policy',
       'privacy_body': 'Helsa is built to support your health. Personal data stays on this device, encrypted at rest with AES-256. The encryption key is kept only in the OS secure store (Android Keystore / iOS Keychain). We do not upload your data to a server. You can delete parts of your data at any time. Your name is kept after a full wipe unless you edit the profile yourself.',
       'privacy_points_title': 'Our commitments',
@@ -365,6 +371,9 @@ class HomeText {
       'menu_coming_soon': 'Sera ajouté à l\'avenir',
       'menu_privacy': 'Confidentialité',
       'privacy_on_device_badge':
+      'privacy_policy_title': 'Politique de confidentialité Helsa',
+      'privacy_policy_body': 'Helsa est une appli santé qui garde vos données sur ce téléphone.\n\n• Ce qui est stocké : nom, sexe, âge, taille, poids, tour de taille, activité, régime, allergies, aliments préférés, horaires de sommeil, pas, temps actif, calories estimées, série, thème et avatar.\n• Où : uniquement sur cet appareil (Hive chiffré).\n• Chiffrement : AES-256 au repos ; la clé reste dans Android Keystore / iOS Keychain.\n• Serveurs : pas d’envoi de vos données santé. Pas de compte cloud obligatoire.\n• Contrôle : supprimez chaque section ou toutes les données.\n• Capteurs : l’activité sert seulement au comptage des pas sur l’appareil.\n\nEn utilisant Helsa, vous acceptez que les données restent locales.',
+      'privacy_point_transparent': 'Transparence : nous disons clairement ce qui est stocké ou non',
           'Vos données restent uniquement sur cet appareil',
       'privacy_title': 'Politique d\'information Helsa',
       'privacy_body': 'Helsa est conçu pour soutenir votre santé. Les données personnelles restent sur cet appareil, chiffrées au repos en AES-256. La clé est conservée uniquement dans le stockage sécurisé du système (Android Keystore / iOS Keychain). Nous n’envoyons pas vos données sur un serveur. Vous pouvez supprimer des parties de vos données à tout moment. Votre nom est conservé après un effacement complet sauf si vous modifiez vous-même le profil.',
@@ -486,18 +495,30 @@ class HomeText {
   }
 
   /// Replace `{name}` placeholders, e.g. format(lang, 'streak_days', {'n': '5'}).
+  /// LTR isolate so Latin digits stay ordered inside RTL sentences.
+  static String ltrIsolate(Object value) => '\u2066$value\u2069';
+
+  static String _ltrNum(Object n) => ltrIsolate(n);
+
   static String format(
     String languageCode,
     String key,
-    Map<String, String> vars,
-  ) {
+    Map<String, String> vars, {
+    bool isolateNumbers = true,
+  }) {
     var s = getString(languageCode, key);
+    final rtl = _lang(languageCode) == 'fa';
     vars.forEach((k, v) {
-      s = s.replaceAll('{$k}', v);
+      var val = v;
+      if (isolateNumbers && rtl && RegExp(r'^[0-9+./٪%\-]+$').hasMatch(v.trim())) {
+        val = _ltrNum(v);
+      }
+      s = s.replaceAll('{$k}', val);
     });
     return s;
   }
 
+  /// Isolates Latin digits so they don't jump in RTL (Farsi).
   static String streakLabel(String languageCode, int n) {
     if (n <= 0) return getString(languageCode, 'streak_start');
     return format(languageCode, 'streak_days', {'n': '$n'});

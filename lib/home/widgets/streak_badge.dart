@@ -130,12 +130,18 @@ class _StreakBadgeState extends State<StreakBadge>
               },
             ),
             SizedBox(width: context.hX3s),
-            Text(
-              _label(),
-              style: TextStyle(
-                fontWeight: FontWeight.w800,
-                fontSize: context.m * 0.95,
-                color: border,
+            Directionality(
+              textDirection: widget.language.toLowerCase().startsWith('fa')
+                  ? TextDirection.rtl
+                  : TextDirection.ltr,
+              child: Text(
+                _label(),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: context.m * 0.95,
+                  color: border,
+                ),
               ),
             ),
           ],

@@ -13,6 +13,7 @@ import 'package:helsa/setting/color/theme_palette.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
 import 'package:helsa/setting/storage/meta_store.dart';
 import 'package:helsa/setting/storage/theme_store.dart';
+import 'package:helsa/setting/branding/launcher_icon_service.dart';
 
 /// Appearance — local preview until tick / continue; then saves + closes.
 /// Opened via [MenuExpandHost] overlay → close with [MenuExpandScope.close].
@@ -108,16 +109,17 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
   Future<void> _playOpen() async {
     if (!mounted) return;
     _busy = true;
-    // Brief beat after host expand finishes
-    await Future<void>.delayed(const Duration(milliseconds: 140));
+    // Wait until MenuExpandHost two-phase expand is fully done (~1.3s),
+    // THEN play heart → icons → theme card. Never start mid-expand.
+    await Future<void>.delayed(const Duration(milliseconds: 1380));
     if (!mounted) return;
     _burstCtrl.duration = const Duration(milliseconds: 980);
-    await _burstCtrl.forward();
+    await _burstCtrl.forward(from: 0);
     if (!mounted) return;
-    await Future<void>.delayed(const Duration(milliseconds: 60));
+    await Future<void>.delayed(const Duration(milliseconds: 80));
     if (!mounted) return;
     _cardCtrl.duration = const Duration(milliseconds: 420);
-    await _cardCtrl.forward();
+    await _cardCtrl.forward(from: 0);
     if (!mounted) return;
     _busy = false;
   }
@@ -130,6 +132,7 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
       ThemeStore.night.value = _night;
       try {
         await ThemeStore.save();
+        await LauncherIconService.applyForPalette(_paletteId);
       } catch (_) {}
     }
     if (!mounted) return;
@@ -239,7 +242,7 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                         final orbitSize =
                             (math.min(w, h) * 0.52).clamp(220.0, 300.0);
                         final cardSide =
-                            (w * 0.38).clamp(128.0, 160.0);
+                            (w * 0.50).clamp(168.0, 220.0);
 
                         return Column(
                           children: [
@@ -320,7 +323,7 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                               ),
                             ),
                             // Card sits close above orbit
-                            SizedBox(height: context.vX3s * 0.4),
+                            SizedBox(height: context.vS * 0.7),
                             Expanded(
                               child: Center(
                                 child: SizedBox(

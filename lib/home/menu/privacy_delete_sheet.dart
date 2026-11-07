@@ -32,13 +32,23 @@ Future<void> showPrivacyDeleteSheet(
   BuildContext context, {
   required String language,
 }) {
+  // Root navigator + high barrier so sheet is ABOVE drawer / expand overlays.
   return showGeneralDialog<void>(
     context: context,
+    useRootNavigator: true,
     barrierLabel: 'delete-data',
     barrierDismissible: true,
-    barrierColor: Colors.black.withValues(alpha: 0.45),
+    barrierColor: Colors.black.withValues(alpha: 0.55),
     transitionDuration: const Duration(milliseconds: 320),
-    pageBuilder: (ctx, anim, sec) => const SizedBox.shrink(),
+    pageBuilder: (ctx, anim, sec) {
+      return Material(
+        type: MaterialType.transparency,
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: PrivacyDeleteSheet(language: language),
+        ),
+      );
+    },
     transitionBuilder: (ctx, anim, sec, child) {
       final curved = CurvedAnimation(
         parent: anim,
@@ -49,13 +59,10 @@ Future<void> showPrivacyDeleteSheet(
         opacity: curved,
         child: SlideTransition(
           position: Tween<Offset>(
-            begin: const Offset(0, 0.12),
+            begin: const Offset(0, 0.14),
             end: Offset.zero,
           ).animate(curved),
-          child: Align(
-            alignment: Alignment.bottomCenter,
-            child: PrivacyDeleteSheet(language: language),
-          ),
+          child: child,
         ),
       );
     },

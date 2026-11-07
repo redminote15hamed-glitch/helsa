@@ -176,13 +176,15 @@ class _AppleActivityCardState extends State<AppleActivityCard>
         name: HomeText.getString(widget.language, 'steps'),
         progress: s.fill,
         cycles: s.cycles,
-        bonusLabel: s.cycles > 0 ? '+${s.cycles * widget.stepsGoal}' : null,
-        percentLabel: '${(s.fill * 100).round()}%',
+        bonusLabel: s.cycles > 0
+            ? HomeText.ltrIsolate('+${s.cycles * widget.stepsGoal}')
+            : null,
+        percentLabel: HomeText.ltrIsolate('${(s.fill * 100).round()}%'),
         // فقط دور فعلی سیب
-        detailLabel:
-            '${(s.fill * widget.stepsGoal).round()} / ${widget.stepsGoal}',
+        detailLabel: HomeText.ltrIsolate(
+            '${(s.fill * widget.stepsGoal).round()} / ${widget.stepsGoal}'),
         // مجموع کل بین اسم و سیب
-        totalLabel: '${widget.steps}',
+        totalLabel: HomeText.ltrIsolate('${widget.steps}'),
         goalValue: widget.stepsGoal,
         valueKey: widget.steps,
       ),
@@ -195,12 +197,12 @@ class _AppleActivityCardState extends State<AppleActivityCard>
         progress: c.fill,
         cycles: c.cycles,
         bonusLabel: c.cycles > 0
-            ? '+${(c.cycles * widget.caloriesGoal).round()}'
+            ? HomeText.ltrIsolate('+${(c.cycles * widget.caloriesGoal).round()}')
             : null,
-        percentLabel: '${(c.fill * 100).round()}%',
-        detailLabel:
-            '${(c.fill * widget.caloriesGoal).round()} / ${widget.caloriesGoal.round()}',
-        totalLabel: widget.calories.toStringAsFixed(0),
+        percentLabel: HomeText.ltrIsolate('${(c.fill * 100).round()}%'),
+        detailLabel: HomeText.ltrIsolate(
+            '${(c.fill * widget.caloriesGoal).round()} / ${widget.caloriesGoal.round()}'),
+        totalLabel: HomeText.ltrIsolate(widget.calories.toStringAsFixed(0)),
         goalValue: widget.caloriesGoal.round(),
         valueKey: widget.calories.round(),
       ),
@@ -212,12 +214,13 @@ class _AppleActivityCardState extends State<AppleActivityCard>
         name: HomeText.getString(widget.language, 'active'),
         progress: a.fill,
         cycles: a.cycles,
-        bonusLabel:
-            a.cycles > 0 ? '+${a.cycles * widget.activeMinutesGoal}' : null,
-        percentLabel: '${(a.fill * 100).round()}%',
+        bonusLabel: a.cycles > 0
+            ? HomeText.ltrIsolate('+${a.cycles * widget.activeMinutesGoal}')
+            : null,
+        percentLabel: HomeText.ltrIsolate('${(a.fill * 100).round()}%'),
         detailLabel:
-            '${(a.fill * widget.activeMinutesGoal).round()} / ${widget.activeMinutesGoal} ${HomeText.getString(widget.language, 'minutes')}',
-        totalLabel: '${widget.activeMinutes}',
+            '${HomeText.ltrIsolate('${(a.fill * widget.activeMinutesGoal).round()} / ${widget.activeMinutesGoal}')} ${HomeText.getString(widget.language, 'minutes')}',
+        totalLabel: HomeText.ltrIsolate('${widget.activeMinutes}'),
         goalValue: widget.activeMinutesGoal,
         valueKey: widget.activeMinutes,
       ),
@@ -230,47 +233,48 @@ class _AppleActivityCardState extends State<AppleActivityCard>
       child: Opacity(
         opacity: nightDim,
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            for (int i = 0; i < items.length; i++) ...[
-              if (i > 0) const SizedBox(width: 4),
-              Expanded(
-                child: Center(
-                  child: SizedBox(
-                    width: unit,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(unit * 0.18),
-                      onTap: () => _editGoal(items[i].kind, items[i].goalValue),
-                      child: items[i].id == 'steps'
-                          ? WalkAura(
-                              steps: widget.steps,
-                              isWalking: widget.isWalking,
-                              color: items[i].color,
-                              child: _AppleMetric(
-                                spec: items[i],
-                                wave: _wave,
-                                burst: _burst.animation,
-                                playBurst: _burst.isBursting(items[i].id),
-                                unit: unit,
-                                ghostProgress: 0,
-                                isWalking: widget.isWalking,
-                              ),
-                            )
-                          : _AppleMetric(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (int i = 0; i < items.length; i++) ...[
+            if (i > 0) const SizedBox(width: 4),
+            Expanded(
+              child: Center(
+                child: SizedBox(
+                  width: unit,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(unit * 0.18),
+                    onTap: () =>
+                        _editGoal(items[i].kind, items[i].goalValue),
+                    child: items[i].id == 'steps'
+                        ? WalkAura(
+                            steps: widget.steps,
+                            isWalking: widget.isWalking,
+                            color: items[i].color,
+                            child: _AppleMetric(
                               spec: items[i],
                               wave: _wave,
                               burst: _burst.animation,
                               playBurst: _burst.isBursting(items[i].id),
                               unit: unit,
+                              ghostProgress: 0,
                               isWalking: widget.isWalking,
                             ),
-                    ),
+                          )
+                        : _AppleMetric(
+                            spec: items[i],
+                            wave: _wave,
+                            burst: _burst.animation,
+                            playBurst: _burst.isBursting(items[i].id),
+                            unit: unit,
+                            isWalking: widget.isWalking,
+                          ),
                   ),
                 ),
               ),
-            ],
+            ),
           ],
-        ),
+        ],
+      ),
       ),
     );
   }
@@ -337,8 +341,7 @@ class _AppleMetric extends StatelessWidget {
     final bodyH = unit * 0.90;
     final percentSize = (unit * 0.135).clamp(11.0, 16.0);
     final detailSize = (unit * 0.10).clamp(9.5, 12.5);
-    final topBlock =
-        iconSize + gapIconName + nameSize + 4 + nameSize + gapNameBody;
+    final topBlock = iconSize + gapIconName + nameSize + 4 + nameSize + gapNameBody;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -455,6 +458,8 @@ class _AppleMetric extends StatelessWidget {
         SizedBox(height: unit * 0.06),
         Text(
           spec.percentLabel,
+          textAlign: TextAlign.center,
+          textDirection: TextDirection.ltr,
           style: TextStyle(
             fontWeight: FontWeight.w800,
             fontSize: percentSize,
@@ -469,8 +474,10 @@ class _AppleMetric extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
             fontSize: detailSize,
-            color:
-                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
+            color: Theme.of(context)
+                .colorScheme
+                .onSurface
+                .withValues(alpha: 0.55),
           ),
         ),
       ],
@@ -557,6 +564,8 @@ class _ApplePainter extends CustomPainter {
         ..style = PaintingStyle.fill,
     );
 
+
+
     // —— مایع داخل شیشه ——
     if (progress > 0.001) {
       canvas.save();
@@ -594,8 +603,7 @@ class _ApplePainter extends CustomPainter {
             end: Alignment.topCenter,
             colors: [deep, mid.withValues(alpha: 0.95)],
             stops: const [0.0, 1.0],
-          ).createShader(
-              Rect.fromLTRB(b.left, fillTop - amp, b.right, b.bottom))
+          ).createShader(Rect.fromLTRB(b.left, fillTop - amp, b.right, b.bottom))
           ..style = PaintingStyle.fill,
       );
 
@@ -647,8 +655,7 @@ class _ApplePainter extends CustomPainter {
               bright.withValues(alpha: 0.55),
               bright.withValues(alpha: 0.0),
             ],
-          ).createShader(Rect.fromLTRB(
-              b.left, fillTop - amp, b.right, fillTop + fillH * 0.25))
+          ).createShader(Rect.fromLTRB(b.left, fillTop - amp, b.right, fillTop + fillH * 0.25))
           ..style = PaintingStyle.fill,
       );
 
