@@ -208,7 +208,6 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
   @override
   Widget build(BuildContext context) {
     final localTheme = AppTheme.fromPalette(_selected, night: _night);
-    final pad = context.hM;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
     final metrics = MetricColors.fromPalette(_selected, night: _night);
     final isRtl = Directionality.of(context) == TextDirection.rtl;
