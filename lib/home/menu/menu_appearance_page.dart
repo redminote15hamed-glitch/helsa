@@ -240,7 +240,6 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                         // Below min orbit size → scroll instead of crushing.
                         final applyReserve = _dirty ? 64.0 : 8.0;
                         final usableH = (h - applyReserve).clamp(320.0, h);
-                        final compact = usableH < 560;
                         final tight = usableH < 480;
 
                         final appleSize = (w * (tight ? 0.19 : 0.21))

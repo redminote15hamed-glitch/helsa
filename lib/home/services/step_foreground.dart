@@ -266,7 +266,6 @@ class StepTaskHandler extends TaskHandler {
   static const int _minSessionSeconds = 20;
   final List<DateTime> _recentStepEvents = <DateTime>[];
   int _stepsAtSessionStart = 0;
-  bool _statusSaysWalking = false;
   String _dayKey = '';
   String _stepsLabel = 'steps';
   String _notificationBody = 'Helsa is tracking activity';
@@ -406,7 +405,6 @@ class StepTaskHandler extends TaskHandler {
   void _onPedestrianStatus(PedestrianStatus event) {
     final now = DateTime.now();
     final walking = event.status.toLowerCase() == 'walking';
-    _statusSaysWalking = walking;
 
     if (walking && !_isWalking) {
       // Status alone is not enough — need a real step burst.
