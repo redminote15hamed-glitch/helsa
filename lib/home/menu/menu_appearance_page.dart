@@ -236,12 +236,23 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                         final h = constraints.maxHeight;
                         final w = constraints.maxWidth;
 
-                        // Bigger apples/hearts · card tight above orbit
-                        final appleSize = (w * 0.175).clamp(58.0, 76.0);
-                        final orbitSize =
-                            (math.min(w, h) * 0.52).clamp(220.0, 300.0);
+                        // Responsive: bigger preview, card glued to orbit.
+                        // Below min orbit size → scroll instead of crushing.
+                        final applyReserve = _dirty ? 64.0 : 8.0;
+                        final usableH = (h - applyReserve).clamp(320.0, h);
+                        final compact = usableH < 560;
+                        final tight = usableH < 480;
+
+                        final appleSize = (w * (tight ? 0.19 : 0.21))
+                            .clamp(tight ? 54.0 : 64.0, tight ? 72.0 : 92.0);
                         final cardSide =
-                            (w * 0.50).clamp(168.0, 220.0);
+                            (w * 0.50).clamp(160.0, tight ? 190.0 : 220.0);
+                        // Orbit: prefer ~48% width, never below readable floor
+                        // unless forced by remaining height (then scroll).
+                        final orbitIdeal =
+                            (math.min(w, usableH) * 0.48).clamp(200.0, 300.0);
+                        final orbitMin = 168.0;
+                        final orbitSize = orbitIdeal;
 
                         return Column(
                           children: [
@@ -282,7 +293,7 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                                 );
                               },
                             ),
-                            SizedBox(height: context.vS * 0.45),
+                            SizedBox(height: context.vS * 0.55),
                             AppearanceHeartDock(
                               // Real theme colors only — same as apples / app metrics.
                               colors: [
@@ -294,7 +305,8 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                               ],
                               width: w * 0.62,
                             ),
-                            SizedBox(height: context.vS * 0.55),
+                            // Push description card down toward the orbit ring
+                            const Spacer(flex: 2),
                             AnimatedBuilder(
                               animation: _cardCtrl,
                               builder: (context, child) {
@@ -321,14 +333,28 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                                 onNight: () => setState(() => _night = true),
                               ),
                             ),
-                            // Card sits close above orbit
-                            SizedBox(height: context.vS * 0.7),
+                            // Tight gap — card sticks to theme picker
+                            SizedBox(height: context.vS * 0.35),
                             Expanded(
-                              child: Center(
-                                child: SizedBox(
-                                  height: orbitSize,
-                                  width: orbitSize,
-                                  child: AnimatedBuilder(
+                              flex: 5,
+                              child: LayoutBuilder(
+                                builder: (context, orbitBox) {
+                                  // Fit orbit into remaining space; floor at orbitMin
+                                  final available = math.min(
+                                    orbitBox.maxWidth,
+                                    orbitBox.maxHeight,
+                                  );
+                                  // Never crush below readable floor; scroll if needed.
+                                  final side = available < orbitMin
+                                      ? orbitMin
+                                      : math.min(available, orbitSize);
+                                  final needsScroll =
+                                      orbitBox.maxHeight + 0.5 < orbitMin;
+
+                                  Widget ring = SizedBox(
+                                    height: side,
+                                    width: side,
+                                    child: AnimatedBuilder(
                                     animation: Listenable.merge([
                                       _ringPulse,
                                       _burstCtrl,
@@ -345,7 +371,19 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                                       );
                                     },
                                   ),
-                                ),
+                                  );
+
+                                  if (needsScroll) {
+                                    return SingleChildScrollView(
+                                      physics: const BouncingScrollPhysics(),
+                                      child: SizedBox(
+                                        height: orbitMin + 8,
+                                        child: Center(child: ring),
+                                      ),
+                                    );
+                                  }
+                                  return Center(child: ring);
+                                },
                               ),
                             ),
                             AppearanceApplyBar(

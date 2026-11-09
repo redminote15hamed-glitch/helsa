@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#00BFA5</color>
+    <color name="helsa_icon_mint_bg">#0D9488</color>
+    <color name="helsa_icon_ocean_bg">#0284C7</color>
+    <color name="helsa_icon_forest_bg">#16A34A</color>
+    <color name="helsa_icon_sunrise_bg">#EA580C</color>
+    <color name="helsa_icon_lavender_bg">#7C3AED</color>
+    <color name="helsa_icon_slate_bg">#475569</color>
 </resources>

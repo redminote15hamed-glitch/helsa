@@ -1,9 +1,12 @@
 // lib/setting/storage/theme_store.dart
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:helsa/setting/storage/secure_hive.dart';
 import 'package:helsa/setting/color/theme_palette.dart';
 import 'package:helsa/setting/color/theme_color.dart';
+import 'package:helsa/setting/branding/launcher_icon_service.dart';
 
 /// Palette + day/night brightness, persisted and broadcast app-wide.
 class ThemeStore {
@@ -18,7 +21,7 @@ class ThemeStore {
   static final ValueNotifier<String> paletteId = ValueNotifier<String>('mint');
   static final ValueNotifier<bool> night = ValueNotifier<bool>(false);
 
-  /// Bumps on every apply so MaterialApp rebuilds ThemeData.
+  /// Bumps on every apply so MaterialApp + Home rebuild.
   static final ValueNotifier<int> revision = ValueNotifier<int>(0);
 
   static String _savedPalette = 'mint';
@@ -33,6 +36,8 @@ class ThemeStore {
     _savedPalette = paletteId.value;
     _savedNight = night.value;
     revision.value++;
+    // Sync launcher icon with saved palette (in case it was out of date).
+    unawaited(LauncherIconService.applyForPalette(paletteId.value));
   }
 
   static Box<dynamic> get _b {
@@ -65,6 +70,8 @@ class ThemeStore {
     _savedPalette = paletteId.value;
     _savedNight = night.value;
     revision.value++;
+    // Icon switch immediately with theme apply
+    unawaited(LauncherIconService.applyForPalette(paletteId.value));
   }
 
   static void revert() {

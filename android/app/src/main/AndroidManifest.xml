@@ -133,6 +133,9 @@
             android:label="@string/widget_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="android.appwidget.action.APPWIDGET_ENABLED" />
+                <action android:name="android.appwidget.action.APPWIDGET_DISABLED" />
+                <action android:name="android.appwidget.action.APPWIDGET_DELETED" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
@@ -145,6 +148,9 @@
             android:label="@string/widget_steps_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="android.appwidget.action.APPWIDGET_ENABLED" />
+                <action android:name="android.appwidget.action.APPWIDGET_DISABLED" />
+                <action android:name="android.appwidget.action.APPWIDGET_DELETED" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"

@@ -5,7 +5,8 @@ import 'package:helsa/setting/responsive/responsive_utils.dart';
 
 /// Theme description card + Light/Dark mode pills.
 class AppearanceThemeInfoCard extends StatelessWidget {
-  const AppearanceThemeInfoCard({super.key, 
+  const AppearanceThemeInfoCard({
+    super.key,
     required this.palette,
     required this.night,
     required this.lang,
@@ -26,6 +27,8 @@ class AppearanceThemeInfoCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final name = HomeText.getString(lang, 'palette_${palette.id}');
     final desc = HomeText.getString(lang, 'palette_${palette.id}_desc');
+    final isFa = lang == 'fa';
+    final cardH = side * 1.12;
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: context.hM),
@@ -46,10 +49,12 @@ class AppearanceThemeInfoCard extends StatelessWidget {
           SizedBox(width: context.hS),
           Container(
             width: side,
-            height: side * 1.08,
-            padding: EdgeInsets.symmetric(
-              horizontal: context.hS,
-              vertical: context.vXs,
+            height: cardH,
+            padding: EdgeInsets.fromLTRB(
+              context.hS * 0.9,
+              context.vXs,
+              context.hS * 0.9,
+              context.vXs * 0.8,
             ),
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -69,74 +74,70 @@ class AppearanceThemeInfoCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(18),
               border: Border.all(
                 color: cs.primary.withValues(alpha: 0.22),
-                width: 1.0,
+                width: 1.2,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: cs.primary.withValues(alpha: 0.10),
-                  blurRadius: 14,
+                  color: cs.primary.withValues(alpha: night ? 0.18 : 0.10),
+                  blurRadius: 16,
                   offset: const Offset(0, 6),
                 ),
               ],
             ),
             child: Column(
               children: [
-                Icon(palette.icon, size: 20, color: cs.primary),
-                SizedBox(height: context.vX3s * 0.6),
+                Icon(
+                  palette.icon,
+                  size: 22,
+                  color: cs.primary,
+                ),
+                SizedBox(height: context.vX3s * 0.35),
                 Expanded(
-                  child: Center(
-                    child: Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: context.hXs * 0.6,
-                        vertical: context.vX3s * 0.5,
-                      ),
-                      decoration: BoxDecoration(
-                        color:
-                            cs.surface.withValues(alpha: night ? 0.50 : 0.88),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: cs.outline.withValues(alpha: 0.18),
-                        ),
-                      ),
-                      child: LayoutBuilder(
-                        builder: (context, box) {
-                          final fs = (box.maxHeight / 9.2)
-                              .clamp(11.0, context.m * 1.05);
-                          final isRtl = lang == 'fa' ||
-                              Directionality.of(context) ==
-                                  TextDirection.rtl;
-                          return Text(
+                  child: LayoutBuilder(
+                    builder: (context, box) {
+                      // Scale font so description always fits (any language).
+                      final baseStyle = TextStyle(
+                        fontSize: context.s,
+                        height: 1.35,
+                        fontWeight: FontWeight.w500,
+                        color: cs.onSurface.withValues(alpha: 0.92),
+                      );
+                      return FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.center,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: box.maxWidth,
+                            // Give FittedBox a "design" height so long text
+                            // shrinks instead of overflowing.
+                            maxHeight: box.maxHeight,
+                          ),
+                          child: Text(
                             desc,
                             textAlign: TextAlign.center,
                             textDirection:
-                                isRtl ? TextDirection.rtl : TextDirection.ltr,
-                            maxLines: 8,
-                            overflow: TextOverflow.ellipsis,
-                            softWrap: true,
-                            style: TextStyle(
-                              fontSize: fs,
-                              height: 1.38,
-                              fontWeight: FontWeight.w500,
-                              color: cs.onSurface.withValues(alpha: 0.92),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
+                                isFa ? TextDirection.rtl : TextDirection.ltr,
+                            style: baseStyle,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
-                SizedBox(height: context.vX3s * 0.5),
-                Text(
-                  name,
-                  textAlign: TextAlign.center,
-                  textDirection: (lang == 'fa')
-                      ? TextDirection.rtl
-                      : TextDirection.ltr,
-                  style: TextStyle(
-                    fontSize: context.m,
-                    fontWeight: FontWeight.w800,
-                    color: cs.onSurface,
+                SizedBox(height: context.vX3s * 0.35),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    name,
+                    maxLines: 1,
+                    textAlign: TextAlign.center,
+                    textDirection:
+                        isFa ? TextDirection.rtl : TextDirection.ltr,
+                    style: TextStyle(
+                      fontSize: context.m,
+                      fontWeight: FontWeight.w800,
+                      color: cs.onSurface,
+                    ),
                   ),
                 ),
               ],
@@ -160,7 +161,8 @@ class AppearanceThemeInfoCard extends StatelessWidget {
 }
 
 class AppearanceModePill extends StatelessWidget {
-  const AppearanceModePill({super.key, 
+  const AppearanceModePill({
+    super.key,
     required this.selected,
     required this.icon,
     required this.label,
@@ -189,12 +191,13 @@ class AppearanceModePill extends StatelessWidget {
         duration: const Duration(milliseconds: 280),
         curve: Curves.easeOutCubic,
         padding: EdgeInsets.symmetric(
-          horizontal: selected ? 11 : 8,
-          vertical: selected ? 12 : 9,
+          horizontal: selected ? 12 : 9,
+          // Taller pills as requested
+          vertical: selected ? 16 : 13,
         ),
         decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: selected ? fg.withValues(alpha: 0.55) : Colors.transparent,
             width: selected ? 1.5 : 1.0,
@@ -212,8 +215,8 @@ class AppearanceModePill extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: selected ? 18 : 15, color: fg),
-            const SizedBox(height: 3),
+            Icon(icon, size: selected ? 20 : 17, color: fg),
+            const SizedBox(height: 5),
             Text(
               label,
               style: TextStyle(
@@ -228,7 +231,3 @@ class AppearanceModePill extends StatelessWidget {
     );
   }
 }
-
-
-
-/// Bottom Continue / Apply button shown when theme is dirty.

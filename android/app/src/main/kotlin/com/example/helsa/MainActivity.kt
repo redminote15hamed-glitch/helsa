@@ -40,8 +40,12 @@ class MainActivity : FlutterActivity() {
         ).setMethodCallHandler { call, result ->
             when (call.method) {
                 "setIcon" -> {
-                    val name = call.argument<String>("name") ?: "helsa_icon_mint"
+                    // Dart sends paletteId (mint/ocean/…); accept legacy "name" too.
+                    val name = call.argument<String>("paletteId")
+                        ?: call.argument<String>("name")
+                        ?: "mint"
                     val ok = setLauncherIcon(name)
+                    Log.d(TAG, "setIcon request=$name ok=$ok")
                     result.success(ok)
                 }
                 else -> result.notImplemented()

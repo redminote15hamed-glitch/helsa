@@ -1,181 +1,130 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="0dp">
+    android:orientation="horizontal"
+    android:gravity="center"
+    android:padding="10dp"
+    android:background="@drawable/widget_solid_bg">
 
-    <!-- Dynamic rounded background (bitmap set from Kotlin) -->
-    <ImageView
-        android:id="@+id/widget_bg_image"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scaleType="fitXY"
-        android:contentDescription="@null" />
-
+    <!-- STEPS -->
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:orientation="horizontal"
+        android:layout_weight="1"
+        android:orientation="vertical"
         android:gravity="center"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp">
+        android:padding="4dp">
 
-        <!-- STEPS -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:padding="4dp"
-            android:background="@drawable/widget_metric_chip">
+        <ImageView
+            android:id="@+id/iv_steps"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:src="@drawable/ic_widget_steps"
+            android:contentDescription="@null" />
 
-            <FrameLayout
-                android:layout_width="28dp"
-                android:layout_height="28dp">
-                <ImageView
-                    android:id="@+id/iv_steps_disk"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:src="@drawable/widget_icon_disk"
-                    android:contentDescription="@null" />
-                <ImageView
-                    android:id="@+id/iv_steps"
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_widget_steps"
-                    android:contentDescription="@null" />
-            </FrameLayout>
+        <TextView
+            android:id="@+id/tv_steps"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="0"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:textColor="#FF111111"
+            android:includeFontPadding="false"
+            android:maxLines="1" />
 
-            <TextView
-                android:id="@+id/tv_steps"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="0"
-                android:textStyle="bold"
-                android:textSize="15sp"
-                android:includeFontPadding="false"
-                android:maxLines="1" />
-
-            <TextView
-                android:id="@+id/tv_steps_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="steps"
-                android:textSize="9sp"
-                android:includeFontPadding="false"
-                android:maxLines="1" />
-        </LinearLayout>
-
-        <Space
-            android:layout_width="6dp"
-            android:layout_height="match_parent" />
-
-        <!-- CAL -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:padding="4dp"
-            android:background="@drawable/widget_metric_chip">
-
-            <FrameLayout
-                android:layout_width="28dp"
-                android:layout_height="28dp">
-                <ImageView
-                    android:id="@+id/iv_cal_disk"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:src="@drawable/widget_icon_disk"
-                    android:contentDescription="@null" />
-                <ImageView
-                    android:id="@+id/iv_cal"
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_widget_cal"
-                    android:contentDescription="@null" />
-            </FrameLayout>
-
-            <TextView
-                android:id="@+id/tv_cal"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="0"
-                android:textStyle="bold"
-                android:textSize="15sp"
-                android:includeFontPadding="false"
-                android:maxLines="1" />
-
-            <TextView
-                android:id="@+id/tv_cal_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="kcal"
-                android:textSize="9sp"
-                android:includeFontPadding="false"
-                android:maxLines="1" />
-        </LinearLayout>
-
-        <Space
-            android:layout_width="6dp"
-            android:layout_height="match_parent" />
-
-        <!-- TIME -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:padding="4dp"
-            android:background="@drawable/widget_metric_chip">
-
-            <FrameLayout
-                android:layout_width="28dp"
-                android:layout_height="28dp">
-                <ImageView
-                    android:id="@+id/iv_time_disk"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:src="@drawable/widget_icon_disk"
-                    android:contentDescription="@null" />
-                <ImageView
-                    android:id="@+id/iv_time"
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_widget_time"
-                    android:contentDescription="@null" />
-            </FrameLayout>
-
-            <TextView
-                android:id="@+id/tv_time"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="0"
-                android:textStyle="bold"
-                android:textSize="15sp"
-                android:includeFontPadding="false"
-                android:maxLines="1" />
-
-            <TextView
-                android:id="@+id/tv_time_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="min"
-                android:textSize="9sp"
-                android:includeFontPadding="false"
-                android:maxLines="1" />
-        </LinearLayout>
+        <TextView
+            android:id="@+id/tv_steps_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="steps"
+            android:textSize="11sp"
+            android:textColor="#99000000"
+            android:includeFontPadding="false"
+            android:maxLines="1" />
     </LinearLayout>
-</FrameLayout>
+
+    <!-- CAL -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="4dp">
+
+        <ImageView
+            android:id="@+id/iv_cal"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:src="@drawable/ic_widget_cal"
+            android:contentDescription="@null" />
+
+        <TextView
+            android:id="@+id/tv_cal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="0"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:textColor="#FF111111"
+            android:includeFontPadding="false"
+            android:maxLines="1" />
+
+        <TextView
+            android:id="@+id/tv_cal_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="kcal"
+            android:textSize="11sp"
+            android:textColor="#99000000"
+            android:includeFontPadding="false"
+            android:maxLines="1" />
+    </LinearLayout>
+
+    <!-- TIME -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="4dp">
+
+        <ImageView
+            android:id="@+id/iv_time"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:src="@drawable/ic_widget_time"
+            android:contentDescription="@null" />
+
+        <TextView
+            android:id="@+id/tv_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="0"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:textColor="#FF111111"
+            android:includeFontPadding="false"
+            android:maxLines="1" />
+
+        <TextView
+            android:id="@+id/tv_time_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="min"
+            android:textSize="11sp"
+            android:textColor="#99000000"
+            android:includeFontPadding="false"
+            android:maxLines="1" />
+    </LinearLayout>
+</LinearLayout>

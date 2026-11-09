@@ -23,6 +23,7 @@ import 'package:helsa/setting/responsive/device_modifier.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
 import 'package:helsa/setting/storage/identity_store.dart';
 import 'package:helsa/setting/storage/meta_store.dart';
+import 'package:helsa/setting/storage/theme_store.dart';
 import 'package:helsa/setting/kit/textfielder.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -41,6 +42,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void initState() {
     MetaStore.revision.addListener(_onMetaRevision);
+    ThemeStore.revision.addListener(_onThemeRevision);
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _tracker.addListener(_onUpdate);
@@ -93,9 +95,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (mounted) setState(() {});
   }
 
+  void _onThemeRevision() {
+    // Rebuild apples / ambient with new MetricColors immediately.
+    if (mounted) setState(() {});
+  }
+
   @override
   void dispose() {
     MetaStore.revision.removeListener(_onMetaRevision);
+    ThemeStore.revision.removeListener(_onThemeRevision);
     WidgetsBinding.instance.removeObserver(this);
     _tracker.removeListener(_onUpdate);
     super.dispose();
