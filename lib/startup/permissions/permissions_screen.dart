@@ -164,7 +164,8 @@ class _PermissionsScreenState extends State<PermissionsScreen>
   Future<void> _onStart() async {
     if (!_canStart) return;
     try {
-      await MetaStore.setSetupDone(true);
+      await MetaStore.setPermissionsDone(true);
+      await MetaStore.clearSetupDraft();
     } catch (_) {}
     if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(

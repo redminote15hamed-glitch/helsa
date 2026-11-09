@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:helsa/setting/responsive/device_modifier.dart';
 import 'package:helsa/setting/motion/transitioner.dart';
 import 'package:helsa/setting/storage/profile_store.dart';
+import 'package:helsa/setting/storage/meta_store.dart';
 import 'package:helsa/startup/setup/setup.dart';
+import 'package:helsa/startup/permissions/permissions_screen.dart';
 import 'package:helsa/home/home_screen.dart';
 
 import 'device/m_v.dart';
@@ -45,9 +47,7 @@ class _SplashScreenState extends State<SplashScreen> {
       _isNavigating = true;
     });
 
-    // اگر setup قبلاً در Hive تمام شده → خانه؛ وگرنه → setup
-    final Widget nextPage =
-        ProfileStore.isSetupDone ? const HomeScreen() : const SetupScreen();
+    final Widget nextPage = _resolveNext();
 
     await Navigator.of(context).pushReplacement(
       Transitioner.createRoute(
@@ -61,6 +61,25 @@ class _SplashScreenState extends State<SplashScreen> {
         _isNavigating = false;
         _renderKey = UniqueKey();
       });
+    }
+  }
+
+  Widget _resolveNext() {
+    try {
+      final setupDone = MetaStore.isSetupDone;
+      final permsDone = MetaStore.isPermissionsDone;
+      if (!setupDone) {
+        return const SetupScreen();
+      }
+      if (!permsDone) {
+        return PermissionsScreen(language: MetaStore.language);
+      }
+      return const HomeScreen();
+    } catch (_) {
+      // Meta not open yet — fall back to profile flag
+      return ProfileStore.isSetupDone
+          ? const HomeScreen()
+          : const SetupScreen();
     }
   }
 

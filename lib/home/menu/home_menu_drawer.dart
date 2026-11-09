@@ -542,17 +542,20 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
           ),
         );
 
+        // Softer open/close: longer duration, gentler distance + curve.
         final animated = closing
             ? panel.exSlideEnd(
                 context,
-                s: AS.balanced,
-                x: drawerW * 0.35,
+                s: AS.relaxed,
+                c: AC.easeInCubic,
+                x: drawerW * 0.22,
                 onComplete: onExitDone,
               )
             : panel.enSlideStart(
                 context,
-                s: AS.slow,
-                x: drawerW * 0.35,
+                s: AS.relaxed,
+                c: AC.easeOutCubic,
+                x: drawerW * 0.22,
               );
 
         final barrier = closing

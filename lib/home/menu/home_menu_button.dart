@@ -112,7 +112,7 @@ class _HomeMenuButtonState extends State<HomeMenuButton> {
     if (mounted) setState(() {});
 
     _forceCloseTimer?.cancel();
-    _forceCloseTimer = Timer(const Duration(milliseconds: 900), () {
+    _forceCloseTimer = Timer(const Duration(milliseconds: 1100), () {
       if (_entry != null) _removeOverlay(immediate: true);
     });
   }

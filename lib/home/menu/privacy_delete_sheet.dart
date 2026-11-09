@@ -27,52 +27,120 @@ enum PrivacyDeleteKind {
   allApp,
 }
 
-/// Opens the bottom sheet (fade + slide) listing deletable data groups.
+/// Opens the delete sheet above drawer + expand overlays (root Overlay).
 Future<void> showPrivacyDeleteSheet(
   BuildContext context, {
   required String language,
 }) {
-  // Root navigator + high barrier so sheet is ABOVE drawer / expand overlays.
-  return showGeneralDialog<void>(
-    context: context,
-    useRootNavigator: true,
-    barrierLabel: 'delete-data',
-    barrierDismissible: true,
-    barrierColor: Colors.black.withValues(alpha: 0.55),
-    transitionDuration: const Duration(milliseconds: 320),
-    pageBuilder: (ctx, anim, sec) {
-      return Material(
-        type: MaterialType.transparency,
-        child: Align(
-          alignment: Alignment.bottomCenter,
-          child: PrivacyDeleteSheet(language: language),
-        ),
-      );
-    },
-    transitionBuilder: (ctx, anim, sec, child) {
-      final curved = CurvedAnimation(
-        parent: anim,
-        curve: Curves.easeOutCubic,
-        reverseCurve: Curves.easeInCubic,
-      );
-      return FadeTransition(
-        opacity: curved,
-        child: SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.14),
-            end: Offset.zero,
-          ).animate(curved),
-          child: child,
-        ),
+  final overlayState = Overlay.of(context, rootOverlay: true);
+  late OverlayEntry entry;
+
+  entry = OverlayEntry(
+    builder: (ctx) {
+      return _PrivacyDeleteOverlay(
+        language: language,
+        onDismiss: () {
+          entry.remove();
+        },
       );
     },
   );
+  overlayState.insert(entry);
+  return entry.mounted
+      ? Future<void>.value()
+      : Future<void>.value();
+}
+
+class _PrivacyDeleteOverlay extends StatefulWidget {
+  const _PrivacyDeleteOverlay({
+    required this.language,
+    required this.onDismiss,
+  });
+
+  final String language;
+  final VoidCallback onDismiss;
+
+  @override
+  State<_PrivacyDeleteOverlay> createState() => _PrivacyDeleteOverlayState();
+}
+
+class _PrivacyDeleteOverlayState extends State<_PrivacyDeleteOverlay>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _fade;
+  late final Animation<Offset> _slide;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 320),
+    );
+    _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic);
+    _slide = Tween<Offset>(
+      begin: const Offset(0, 0.12),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
+    _ctrl.forward();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _close() async {
+    try {
+      await _ctrl.reverse();
+    } catch (_) {}
+    widget.onDismiss();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      type: MaterialType.transparency,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          FadeTransition(
+            opacity: _fade,
+            child: GestureDetector(
+              onTap: _close,
+              behavior: HitTestBehavior.opaque,
+              child: Container(color: Colors.black.withValues(alpha: 0.55)),
+            ),
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: SlideTransition(
+              position: _slide,
+              child: FadeTransition(
+                opacity: _fade,
+                child: PrivacyDeleteSheet(
+                  language: widget.language,
+                  onRequestClose: _close,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class PrivacyDeleteSheet extends StatefulWidget {
-  const PrivacyDeleteSheet({super.key, required this.language});
+  const PrivacyDeleteSheet({
+    super.key,
+    required this.language,
+    this.onRequestClose,
+  });
 
   final String language;
+  final Future<void> Function()? onRequestClose;
 
   @override
   State<PrivacyDeleteSheet> createState() => _PrivacyDeleteSheetState();
@@ -82,6 +150,17 @@ class _PrivacyDeleteSheetState extends State<PrivacyDeleteSheet> {
   bool _busy = false;
 
   String get _lang => widget.language;
+
+  Future<void> _dismissSheet() async {
+    final custom = widget.onRequestClose;
+    if (custom != null) {
+      await custom();
+      return;
+    }
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
+  }
 
   String _labelKey(PrivacyDeleteKind kind) {
     switch (kind) {
@@ -294,7 +373,7 @@ class _PrivacyDeleteSheetState extends State<PrivacyDeleteSheet> {
         template: SnackbarTemplate.neutral,
         duration: const Duration(seconds: 3),
       );
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) await _dismissSheet();
     } catch (_) {
       if (!mounted) return;
       setState(() => _busy = false);

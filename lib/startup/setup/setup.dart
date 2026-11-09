@@ -3,6 +3,7 @@ import 'dart:ui' show PlatformDispatcher;
 import 'package:flutter/material.dart';
 import 'package:helsa/setting/responsive/device_modifier.dart';
 import 'package:helsa/setting/storage/profile_store.dart';
+import 'package:helsa/setting/storage/meta_store.dart';
 import 'package:helsa/startup/permissions/permissions_screen.dart';
 import 'package:helsa/startup/setup/widget/language_select.dart';
 import 'package:helsa/startup/setup/widget/name_setup.dart';
@@ -53,6 +54,60 @@ class _SetupScreenState extends State<SetupScreen> {
   void initState() {
     super.initState();
     _selectedLang = _langFromDevice();
+    _restoreDraft();
+  }
+
+  void _restoreDraft() {
+    try {
+      if (MetaStore.isSetupDone) return;
+      final d = MetaStore.readSetupDraft();
+      final step = (d['step'] as int?) ?? 0;
+      if (step <= 0 && (d['firstName'] as String? ?? '').isEmpty) return;
+
+      _selectedLang = (d['language'] as String?) ?? _selectedLang;
+      _hasUserSelected = true;
+      _currentStep = step.clamp(0, kTotalSetupSteps - 1);
+      _firstNameController.text = d['firstName'] as String? ?? '';
+      _lastNameController.text = d['lastName'] as String? ?? '';
+      _isNameFilled = _firstNameController.text.trim().isNotEmpty;
+      _selectedGender = d['gender'] as String?;
+      _selectedAge = d['age'] as int?;
+      _selectedHeight = d['height'] as double?;
+      _selectedWeight = d['weight'] as double?;
+      _selectedWaist = d['waist'] as double?;
+      _selectedActivityLevel = d['activityLevel'] as int?;
+      _selectedDiet = d['diet'] as int?;
+      _selectedRestrictions
+        ..clear()
+        ..addAll((d['restrictions'] as List<int>?) ?? const []);
+      _selectedFavorites
+        ..clear()
+        ..addAll((d['favorites'] as List<int>?) ?? const []);
+      _selectedSleepTime = d['sleepTime'] as String?;
+      _selectedWakeTime = d['wakeTime'] as String?;
+    } catch (_) {}
+  }
+
+  Future<void> _persistDraft() async {
+    try {
+      await MetaStore.saveSetupDraft(
+        language: _selectedLang,
+        firstName: _firstNameController.text,
+        lastName: _lastNameController.text,
+        gender: _selectedGender,
+        age: _selectedAge,
+        height: _selectedHeight,
+        weight: _selectedWeight,
+        waist: _selectedWaist,
+        activityLevel: _selectedActivityLevel,
+        diet: _selectedDiet,
+        restrictions: List<int>.from(_selectedRestrictions),
+        favorites: List<int>.from(_selectedFavorites),
+        sleepTime: _selectedSleepTime,
+        wakeTime: _selectedWakeTime,
+        step: _currentStep,
+      );
+    } catch (_) {}
   }
 
   static String _langFromDevice() {
@@ -79,22 +134,24 @@ class _SetupScreenState extends State<SetupScreen> {
     }
   }
 
-  void _onSkipRestrictions() {
+  Future<void> _onSkipRestrictions() async {
     setState(() {
       _selectedRestrictions.clear();
       if (_currentStep < kTotalSetupSteps - 1) {
         _currentStep++;
       }
     });
+    await _persistDraft();
   }
 
-  void _onSkipFavorites() {
+  Future<void> _onSkipFavorites() async {
     setState(() {
       _selectedFavorites.clear();
       if (_currentStep < kTotalSetupSteps - 1) {
         _currentStep++;
       }
     });
+    await _persistDraft();
   }
 
   /// ذخیره پروفایل + رفتن به Permissions (نه Home)
@@ -137,11 +194,13 @@ class _SetupScreenState extends State<SetupScreen> {
     }
 
     setState(() => _currentStep++);
+    await _persistDraft();
   }
 
-  void _handleBack() {
+  Future<void> _handleBack() async {
     if (_currentStep > 0) {
       setState(() => _currentStep--);
+      await _persistDraft();
     } else {
       if (Navigator.of(context).canPop()) {
         Navigator.of(context).pop();

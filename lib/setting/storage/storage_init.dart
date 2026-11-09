@@ -67,7 +67,8 @@ class StorageInit {
     await RestrictionStore.save(restrictions);
     await FavoriteStore.save(favorites);
     await SleepStore.save(sleepTime: sleepTime, wakeTime: wakeTime);
-    await MetaStore.setSetupDone(true);
+    // Profile complete; permissions screen still required.
+    await MetaStore.markAwaitingPermissions();
   }
 
   /// Full personal wipe: all profile/activity Hive boxes + avatar files on disk.
