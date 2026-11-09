@@ -163,33 +163,40 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Widget _card(String language) {
-    final calories = _tracker.calories;
-    final caloriesGoal = _tracker.caloriesGoal;
-    var streak = 0;
-    try {
-      streak = StreakStore.currentStreak;
-    } catch (_) {}
+    return ListenableBuilder(
+      listenable: _tracker,
+      builder: (context, _) {
+        final calories = _tracker.calories;
+        final caloriesGoal = _tracker.caloriesGoal;
+        var streak = 0;
+        try {
+          streak = StreakStore.currentStreak;
+        } catch (_) {}
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        StreakBadge(
-          language: language,
-          streak: streak,
-          isNight: SleepMode.isNightNow,
-        ),
-        AppleActivityCard(
-          language: language,
-          steps: _tracker.steps,
-          stepsGoal: _tracker.stepsGoal,
-          calories: calories,
-          caloriesGoal: caloriesGoal,
-          activeMinutes: _tracker.activeMinutes,
-          activeMinutesGoal: _tracker.activeMinutesGoal,
-          isWalking: _tracker.isWalking,
-          isNight: SleepMode.isNightNow,
-        ),
-      ],
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            StreakBadge(
+              language: language,
+              streak: streak,
+              isNight: SleepMode.isNightNow,
+            ),
+            RepaintBoundary(
+              child: AppleActivityCard(
+                language: language,
+                steps: _tracker.steps,
+                stepsGoal: _tracker.stepsGoal,
+                calories: calories,
+                caloriesGoal: caloriesGoal,
+                activeMinutes: _tracker.activeMinutes,
+                activeMinutesGoal: _tracker.activeMinutesGoal,
+                isWalking: _tracker.isWalking,
+                isNight: SleepMode.isNightNow,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 

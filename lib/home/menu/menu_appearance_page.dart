@@ -240,7 +240,7 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                         // Below min orbit size → scroll instead of crushing.
                         final applyReserve = _dirty ? 64.0 : 8.0;
                         final usableH = (h - applyReserve).clamp(320.0, h);
-                        final tight = usableH < 480;
+                                                final tight = usableH < 480;
 
                         final appleSize = (w * (tight ? 0.19 : 0.21))
                             .clamp(tight ? 54.0 : 64.0, tight ? 72.0 : 92.0);
@@ -253,7 +253,7 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                         final orbitMin = 168.0;
                         final orbitSize = orbitIdeal;
 
-                        return Column(
+                        final column = Column(
                           children: [
                             SizedBox(height: context.vX3s * 0.35),
                             AnimatedBuilder(
@@ -397,6 +397,17 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
                             ),
                           ],
                         );
+
+                        if (tight) {
+                          return SingleChildScrollView(
+                            physics: const BouncingScrollPhysics(),
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(minHeight: usableH),
+                              child: column,
+                            ),
+                          );
+                        }
+                        return column;
                       },
                     ),
                   ),

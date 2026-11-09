@@ -166,12 +166,13 @@ class _AppleActivityCardState extends State<AppleActivityCard>
     final s = appleOverflow(widget.steps, widget.stepsGoal);
     final c = appleOverflow(widget.calories, widget.caloriesGoal);
     final a = appleOverflow(widget.activeMinutes, widget.activeMinutesGoal);
+    final metrics = MetricColors.current;
 
     final items = <_AppleSpec>[
       _AppleSpec(
         id: 'steps',
         kind: _GoalKind.steps,
-        color: MetricColors.current.steps,
+        color: metrics.steps,
         icon: Icons.directions_walk_rounded,
         name: HomeText.getString(widget.language, 'steps'),
         progress: s.fill,
@@ -191,7 +192,7 @@ class _AppleActivityCardState extends State<AppleActivityCard>
       _AppleSpec(
         id: 'calories',
         kind: _GoalKind.calories,
-        color: MetricColors.current.calories,
+        color: metrics.calories,
         icon: Icons.local_fire_department_rounded,
         name: HomeText.getString(widget.language, 'calories'),
         progress: c.fill,
@@ -209,7 +210,7 @@ class _AppleActivityCardState extends State<AppleActivityCard>
       _AppleSpec(
         id: 'active',
         kind: _GoalKind.active,
-        color: MetricColors.current.active,
+        color: metrics.active,
         icon: Icons.timer_outlined,
         name: HomeText.getString(widget.language, 'active'),
         progress: a.fill,

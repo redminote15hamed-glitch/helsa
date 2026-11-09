@@ -16,7 +16,16 @@ Future<void> main() async {
   await ProfileStore.init();
   try {
     await ThemeStore.open();
-  } catch (_) {}
+  } catch (e, st) {
+    debugPrint('ThemeStore.open failed: $e\n$st');
+    // Retry once — cold start race with SecureHive
+    try {
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+      await ThemeStore.open();
+    } catch (e2, st2) {
+      debugPrint('ThemeStore.open retry failed: $e2\n$st2');
+    }
+  }
 
   runApp(const MyApp());
 }

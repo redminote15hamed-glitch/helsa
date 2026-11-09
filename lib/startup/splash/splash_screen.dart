@@ -39,15 +39,18 @@ class _SplashScreenState extends State<SplashScreen> {
   void _startSplashCycle() async {
     if (_isNavigating) return;
 
-    await Future.delayed(const Duration(milliseconds: 2700));
+    final nextPage = _resolveNext();
+    // Returning users: short splash. First-time / incomplete setup: full brand beat.
+    final bool quick = _isReturningUser(nextPage);
+    await Future.delayed(
+      Duration(milliseconds: quick ? 700 : 2700),
+    );
 
     if (!mounted) return;
 
     setState(() {
       _isNavigating = true;
     });
-
-    final Widget nextPage = _resolveNext();
 
     await Navigator.of(context).pushReplacement(
       Transitioner.createRoute(
@@ -62,6 +65,10 @@ class _SplashScreenState extends State<SplashScreen> {
         _renderKey = UniqueKey();
       });
     }
+  }
+
+  bool _isReturningUser(Widget page) {
+    return page is HomeScreen;
   }
 
   Widget _resolveNext() {

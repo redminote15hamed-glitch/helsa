@@ -49,6 +49,7 @@ class _PermissionsScreenState extends State<PermissionsScreen>
         'settings': 'تنظیمات',
         'start': 'شروع',
         'done': 'انجام شد',
+        'battery_warn': 'بدون این، شمارش قدم در پس‌زمینه ممکن است قطع شود.',
       },
       'en': {
         'title': 'Permissions',
@@ -66,6 +67,7 @@ class _PermissionsScreenState extends State<PermissionsScreen>
         'settings': 'Settings',
         'start': 'Start',
         'done': 'Done',
+        'battery_warn': 'Without this, step counting may stop in the background.',
       },
       'fr': {
         'title': 'Autorisations',
@@ -281,7 +283,9 @@ class _PermissionsScreenState extends State<PermissionsScreen>
                             accent: Theme.of(context).colorScheme.tertiary,
                             icon: Icons.battery_charging_full_rounded,
                             title: _t('battery'),
-                            subtitle: _t('battery_desc'),
+                            subtitle: _battery
+                                ? _t('battery_desc')
+                                : '${_t('battery_desc')}\n${_t('battery_warn')}',
                             granted: _battery,
                             actionLabel: _t('allow'),
                             doneLabel: _t('done'),

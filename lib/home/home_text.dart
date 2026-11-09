@@ -382,7 +382,7 @@ class HomeText {
       'privacy_policy_body': 'Cette application vous aide pour la santé et garde vos informations uniquement sur ce téléphone.\n\n• Ce qui est enregistré : nom, sexe, âge, taille, poids, tour de taille, activité, type de régime, sensibilités alimentaires, aliments préférés, horaires de sommeil, pas, temps actif, calories estimées, série d’activité, apparence et photo de profil.\n• Où : uniquement sur ce téléphone. Rien n’est envoyé sur internet.\n• Sécurité : les informations sont verrouillées ; la clé reste dans la zone sécurisée du téléphone.\n• Votre contrôle : vous pouvez effacer une section ou tout supprimer.\n• Autorisations : l’accès à l’activité sert seulement à compter les pas et détecter le mouvement.\n\nEn continuant, vous acceptez que ces informations restent sur votre téléphone.',
       'privacy_point_transparent': 'Nous disons clairement ce qui est enregistré ou non',
       'privacy_title': 'Politique d\'information',
-      'privacy_body': 'Helsa est conçu pour soutenir votre santé. Les données personnelles restent sur cet appareil, chiffrées au repos en AES-256. La clé est conservée uniquement dans le stockage sécurisé du système (Android Keystore / iOS Keychain). Nous n’envoyons pas vos données sur un serveur. Vous pouvez supprimer des parties de vos données à tout moment. Votre nom est conservé après un effacement complet sauf si vous modifiez vous-même le profil.',
+      'privacy_body': 'Les informations personnelles restent sur ce téléphone, sont verrouillées et ne sont pas envoyées. Vous pouvez tout effacer vous-même.',
       'privacy_points_title': 'Nos engagements',
       'privacy_point_local': 'Tout reste uniquement sur ce téléphone',
       'privacy_point_encrypt':

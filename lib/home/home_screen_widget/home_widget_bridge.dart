@@ -60,6 +60,8 @@ class HomeWidgetBridge {
   }
 
   void detach() {
+    _throttle?.cancel();
+    _throttle = null;
     _retryTimer?.cancel();
     _retryTimer = null;
     if (!_listening) return;
@@ -68,8 +70,20 @@ class HomeWidgetBridge {
     ThemeStore.revision.removeListener(_onTheme);
   }
 
-  void _onTracker() => unawaited(push());
-  void _onTheme() => unawaited(push(force: true));
+  Timer? _throttle;
+
+  void _onTracker() {
+    // Throttle home-widget writes — steps can tick every second.
+    if (_throttle?.isActive ?? false) return;
+    _throttle = Timer(const Duration(seconds: 4), () {
+      unawaited(push());
+    });
+  }
+
+  void _onTheme() {
+    _throttle?.cancel();
+    unawaited(push(force: true));
+  }
 
   static int _argb(Color c) {
     return ((c.a * 255.0).round() & 0xff) << 24 |

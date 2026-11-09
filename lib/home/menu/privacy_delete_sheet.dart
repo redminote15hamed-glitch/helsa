@@ -1,5 +1,7 @@
 // lib/home/menu/privacy_delete_sheet.dart
 // Floating delete sheet + confirm dialog + store clear actions.
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:helsa/home/home_text.dart';
 import 'package:helsa/home/services/step_tracker.dart';
@@ -32,23 +34,29 @@ Future<void> showPrivacyDeleteSheet(
   BuildContext context, {
   required String language,
 }) {
+  final completer = Completer<void>();
   final overlayState = Overlay.of(context, rootOverlay: true);
   late OverlayEntry entry;
+
+  void finish() {
+    if (!completer.isCompleted) completer.complete();
+  }
 
   entry = OverlayEntry(
     builder: (ctx) {
       return _PrivacyDeleteOverlay(
         language: language,
         onDismiss: () {
-          entry.remove();
+          try {
+            entry.remove();
+          } catch (_) {}
+          finish();
         },
       );
     },
   );
   overlayState.insert(entry);
-  return entry.mounted
-      ? Future<void>.value()
-      : Future<void>.value();
+  return completer.future;
 }
 
 class _PrivacyDeleteOverlay extends StatefulWidget {
@@ -69,6 +77,7 @@ class _PrivacyDeleteOverlayState extends State<_PrivacyDeleteOverlay>
   late final AnimationController _ctrl;
   late final Animation<double> _fade;
   late final Animation<Offset> _slide;
+  bool _closing = false;
 
   @override
   void initState() {
@@ -92,6 +101,8 @@ class _PrivacyDeleteOverlayState extends State<_PrivacyDeleteOverlay>
   }
 
   Future<void> _close() async {
+    if (_closing) return;
+    _closing = true;
     try {
       await _ctrl.reverse();
     } catch (_) {}

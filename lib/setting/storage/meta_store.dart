@@ -137,10 +137,8 @@ class MetaStore {
       'activityLevel':
           _b.get('draft_activity') is int ? _b.get('draft_activity') as int : null,
       'diet': _b.get('draft_diet') is int ? _b.get('draft_diet') as int : null,
-      'restrictions':
-          (_b.get('draft_restrictions') as List?)?.cast<int>() ?? <int>[],
-      'favorites':
-          (_b.get('draft_favorites') as List?)?.cast<int>() ?? <int>[],
+      'restrictions': _intList(_b.get('draft_restrictions')),
+      'favorites': _intList(_b.get('draft_favorites')),
       'sleepTime': _b.get('draft_sleep')?.toString(),
       'wakeTime': _b.get('draft_wake')?.toString(),
       'step': setupStep,
@@ -167,6 +165,19 @@ class MetaStore {
     ]) {
       await _b.delete(k);
     }
+  }
+
+  static List<int> _intList(dynamic raw) {
+    if (raw is! List) return <int>[];
+    final out = <int>[];
+    for (final e in raw) {
+      if (e is int) {
+        out.add(e);
+      } else if (e is num) {
+        out.add(e.toInt());
+      }
+    }
+    return out;
   }
 
   static Future<void> clear() => _b.clear();
