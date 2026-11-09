@@ -13,6 +13,7 @@ import 'package:helsa/home/home_screen_widget/home_widget_bridge.dart';
 import 'package:helsa/home/home_text.dart';
 import 'package:helsa/home/services/step_tracker.dart';
 import 'package:helsa/setting/storage/meta_store.dart';
+import 'package:helsa/setting/storage/settings_store.dart';
 import 'package:helsa/setting/storage/steps_store.dart';
 
 @pragma('vm:entry-point')
@@ -237,11 +238,23 @@ class StepForeground {
   }
 
   static String _title(int steps, int goal) {
+    try {
+      if (!SettingsStore.shouldShowLiveSteps) {
+        return HomeText.getString(_lang(), 'notif_quiet_title');
+      }
+    } catch (_) {}
     final label = HomeText.getString(_lang(), 'steps');
     return '$steps / $goal $label';
   }
 
-  static String _body() => HomeText.getString(_lang(), 'notif_body');
+  static String _body() {
+    try {
+      if (!SettingsStore.shouldShowLiveSteps) {
+        return HomeText.getString(_lang(), 'notif_quiet_body');
+      }
+    } catch (_) {}
+    return HomeText.getString(_lang(), 'notif_body');
+  }
 }
 
 class StepTaskHandler extends TaskHandler {

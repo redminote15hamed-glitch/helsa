@@ -7,6 +7,7 @@ import 'package:helsa/setting/storage/activity_store.dart';
 import 'package:helsa/setting/storage/age_store.dart';
 import 'package:helsa/setting/storage/body_store.dart';
 import 'package:helsa/setting/storage/gender_store.dart';
+import 'package:helsa/setting/storage/settings_store.dart';
 
 class GoalCalculator {
   GoalCalculator._();
@@ -83,6 +84,10 @@ class GoalCalculator {
   // ---- steps goal ------------------------------------------------------
 
   static int stepsGoal() {
+    try {
+      final o = SettingsStore.stepsGoalOverride;
+      if (o != null) return o;
+    } catch (_) {}
     if (!isProfileComplete) return standardStepsGoal;
 
     const bases = [4000, 5500, 7500, 9500, 11000];
@@ -152,6 +157,10 @@ class GoalCalculator {
   static double kcalPerStep() => caloriesForSteps(1);
 
   static double caloriesGoal() {
+    try {
+      final o = SettingsStore.caloriesGoalOverride;
+      if (o != null) return o;
+    } catch (_) {}
     final steps = stepsGoal();
     final mins = activeMinutesGoal();
     final fromProfile = caloriesForSteps(steps, activeMinutes: mins);
@@ -192,6 +201,10 @@ class GoalCalculator {
   }
 
   static int activeMinutesGoal() {
+    try {
+      final o = SettingsStore.activeMinutesGoalOverride;
+      if (o != null) return o;
+    } catch (_) {}
     if (!isProfileComplete) return standardActiveMinutesGoal;
 
     const dailyWalkingMinutes = [15, 20, 30, 40, 45];

@@ -1,6 +1,7 @@
 // lib/setting/storage/steps_store.dart
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:helsa/setting/storage/secure_hive.dart';
+import 'package:helsa/setting/storage/settings_store.dart';
 
 class StepsStore {
   StepsStore._();
@@ -21,9 +22,16 @@ class StepsStore {
 
   static String _todayKey() {
     final now = DateTime.now();
-    return '${now.year.toString().padLeft(4, '0')}-'
-        '${now.month.toString().padLeft(2, '0')}-'
-        '${now.day.toString().padLeft(2, '0')}';
+    var day = now;
+    try {
+      final resetH = SettingsStore.dayResetHour;
+      if (resetH > 0 && now.hour < resetH) {
+        day = now.subtract(const Duration(days: 1));
+      }
+    } catch (_) {}
+    return '${day.year.toString().padLeft(4, '0')}-'
+        '${day.month.toString().padLeft(2, '0')}-'
+        '${day.day.toString().padLeft(2, '0')}';
   }
 
   /// Ensures daily values belong to the current local calendar day.

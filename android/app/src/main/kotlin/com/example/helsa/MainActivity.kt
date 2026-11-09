@@ -4,6 +4,9 @@ import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Intent
+import android.net.Uri
+import android.os.Handler
+import android.os.Looper
 import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
@@ -62,11 +65,11 @@ class MainActivity : FlutterActivity() {
     private fun setLauncherIcon(assetName: String): Boolean {
         val key = assetName
             .removePrefix("helsa_icon_")
+            .removePrefix("ic_launcher_")
             .lowercase()
             .trim()
 
-        // Fully-qualified activity-alias names (must match AndroidManifest)
-        val aliases = mapOf(
+        val aliases = linkedMapOf(
             "mint" to "com.example.helsa.IconMint",
             "ocean" to "com.example.helsa.IconOcean",
             "forest" to "com.example.helsa.IconForest",
@@ -75,28 +78,85 @@ class MainActivity : FlutterActivity() {
             "slate" to "com.example.helsa.IconSlate",
         )
         val target = aliases[key] ?: aliases["mint"]!!
-        val pm = packageManager
+        val pm = applicationContext.packageManager
+        val pkg = applicationContext.packageName
 
         return try {
+            // 1) Disable every alias (HyperOS rejects dual LAUNCHER).
             for ((_, fqName) in aliases) {
-                val component = ComponentName(packageName, fqName)
-                val enable = fqName == target
-                val state = if (enable) {
-                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED
-                } else {
-                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED
-                }
                 pm.setComponentEnabledSetting(
-                    component,
-                    state,
+                    ComponentName(pkg, fqName),
+                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
                     PackageManager.DONT_KILL_APP,
                 )
-                Log.d(TAG, "alias $fqName -> ${if (enable) "ENABLED" else "disabled"}")
             }
-            true
+            // 2) Enable target
+            val enableComponent = ComponentName(pkg, target)
+            pm.setComponentEnabledSetting(
+                enableComponent,
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                PackageManager.DONT_KILL_APP,
+            )
+
+            // 3) Nudge launchers (stock + MIUI/HyperOS) to drop icon cache ASAP
+            nudgeLauncherRefresh(pkg, enableComponent)
+
+            // 4) Second pulse a moment later — HyperOS often applies on the second toggle
+            Handler(Looper.getMainLooper()).postDelayed({
+                try {
+                    pm.setComponentEnabledSetting(
+                        enableComponent,
+                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                        PackageManager.DONT_KILL_APP,
+                    )
+                    pm.setComponentEnabledSetting(
+                        enableComponent,
+                        PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                        PackageManager.DONT_KILL_APP,
+                    )
+                    nudgeLauncherRefresh(pkg, enableComponent)
+                    Log.d(TAG, "setLauncherIcon pulse2 done target=$target")
+                } catch (e: Exception) {
+                    Log.w(TAG, "setLauncherIcon pulse2 failed", e)
+                }
+            }, 120)
+
+            val state = pm.getComponentEnabledSetting(enableComponent)
+            val ok = state == PackageManager.COMPONENT_ENABLED_STATE_ENABLED ||
+                state == PackageManager.COMPONENT_ENABLED_STATE_DEFAULT
+            Log.d(TAG, "setLauncherIcon key=$key target=$target state=$state ok=$ok")
+            ok
         } catch (e: Exception) {
             Log.e(TAG, "setLauncherIcon failed for $assetName", e)
             false
+        }
+    }
+
+    /** Best-effort launcher cache bust — no-op if OEM ignores it. */
+    private fun nudgeLauncherRefresh(pkg: String, enabled: ComponentName) {
+        try {
+            val changed = Intent(Intent.ACTION_PACKAGE_CHANGED).apply {
+                data = Uri.parse("package:$pkg")
+                putExtra(Intent.EXTRA_UID, applicationInfo.uid)
+                putExtra(
+                    Intent.EXTRA_CHANGED_COMPONENT_NAME_LIST,
+                    arrayOf(enabled.className),
+                )
+            }
+            sendBroadcast(changed)
+        } catch (e: Exception) {
+            Log.w(TAG, "PACKAGE_CHANGED broadcast failed", e)
+        }
+        // MIUI / HyperOS home (undocumented; safe if missing)
+        for (action in listOf(
+            "com.miui.home.action.REFRESH",
+            "com.miui.launcher.action.REFRESH",
+            "com.miui.home.ACTION_LIVE_ICON_UPDATE",
+        )) {
+            try {
+                sendBroadcast(Intent(action))
+            } catch (_: Exception) {
+            }
         }
     }
 

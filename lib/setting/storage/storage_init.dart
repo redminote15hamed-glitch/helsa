@@ -6,6 +6,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:helsa/setting/storage/secure_hive.dart';
 import 'package:helsa/setting/storage/meta_store.dart';
+import 'package:helsa/setting/storage/settings_store.dart';
 import 'package:helsa/setting/storage/identity_store.dart';
 import 'package:helsa/setting/storage/gender_store.dart';
 import 'package:helsa/setting/storage/age_store.dart';
@@ -27,6 +28,7 @@ class StorageInit {
     await SecureHive.ensureReady();
     await Future.wait([
       MetaStore.open(),
+      SettingsStore.open(),
       IdentityStore.open(),
       GenderStore.open(),
       AgeStore.open(),
@@ -82,6 +84,7 @@ class StorageInit {
     } catch (_) {}
 
     await MetaStore.clear();
+    try { await SettingsStore.clear(); } catch (_) {}
     await IdentityStore.clear();
     await GenderStore.clear();
     await AgeStore.clear();

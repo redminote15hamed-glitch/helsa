@@ -6,6 +6,7 @@ import 'package:pedometer/pedometer.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:helsa/setting/storage/steps_store.dart';
 import 'package:helsa/home/services/goal_calculator.dart';
+import 'package:helsa/setting/storage/settings_store.dart';
 
 class StepTracker extends ChangeNotifier {
   StepTracker._();
@@ -211,10 +212,8 @@ class StepTracker extends ChangeNotifier {
   }
 
   String _localDayKey() {
-    final now = DateTime.now();
-    return '${now.year.toString().padLeft(4, '0')}-'
-        '${now.month.toString().padLeft(2, '0')}-'
-        '${now.day.toString().padLeft(2, '0')}';
+    // Same rule as StepsStore (respects SettingsStore.dayResetHour).
+    return StepsStore.currentDayKey;
   }
 
   void _syncCalendarDay() {

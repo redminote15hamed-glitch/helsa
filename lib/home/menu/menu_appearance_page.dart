@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -134,6 +135,11 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
         await ThemeStore.save();
         await LauncherIconService.applyForPalette(_paletteId);
       } catch (_) {}
+    } else if (_paletteId != _savedPaletteId) {
+      // Revert optimistic launcher icon change
+      try {
+        await LauncherIconService.applyForPalette(_savedPaletteId);
+      } catch (_) {}
     }
     if (!mounted) return;
 
@@ -189,6 +195,8 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
     await _cardCtrl.reverse();
     if (!mounted) return;
     setState(() => _paletteId = p.id);
+    // Apply launcher icon immediately so home screen updates without waiting for Apply.
+    unawaited(LauncherIconService.applyForPalette(p.id));
     await Future.wait([
       _rotateTo(index),
       _cardCtrl.forward(),

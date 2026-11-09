@@ -384,7 +384,12 @@ class _PrivacyDeleteSheetState extends State<PrivacyDeleteSheet> {
         template: SnackbarTemplate.neutral,
         duration: const Duration(seconds: 3),
       );
-      if (mounted) await _dismissSheet();
+      // Keep sheet open for single-section deletes; close only after full wipe.
+      if (kind == PrivacyDeleteKind.allApp) {
+        if (mounted) await _dismissSheet();
+      } else if (mounted) {
+        setState(() => _busy = false);
+      }
     } catch (_) {
       if (!mounted) return;
       setState(() => _busy = false);

@@ -50,6 +50,7 @@ class _PermissionsScreenState extends State<PermissionsScreen>
         'start': 'شروع',
         'done': 'انجام شد',
         'battery_warn': 'بدون این، شمارش قدم در پس‌زمینه ممکن است قطع شود.',
+        'battery_tip': 'در تنظیمات باتری، برای این اپ گزینه «بدون محدودیت» را بزنید.',
       },
       'en': {
         'title': 'Permissions',
@@ -68,6 +69,7 @@ class _PermissionsScreenState extends State<PermissionsScreen>
         'start': 'Start',
         'done': 'Done',
         'battery_warn': 'Without this, step counting may stop in the background.',
+        'battery_tip': 'In battery settings, set this app to “No restrictions”.',
       },
       'fr': {
         'title': 'Autorisations',
@@ -309,6 +311,34 @@ class _PermissionsScreenState extends State<PermissionsScreen>
                         ],
                       ),
               ),
+              if (!_battery) ...[
+                SizedBox(height: context.vX2s),
+                Container(
+                  padding: EdgeInsets.all(context.s),
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: accent.withValues(alpha: 0.28)),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.battery_alert_rounded, color: accent, size: 22),
+                      SizedBox(width: context.hXs),
+                      Expanded(
+                        child: Text(
+                          _t('battery_tip'),
+                          style: TextStyle(
+                            fontSize: context.s,
+                            height: 1.35,
+                            color: cs.onSurface.withValues(alpha: 0.85),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               SizedBox(height: context.vS),
               FilledButton(
                 onPressed: _canStart ? _onStart : null,
