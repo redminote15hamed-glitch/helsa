@@ -1,3 +1,4 @@
+import 'dart:async';
 // lib/home/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:helsa/home/widgets/apple_activity_card.dart';
@@ -10,6 +11,7 @@ import 'package:helsa/home/services/step_tracker.dart';
 import 'package:helsa/home/services/walking_notification.dart';
 import 'package:helsa/home/services/health_permissions.dart';
 import 'package:helsa/home/services/step_foreground.dart';
+import 'package:helsa/setting/backup/backup_auto_sync.dart';
 import 'package:helsa/home/home_screen_widget/home_widget_bridge.dart';
 import 'package:helsa/home/services/daily_recap.dart';
 import 'package:helsa/home/home_text.dart';
@@ -74,6 +76,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      unawaited(BackupAutoSync.instance.maybeRunEndOfDay());
       WalkingNotification.instance.onAppResumed();
       StepForeground.instance.ensureRunning();
     }

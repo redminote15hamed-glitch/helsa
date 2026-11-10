@@ -12,6 +12,7 @@ import 'package:helsa/setting/responsive/responsive_utils.dart';
 import 'package:helsa/setting/storage/activity_store.dart';
 import 'package:helsa/setting/storage/age_store.dart';
 import 'package:helsa/setting/storage/body_store.dart';
+import 'package:helsa/setting/units/unit_system.dart';
 import 'package:helsa/setting/storage/diet_store.dart';
 import 'package:helsa/setting/storage/gender_store.dart';
 import 'package:helsa/setting/storage/identity_store.dart';
@@ -244,9 +245,9 @@ class _ProfileEditorState extends State<_ProfileEditor> {
     _sLast = IdentityStore.lastName;
     _sGender = GenderStore.gender;
     _sAge = AgeStore.age?.toString() ?? '';
-    _sHeight = BodyStore.height?.toString() ?? '';
-    _sWeight = BodyStore.weight?.toString() ?? '';
-    _sWaist = BodyStore.waist?.toString() ?? '';
+    _sHeight = UnitSystem.formatHeight(BodyStore.height);
+    _sWeight = UnitSystem.formatWeight(BodyStore.weight);
+    _sWaist = UnitSystem.formatLength(BodyStore.waist);
     _sActivity = ActivityStore.activityLevel;
     _sDiet = DietStore.diet;
     _sRestrictions = List<int>.from(RestrictionStore.list);
@@ -330,12 +331,10 @@ class _ProfileEditorState extends State<_ProfileEditor> {
       if (age > 100) age = 100;
     }
 
-    double? height = double.tryParse(_height.text.trim().replaceAll(',', '.'));
-    double? weight = double.tryParse(_weight.text.trim().replaceAll(',', '.'));
-    double? waist = double.tryParse(_waist.text.trim().replaceAll(',', '.'));
-    if (height != null && height < 50) height = null; // reject nonsense cm
-    if (weight != null && weight < 20) weight = null;
-    if (waist != null && waist < 30) waist = null;
+    // Input is in the user's current unit system; store always metric.
+    final double? height = UnitSystem.parseHeightToCm(_height.text);
+    final double? weight = UnitSystem.parseWeightToKg(_weight.text);
+    final double? waist = UnitSystem.parseWaistToCm(_waist.text);
 
     await IdentityStore.save(
       firstName: _first.text,
@@ -366,9 +365,12 @@ class _ProfileEditorState extends State<_ProfileEditor> {
       _sFirst = _first.text.trim();
       _sLast = _last.text.trim();
       _sAge = age?.toString() ?? '';
-      _sHeight = height?.toString() ?? '';
-      _sWeight = weight?.toString() ?? '';
-      _sWaist = waist?.toString() ?? '';
+      _sHeight = UnitSystem.formatHeight(height);
+      _sWeight = UnitSystem.formatWeight(weight);
+      _sWaist = UnitSystem.formatLength(waist);
+      _height.text = _sHeight;
+      _weight.text = _sWeight;
+      _waist.text = _sWaist;
       _sGender = _gender;
       _sActivity = _activity;
       _sDiet = _diet;
@@ -595,8 +597,12 @@ class _ProfileEditorState extends State<_ProfileEditor> {
                     Expanded(
                       child: _labeledField(
                         c: _height,
-                        labelKey: 'profile_height',
-                        helperKey: 'profile_height_helper',
+                        labelKey: UnitSystem.isImperial
+                            ? 'profile_height_imperial'
+                            : 'profile_height',
+                        helperKey: UnitSystem.isImperial
+                            ? 'profile_height_helper_imperial'
+                            : 'profile_height_helper',
                         keyboard: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
@@ -606,8 +612,12 @@ class _ProfileEditorState extends State<_ProfileEditor> {
                     Expanded(
                       child: _labeledField(
                         c: _weight,
-                        labelKey: 'profile_weight',
-                        helperKey: 'profile_weight_helper',
+                        labelKey: UnitSystem.isImperial
+                            ? 'profile_weight_imperial'
+                            : 'profile_weight',
+                        helperKey: UnitSystem.isImperial
+                            ? 'profile_weight_helper_imperial'
+                            : 'profile_weight_helper',
                         keyboard: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
@@ -618,8 +628,12 @@ class _ProfileEditorState extends State<_ProfileEditor> {
                 SizedBox(height: context.vX2s),
                 _labeledField(
                   c: _waist,
-                  labelKey: 'profile_waist',
-                  helperKey: 'profile_waist_helper',
+                  labelKey: UnitSystem.isImperial
+                      ? 'profile_waist_imperial'
+                      : 'profile_waist',
+                  helperKey: UnitSystem.isImperial
+                      ? 'profile_waist_helper_imperial'
+                      : 'profile_waist_helper',
                   keyboard: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),

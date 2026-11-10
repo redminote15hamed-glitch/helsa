@@ -6,7 +6,6 @@ import 'package:pedometer/pedometer.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:helsa/setting/storage/steps_store.dart';
 import 'package:helsa/home/services/goal_calculator.dart';
-import 'package:helsa/setting/storage/settings_store.dart';
 
 class StepTracker extends ChangeNotifier {
   StepTracker._();

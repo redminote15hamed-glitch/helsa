@@ -25,6 +25,14 @@ dependencies:
   path_provider: ^2.1.5
   flutter_secure_storage: ^11.2.0
 
+  # Backup (local encrypted + optional Google Drive)
+  crypto: ^3.0.8
+  encrypt: ^5.0.3
+  google_sign_in: ^6.3.0
+  googleapis: ^18.0.0
+  extension_google_sign_in_as_googleapis_auth: ^2.0.13
+  http: ^1.6.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

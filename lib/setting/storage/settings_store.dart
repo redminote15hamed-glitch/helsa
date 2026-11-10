@@ -154,5 +154,118 @@ class SettingsStore {
     _bump();
   }
 
+  // ── Motion ──
+  /// Stored as: calm | medium | fast  (default medium)
+  static String get animationSpeedKey {
+    final raw = (_b.get('animationSpeed')?.toString() ?? 'medium').toLowerCase();
+    if (raw == 'calm' || raw == 'slow') return 'calm';
+    if (raw == 'fast') return 'fast';
+    return 'medium';
+  }
+
+  static Future<void> setAnimationSpeedKey(String key) async {
+    final k = key.toLowerCase();
+    final normalized =
+        (k == 'calm' || k == 'slow') ? 'calm' : (k == 'fast' ? 'fast' : 'medium');
+    await _b.put('animationSpeed', normalized);
+    _bump();
+  }
+
+  /// Simplified motion: fade instead of multi-phase expand, no liquid wave, etc.
+  static bool get simpleMotion {
+    return _b.get('simpleMotion', defaultValue: false) == true;
+  }
+
+  static Future<void> setSimpleMotion(bool value) async {
+    await _b.put('simpleMotion', value);
+    _bump();
+  }
+
+  // ── Units: metric (cm/kg) | imperial (in/lb) ──
+  /// Always store body metrics in metric; this only affects display & input.
+  static String get unitsKey {
+    final raw = (_b.get('units')?.toString() ?? 'metric').toLowerCase();
+    return raw == 'imperial' ? 'imperial' : 'metric';
+  }
+
+  static Future<void> setUnitsKey(String key) async {
+    final k = key.toLowerCase() == 'imperial' ? 'imperial' : 'metric';
+    await _b.put('units', k);
+    _bump();
+  }
+
+  // ── Backup metadata ──
+  static String? get lastBackupAt {
+    final v = _b.get('lastBackupAt')?.toString();
+    if (v == null || v.isEmpty) return null;
+    return v;
+  }
+
+  static Future<void> setLastBackupAt(String? iso) async {
+    if (iso == null || iso.isEmpty) {
+      await _b.delete('lastBackupAt');
+    } else {
+      await _b.put('lastBackupAt', iso);
+    }
+    _bump();
+  }
+
+  static String? get googleBackupEmail {
+    final v = _b.get('googleBackupEmail')?.toString();
+    if (v == null || v.isEmpty) return null;
+    return v;
+  }
+
+  static Future<void> setGoogleBackupEmail(String? email) async {
+    if (email == null || email.isEmpty) {
+      await _b.delete('googleBackupEmail');
+    } else {
+      await _b.put('googleBackupEmail', email);
+    }
+    _bump();
+  }
+
+  /// Preferred Gmail typed by user (hint for Google account picker).
+  static String? get preferredGoogleEmail {
+    final v = _b.get('preferredGoogleEmail')?.toString();
+    if (v == null || v.isEmpty) return null;
+    return v;
+  }
+
+  static Future<void> setPreferredGoogleEmail(String? email) async {
+    if (email == null || email.trim().isEmpty) {
+      await _b.delete('preferredGoogleEmail');
+    } else {
+      await _b.put('preferredGoogleEmail', email.trim().toLowerCase());
+    }
+    _bump();
+  }
+
+  /// When true, encrypted Drive backup runs once per day after day rollover.
+  static bool get autoSyncEnabled {
+    return _b.get('autoSyncEnabled', defaultValue: false) == true;
+  }
+
+  static Future<void> setAutoSyncEnabled(bool value) async {
+    await _b.put('autoSyncEnabled', value);
+    _bump();
+  }
+
+  /// Local calendar day key of last successful auto-sync.
+  static String? get lastAutoSyncDayKey {
+    final v = _b.get('lastAutoSyncDayKey')?.toString();
+    if (v == null || v.isEmpty) return null;
+    return v;
+  }
+
+  static Future<void> setLastAutoSyncDayKey(String? key) async {
+    if (key == null || key.isEmpty) {
+      await _b.delete('lastAutoSyncDayKey');
+    } else {
+      await _b.put('lastAutoSyncDayKey', key);
+    }
+    _bump();
+  }
+
   static Future<void> clear() => _b.clear();
 }
