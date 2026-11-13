@@ -1,5 +1,5 @@
 // lib/setting/color/theme_palette.dart
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// One Helsa color identity with dedicated day + night schemes.
 class HelsaPalette {

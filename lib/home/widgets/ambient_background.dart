@@ -2,7 +2,7 @@
 // Sky follows APP theme brightness first. Time-of-day only tints within that mode.
 // Never force dark home + light drawer (or the reverse).
 import 'dart:math' as math;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 enum _SkyPhase { morning, noon, evening, night }

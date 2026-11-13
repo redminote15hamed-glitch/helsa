@@ -1,6 +1,6 @@
 // lib/home/widgets/walk_aura.dart
 // حلقه‌های نورانی دور سیب قدم — با هر قدم منبسط و محو می‌شوند
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class WalkAura extends StatefulWidget {
   final int steps;

@@ -1,8 +1,7 @@
-import 'package:flutter/foundation.dart';
 // lib/setting/storage/theme_store.dart
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:helsa/setting/storage/secure_hive.dart';
 import 'package:helsa/setting/color/theme_palette.dart';

@@ -1,5 +1,5 @@
 // lib/startup/setup/widget/setup_progress.dart
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
 
 class SetupProgress extends StatelessWidget {

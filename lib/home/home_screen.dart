@@ -1,6 +1,6 @@
 import 'dart:async';
 // lib/home/home_screen.dart
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:helsa/home/widgets/apple_activity_card.dart';
 import 'package:helsa/home/menu/home_menu_button.dart';
 import 'package:helsa/home/widgets/streak_badge.dart';

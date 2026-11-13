@@ -1,5 +1,5 @@
 // lib/startup/setup/widget/restriction_setup.dart
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:helsa/setting/kit/pageviewer.dart';
 
 /// Food restrictions — uses shared [PageViewer].

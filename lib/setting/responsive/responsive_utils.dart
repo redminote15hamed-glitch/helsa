@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:helsa/setting/responsive/deviceconfig.dart'; // مطمئن شوید این مسیر درست وارد شده باشد
 
 extension ResponsiveContext on BuildContext {

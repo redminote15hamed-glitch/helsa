@@ -1,5 +1,5 @@
 // lib/home/menu/menu_coming_soon_page.dart
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:helsa/home/home_text.dart';
 import 'package:helsa/home/menu/menu_expand_host.dart';
 

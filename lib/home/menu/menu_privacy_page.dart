@@ -1,6 +1,6 @@
 // lib/home/menu/menu_privacy_page.dart
 // Privacy shell — policy body + open delete sheet.
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:helsa/home/home_text.dart';
 import 'package:helsa/home/menu/menu_expand_host.dart';
 import 'package:helsa/home/menu/privacy_delete_sheet.dart';

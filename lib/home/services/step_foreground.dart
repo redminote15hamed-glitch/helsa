@@ -6,7 +6,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart' show Colors;
+import 'package:material_ui/material_ui.dart' show Colors;
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:helsa/home/home_screen_widget/home_widget_bridge.dart';

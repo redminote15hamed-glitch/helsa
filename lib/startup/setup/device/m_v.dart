@@ -1,5 +1,5 @@
 // lib/startup/setup/device/m_v.dart
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
 import 'package:helsa/startup/setup/widget/setup_header.dart';
 import 'package:helsa/startup/setup/widget/title_setup.dart';

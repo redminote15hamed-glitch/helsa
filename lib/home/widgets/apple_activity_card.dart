@@ -1,6 +1,6 @@
 // lib/home/widgets/apple_activity_card.dart
 import 'dart:math' as math;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
 import 'package:helsa/setting/color/metric_colors.dart';

@@ -3,7 +3,7 @@
 // Close reverses the path. Drawer stays open.
 import 'dart:async';
 import 'dart:math' as math;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class MenuExpandHost {
   MenuExpandHost._();

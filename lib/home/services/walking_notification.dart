@@ -21,11 +21,11 @@ class WalkingNotification {
     try {
       const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
       await _plugin.initialize(
-        const InitializationSettings(android: androidInit),
+        settings: const InitializationSettings(android: androidInit),
       );
-      await _plugin.cancel(_oldNotifId);
+      await _plugin.cancel(id: _oldNotifId);
       // هر id قدیمی دیگر
-      await _plugin.cancel(4201);
+      await _plugin.cancel(id: 4201);
     } catch (_) {}
   }
 
@@ -39,7 +39,7 @@ class WalkingNotification {
 
   Future<void> cancel() async {
     try {
-      await _plugin.cancel(_oldNotifId);
+      await _plugin.cancel(id: _oldNotifId);
     } catch (_) {}
   }
 }

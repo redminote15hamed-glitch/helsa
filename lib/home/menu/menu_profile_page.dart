@@ -1,7 +1,7 @@
 // lib/home/menu/menu_profile_page.dart
 // Profile editor: Genie in/out, full scroll, no section overlap, keyboard-safe.
 import 'dart:async';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:helsa/home/menu/menu_expand_host.dart';
 import 'package:flutter/services.dart';
 import 'package:helsa/home/home_text.dart';

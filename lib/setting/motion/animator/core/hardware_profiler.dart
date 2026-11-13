@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:disk_space_plus/disk_space_plus.dart';
 import 'speeds.dart';

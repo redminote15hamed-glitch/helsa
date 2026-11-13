@@ -1,7 +1,7 @@
 // lib/home/widgets/metric_icon_pulse.dart
 // انیمیشن طبیعی و هماهنگ با هر آیکون — با هر تغییر مقدار
 import 'dart:math' as math;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 enum MetricIconStyle { steps, calories, active }
 

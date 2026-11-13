@@ -2,7 +2,7 @@
 // Hamburger that opens the side menu overlay.
 // High-contrast icon on light & dark ambient skies.
 import 'dart:async';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:helsa/home/home_text.dart';
 import 'package:helsa/home/menu/home_menu_drawer.dart';
 import 'package:helsa/setting/storage/gender_store.dart';

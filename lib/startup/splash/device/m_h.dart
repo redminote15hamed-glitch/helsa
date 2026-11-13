@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:helsa/setting/responsive/workspace_area.dart';
 import 'package:helsa/startup/splash/widget/splash_object.dart';
 

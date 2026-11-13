@@ -1,5 +1,5 @@
 // lib/startup/setup/widget/favorite_food_setup.dart
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:helsa/setting/kit/pageviewer.dart';
 
 /// Favorite foods — hides items linked to selected restrictions.

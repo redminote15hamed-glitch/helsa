@@ -1,6 +1,6 @@
 // lib/home/services/daily_recap.dart
 // Previous-day recap dialog.
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:helsa/home/home_text.dart';
 import 'package:helsa/setting/kit/textfielder.dart';
 import 'package:helsa/setting/storage/steps_store.dart';

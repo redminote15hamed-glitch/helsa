@@ -1,5 +1,5 @@
 // lib/startup/intro/widget/title_intro.dart
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:helsa/setting/kit/iconer.dart';
 import 'package:helsa/setting/kit/textfielder.dart';
 import 'package:helsa/setting/motion/displayer.dart';

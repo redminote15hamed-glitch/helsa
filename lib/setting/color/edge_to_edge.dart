@@ -1,5 +1,5 @@
 // lib/setting/theme/edge_to_edge_wrapper.dart
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 class EdgeToEdgeWrapper extends StatelessWidget {

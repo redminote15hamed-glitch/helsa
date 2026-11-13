@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:helsa/setting/motion/transitioner.dart';
 import 'package:helsa/setting/responsive/device_modifier.dart';
 import 'package:helsa/startup/setup/setup.dart';

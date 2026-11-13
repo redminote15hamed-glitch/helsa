@@ -4,7 +4,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:helsa/home/services/step_tracker.dart';
 import 'package:helsa/home/home_text.dart';

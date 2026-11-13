@@ -1,5 +1,5 @@
 // lib/home/widgets/streak_badge.dart
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:helsa/home/home_text.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
 

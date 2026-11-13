@@ -2,7 +2,7 @@
 // Narrow side drawer — gradient header, grouped dock-style items, streak bar.
 import 'dart:math' as math;
 import 'dart:ui';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:helsa/setting/motion/motion_settings.dart';
 import 'package:helsa/home/home_text.dart';
 import 'package:helsa/home/menu/menu_streak_capsule.dart';

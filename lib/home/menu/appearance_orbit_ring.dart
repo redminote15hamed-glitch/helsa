@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:helsa/setting/color/theme_palette.dart';
 
 /// Dual-ring theme selector with heart burst open/close.

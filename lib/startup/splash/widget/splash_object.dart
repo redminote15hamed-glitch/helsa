@@ -1,5 +1,5 @@
 // lib/startup/splash/widget/splash_object.dart
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
 import 'package:helsa/setting/kit/textfielder.dart';
 import 'package:helsa/setting/kit/iconer.dart';

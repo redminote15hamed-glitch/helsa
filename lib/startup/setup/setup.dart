@@ -1,6 +1,6 @@
 // lib/startup/setup/setup.dart
 import 'dart:ui' show PlatformDispatcher;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:helsa/setting/responsive/device_modifier.dart';
 import 'package:helsa/setting/storage/profile_store.dart';
 import 'package:helsa/setting/storage/meta_store.dart';

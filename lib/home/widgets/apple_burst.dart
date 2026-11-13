@@ -1,7 +1,7 @@
 // lib/home/widgets/apple_burst.dart
 // هر بار که یک دور هدف کامل شود → انفجار + تشکیل دوباره
 import 'dart:math' as math;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 ({int cycles, double fill}) appleOverflow(num value, num goal) {
   if (goal <= 0) return (cycles: 0, fill: 0);

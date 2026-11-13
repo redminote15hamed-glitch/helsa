@@ -1,5 +1,7 @@
 // lib/setting/backup/google_drive_backup.dart
 // Optional Google Sign-In + encrypted backup in Drive App Data folder.
+// Migrated for google_sign_in 7.x + extension_google_sign_in_as_googleapis_auth 3.x
+
 
 import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -16,37 +18,58 @@ class GoogleDriveBackup {
     drive.DriveApi.driveAppdataScope,
   ];
 
-  GoogleSignIn _signIn = GoogleSignIn(scopes: _scopes);
+  final GoogleSignIn _signIn = GoogleSignIn.instance;
+  GoogleSignInAccount? _currentUser;
+  bool _initialized = false;
 
-  GoogleSignInAccount? get currentUser => _signIn.currentUser;
+  GoogleSignInAccount? get currentUser => _currentUser;
 
-  bool get isSignedIn => _signIn.currentUser != null;
+  bool get isSignedIn => _currentUser != null;
 
-  String? get email => _signIn.currentUser?.email;
+  String? get email => _currentUser?.email;
 
-  void _rebuildSignIn({String? emailHint}) {
-    _signIn = GoogleSignIn(scopes: _scopes);
-    // Note: google_sign_in uses hostedDomain / login hint via signInSilently
-    // on some platforms; we still pass preferred email into Settings.
-    if (emailHint != null && emailHint.isNotEmpty) {
-      // no-op constructor-wise on all platforms; email is stored for UX
-    }
+  Future<void> _ensureInitialized() async {
+    if (_initialized) return;
+    await _signIn.initialize();
+    _signIn.authenticationEvents.listen((event) {
+      switch (event) {
+        case GoogleSignInAuthenticationEventSignIn(:final user):
+          _currentUser = user;
+        case GoogleSignInAuthenticationEventSignOut():
+          _currentUser = null;
+      }
+    });
+    _initialized = true;
   }
 
   /// Standard Google account picker (Sign in with Google).
   Future<bool> signInWithGoogle() async {
     if (kIsWeb) return false;
     try {
-      _rebuildSignIn();
-      final existing = await _signIn.signInSilently();
-      if (existing != null) {
-        await _persistEmail(existing.email);
-        return true;
+      await _ensureInitialized();
+
+      final lightweight = _signIn.attemptLightweightAuthentication();
+      if (lightweight != null) {
+        final existing = await lightweight;
+        if (existing != null) {
+          _currentUser = existing;
+          await _persistEmail(existing.email);
+          return true;
+        }
       }
-      final account = await _signIn.signIn();
-      if (account == null) return false;
+
+      if (!_signIn.supportsAuthenticate()) {
+        return false;
+      }
+
+      final account = await _signIn.authenticate(scopeHint: _scopes);
+      _currentUser = account;
       await _persistEmail(account.email);
       return true;
+    } on GoogleSignInException catch (e, st) {
+      if (e.code == GoogleSignInExceptionCode.canceled) return false;
+      debugPrint('GoogleDriveBackup.signInWithGoogle: $e\n$st');
+      rethrow;
     } catch (e, st) {
       debugPrint('GoogleDriveBackup.signInWithGoogle: $e\n$st');
       rethrow;
@@ -64,19 +87,7 @@ class GoogleDriveBackup {
     try {
       await SettingsStore.open();
       await SettingsStore.setPreferredGoogleEmail(cleaned);
-      _rebuildSignIn(emailHint: cleaned);
-
-      // Try silent first (already signed-in same account).
-      final silent = await _signIn.signInSilently();
-      if (silent != null) {
-        await _persistEmail(silent.email);
-        return true;
-      }
-
-      final account = await _signIn.signIn();
-      if (account == null) return false;
-      await _persistEmail(account.email);
-      return true;
+      return await signInWithGoogle();
     } catch (e, st) {
       debugPrint('GoogleDriveBackup.signInWithEmail: $e\n$st');
       rethrow;
@@ -100,12 +111,14 @@ class GoogleDriveBackup {
   /// Log out / disconnect Google from this app.
   Future<void> logOut() async {
     try {
+      await _ensureInitialized();
       await _signIn.disconnect();
     } catch (_) {
       try {
         await _signIn.signOut();
       } catch (_) {}
     }
+    _currentUser = null;
     try {
       await SettingsStore.open();
       await SettingsStore.setGoogleBackupEmail(null);
@@ -113,15 +126,26 @@ class GoogleDriveBackup {
   }
 
   Future<drive.DriveApi> _api() async {
-    var account = _signIn.currentUser;
-    account ??= await _signIn.signInSilently();
+    await _ensureInitialized();
+
+    var account = _currentUser;
+    if (account == null) {
+      final lightweight = _signIn.attemptLightweightAuthentication();
+      if (lightweight != null) {
+        account = await lightweight;
+        _currentUser = account;
+      }
+    }
     if (account == null) {
       throw StateError('backup_not_signed_in');
     }
-    final httpClient = await _signIn.authenticatedClient();
-    if (httpClient == null) {
-      throw StateError('backup_not_signed_in');
-    }
+
+    var authorization =
+        await account.authorizationClient.authorizationForScopes(_scopes);
+    authorization ??=
+        await account.authorizationClient.authorizeScopes(_scopes);
+
+    final httpClient = authorization.authClient(scopes: _scopes);
     return drive.DriveApi(httpClient);
   }
 
@@ -160,7 +184,7 @@ class GoogleDriveBackup {
 
     await api.files.create(meta, uploadMedia: media);
     await BackupService.instance.markDriveBackupTime();
-    await _persistEmail(_signIn.currentUser?.email);
+    await _persistEmail(_currentUser?.email);
   }
 
   Future<Uint8List?> downloadLatest() async {
@@ -177,8 +201,14 @@ class GoogleDriveBackup {
     final id = files.first.id;
     if (id == null) return null;
 
-    final client = await _signIn.authenticatedClient();
-    if (client == null) throw StateError('backup_not_signed_in');
+    final account = _currentUser;
+    if (account == null) throw StateError('backup_not_signed_in');
+
+    var authorization =
+        await account.authorizationClient.authorizationForScopes(_scopes);
+    authorization ??=
+        await account.authorizationClient.authorizeScopes(_scopes);
+    final client = authorization.authClient(scopes: _scopes);
 
     final url = 'https://www.googleapis.com/drive/v3/files/$id?alt=media';
     final res = await client.get(Uri.parse(url));

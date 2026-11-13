@@ -1,5 +1,5 @@
 // lib/startup/setup/widget/skip_button.dart
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:helsa/setting/kit/textfielder.dart';
 import 'package:helsa/setting/motion/displayer.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';

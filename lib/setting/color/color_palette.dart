@@ -1,5 +1,5 @@
 // فایل: lib/setting/color/color_palette.dart
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class ColorPalette {
   // ═══════════════════════════════════════════════════════════
