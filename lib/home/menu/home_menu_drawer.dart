@@ -3,6 +3,7 @@
 import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:helsa/setting/motion/motion_settings.dart';
 import 'package:helsa/home/home_text.dart';
 import 'package:helsa/home/menu/menu_streak_capsule.dart';
 import 'package:helsa/home/menu/menu_support_sheet.dart';
@@ -14,6 +15,7 @@ import 'package:helsa/home/menu/menu_expand_host.dart';
 import 'package:helsa/home/menu/menu_appearance_page.dart';
 import 'package:helsa/home/menu/menu_privacy_page.dart';
 import 'package:helsa/home/menu/menu_settings_page.dart';
+import 'package:helsa/home/menu/menu_backup_page.dart';
 import 'package:helsa/setting/color/metric_colors.dart';
 import 'package:helsa/setting/kit/textfielder.dart';
 import 'package:helsa/setting/motion/animator/animator.dart';
@@ -31,7 +33,7 @@ class HomeMenuDrawerOverlay extends StatefulWidget {
   final VoidCallback onBarrierTap;
   final VoidCallback onExitDone;
 
-  static const String appVersion = '1.0.0+3';
+  static const String appVersion = '3.0.0beta';
 
   const HomeMenuDrawerOverlay({
     super.key,
@@ -62,7 +64,7 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
     _genderTitle = widget.genderTitle;
     _pulse = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
+      duration: MotionSettings.ms(900),
     );
   }
 
@@ -107,7 +109,7 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
   /// Avatar is floating → close drawer first so it is not covered.
   Future<void> _openAvatar() async {
     widget.onBarrierTap();
-    await Future<void>.delayed(const Duration(milliseconds: 320));
+    await Future<void>.delayed(MotionSettings.ms(320));
     if (!mounted) return;
     final theme = Theme.of(context);
     final changed = await MenuAvatarPicker.show(
@@ -165,7 +167,7 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
   /// Close the drawer first so the sheet is not covered by the open menu.
   Future<void> _openSupport(BuildContext rowCtx) async {
     widget.onBarrierTap(); // auto-close drawer (same as avatar / barrier)
-    await Future<void>.delayed(const Duration(milliseconds: 280));
+    await Future<void>.delayed(MotionSettings.ms(280));
     if (!mounted) return;
     await MenuSupportSheet.show(
       context,
@@ -185,6 +187,13 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
     return _openFromRow(
       rowCtx,
       builder: (ctx) => MenuSettingsPage(language: widget.language),
+    );
+  }
+
+  Future<void> _openBackup(BuildContext rowCtx) {
+    return _openFromRow(
+      rowCtx,
+      builder: (ctx) => MenuBackupPage(language: widget.language),
     );
   }
 
@@ -469,6 +478,22 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
                             isDark: isDark,
                             children: [
                               _DockItem(
+                                icon: Icons.cloud_outlined,
+                                label: HomeText.getString(
+                                    language, 'menu_backup'),
+                                language: language,
+                                tint: const Color(0xFF26A69A),
+                                pulse: _pulse,
+                                pulseKind: _PulseKind.none,
+                                onTap: (ctx) => _openBackup(ctx),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: context.vS),
+                          _GroupCard(
+                            isDark: isDark,
+                            children: [
+                              _DockItem(
                                 icon: Icons.support_agent_rounded,
                                 label: HomeText.getString(
                                     language, 'menu_support'),
@@ -480,6 +505,12 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
                                     : _PulseKind.none,
                                 onTap: _openSupport,
                               ),
+                            ],
+                          ),
+                          SizedBox(height: context.vS),
+                          _GroupCard(
+                            isDark: isDark,
+                            children: [
                               _DockItem(
                                 icon: Icons.privacy_tip_outlined,
                                 label: HomeText.getString(
@@ -519,17 +550,14 @@ class _HomeMenuDrawerOverlayState extends State<HomeMenuDrawerOverlay>
                         children: [
                           MenuStreakCapsule(language: language),
                           SizedBox(height: context.vX2s),
-                          TextFielder(
-                            text: HomeText.versionLabel(
-                              language,
-                              HomeMenuDrawerOverlay.appVersion,
-                            ),
-                            languageCode: language,
-                            template: TextTemplate.caption,
+                          Text(
+                            'helsa ${HomeMenuDrawerOverlay.appVersion}',
                             textAlign: TextAlign.center,
-                            customStyle: TextStyle(
+                            style: TextStyle(
                               color: cs.onSurface.withValues(alpha: 0.35),
-                              fontSize: context.s * 0.9,
+                              fontSize: context.s * 0.85,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.3,
                             ),
                           ),
                         ],

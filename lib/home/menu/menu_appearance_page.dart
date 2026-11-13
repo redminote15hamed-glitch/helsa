@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:helsa/setting/motion/motion_settings.dart';
 import 'package:helsa/home/home_text.dart';
 import 'package:helsa/home/menu/appearance_chrome.dart';
 import 'package:helsa/home/menu/appearance_theme_card.dart';
@@ -81,12 +82,19 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
     );
     _ringPulse = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 4800),
-    )..repeat();
+      duration: MotionSettings.ms(4800),
+    );
     _wave = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2400),
-    )..repeat();
+      duration: MotionSettings.ms(2400),
+    );
+    if (!MotionSettings.simple) {
+      _ringPulse.repeat();
+      _wave.repeat();
+    } else {
+      _ringPulse.value = 0;
+      _wave.value = 0;
+    }
     _orbitAngle = _angleForIndex(_selectedIndex);
 
     WidgetsBinding.instance.addPostFrameCallback((_) => _playOpen());
@@ -112,15 +120,21 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
     _busy = true;
     // Wait until MenuExpandHost two-phase expand is fully done (~1.3s),
     // THEN play heart → icons → theme card. Never start mid-expand.
-    await Future<void>.delayed(const Duration(milliseconds: 1380));
+    await Future<void>.delayed(MotionSettings.ms(MotionSettings.simple ? 120 : 1380));
     if (!mounted) return;
-    _burstCtrl.duration = const Duration(milliseconds: 980);
-    await _burstCtrl.forward(from: 0);
-    if (!mounted) return;
-    await Future<void>.delayed(const Duration(milliseconds: 80));
-    if (!mounted) return;
-    _cardCtrl.duration = const Duration(milliseconds: 420);
-    await _cardCtrl.forward(from: 0);
+    _burstCtrl.duration = MotionSettings.ms(MotionSettings.simple ? 200 : 980);
+    if (MotionSettings.simple) {
+      _burstCtrl.value = 1;
+      _cardCtrl.duration = MotionSettings.ms(220);
+      await _cardCtrl.forward(from: 0);
+    } else {
+      await _burstCtrl.forward(from: 0);
+      if (!mounted) return;
+      await Future<void>.delayed(MotionSettings.ms(80));
+      if (!mounted) return;
+      _cardCtrl.duration = MotionSettings.ms(420);
+      await _cardCtrl.forward(from: 0);
+    }
     if (!mounted) return;
     _busy = false;
   }
@@ -129,35 +143,34 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
     if (_busy) return;
     _busy = true;
     if (save) {
+      // Persist theme FIRST. Icon switch can kill the process on some OEMs —
+      // if it runs before Hive write, theme is lost and icon reverts on next open.
       ThemeStore.paletteId.value = _paletteId;
       ThemeStore.night.value = _night;
       try {
         await ThemeStore.save();
-        await LauncherIconService.applyForPalette(_paletteId);
-      } catch (_) {}
-    } else if (_paletteId != _savedPaletteId) {
-      // Revert optimistic launcher icon change
-      try {
-        await LauncherIconService.applyForPalette(_savedPaletteId);
-      } catch (_) {}
+      } catch (e, st) {
+        debugPrint('ThemeStore.save failed: $e\n$st');
+      }
     }
+    // Do not touch launcher icon until after close animation (see _saveAndClose).
     if (!mounted) return;
 
     // Card retreats first (quick)
-    _cardCtrl.duration = const Duration(milliseconds: 220);
+    _cardCtrl.duration = MotionSettings.ms(220);
     if (_cardCtrl.value > 0) {
       await _cardCtrl.reverse();
     }
     if (!mounted) return;
 
     // Short hold, then icons collapse into heart (faster than open)
-    await Future<void>.delayed(const Duration(milliseconds: 90));
+    await Future<void>.delayed(MotionSettings.ms(90));
     if (!mounted) return;
-    _burstCtrl.duration = const Duration(milliseconds: 420);
+    _burstCtrl.duration = MotionSettings.ms(420);
     await _burstCtrl.reverse();
     if (!mounted) return;
 
-    await Future<void>.delayed(const Duration(milliseconds: 40));
+    await Future<void>.delayed(MotionSettings.ms(40));
     if (!mounted) return;
     await MenuExpandScope.close(context);
   }
@@ -195,8 +208,8 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
     await _cardCtrl.reverse();
     if (!mounted) return;
     setState(() => _paletteId = p.id);
-    // Apply launcher icon immediately so home screen updates without waiting for Apply.
-    unawaited(LauncherIconService.applyForPalette(p.id));
+    // Icon applies only on Save — mid-select switch kills the process on many
+    // Android OEMs and leaves theme unsaved / icon out of sync.
     await Future.wait([
       _rotateTo(index),
       _cardCtrl.forward(),
@@ -206,7 +219,19 @@ class _MenuAppearancePageState extends State<MenuAppearancePage>
   }
 
   Future<void> _saveAndClose() async {
+    final paletteToApply = _paletteId;
+    final paletteChanged = _paletteId != _savedPaletteId;
     await _playCloseAndDismiss(save: true);
+    // After UI is gone + theme is on disk, switch icon safely.
+    if (paletteChanged) {
+      // Small delay so the expand host finishes removing the overlay.
+      await Future<void>.delayed(const Duration(milliseconds: 350));
+      try {
+        await LauncherIconService.applyForPalette(paletteToApply);
+      } catch (e, st) {
+        debugPrint('launcher icon after save: $e\n$st');
+      }
+    }
   }
 
   Future<void> _back() async {

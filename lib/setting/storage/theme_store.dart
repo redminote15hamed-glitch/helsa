@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 // lib/setting/storage/theme_store.dart
 import 'dart:async';
 
@@ -36,8 +37,11 @@ class ThemeStore {
     _savedPalette = paletteId.value;
     _savedNight = night.value;
     revision.value++;
-    // Sync launcher icon with saved palette (in case it was out of date).
-    unawaited(LauncherIconService.applyForPalette(paletteId.value));
+    // Defer icon sync — applying activity-alias during cold start can kill the
+    // process on some OEMs. Only runs if icon is already wrong.
+    Future<void>.delayed(const Duration(milliseconds: 800), () {
+      unawaited(LauncherIconService.applyForPalette(paletteId.value));
+    });
   }
 
   static Box<dynamic> get _b {
@@ -70,8 +74,8 @@ class ThemeStore {
     _savedPalette = paletteId.value;
     _savedNight = night.value;
     revision.value++;
-    // Icon switch immediately with theme apply
-    unawaited(LauncherIconService.applyForPalette(paletteId.value));
+    // Icon is applied by the appearance page *after* save + close.
+    // Avoid double-apply here (setComponentEnabledSetting is process-sensitive).
   }
 
   static void revert() {

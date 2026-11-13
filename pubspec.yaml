@@ -2,7 +2,7 @@ name: helsa
 description: "Helsa — on-device health companion for steps, activity and wellbeing."
 publish_to: 'none'
 
-version: 1.0.0+3
+version: 3.0.0-beta+1
 
 environment:
   sdk: ^3.5.0
@@ -26,12 +26,12 @@ dependencies:
   flutter_secure_storage: ^11.2.0
 
   # Backup (local encrypted + optional Google Drive)
-  crypto: ^3.0.8
+  crypto: ^3.0.6
   encrypt: ^5.0.3
-  google_sign_in: ^6.3.0
-  googleapis: ^18.0.0
-  extension_google_sign_in_as_googleapis_auth: ^2.0.13
-  http: ^1.6.0
+  google_sign_in: ^6.2.2
+  googleapis: ^14.0.0
+  extension_google_sign_in_as_googleapis_auth: ^2.0.12
+  http: ^1.2.2
 
 dev_dependencies:
   flutter_test:

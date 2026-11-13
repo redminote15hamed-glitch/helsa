@@ -1,4 +1,4 @@
-// ignore_for_file: curly_braces_in_flow_control_structures
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,9 +12,6 @@ import 'package:helsa/setting/kit/snackbarer.dart';
 import 'package:helsa/setting/responsive/responsive_utils.dart';
 import 'package:helsa/setting/storage/meta_store.dart';
 import 'package:helsa/setting/storage/settings_store.dart';
-import 'package:helsa/setting/backup/backup_service.dart';
-import 'package:helsa/setting/backup/google_drive_backup.dart';
-import 'package:helsa/setting/backup/backup_auto_sync.dart';
 
 /// Settings — categorized expandable groups (standard settings layout).
 class MenuSettingsPage extends StatefulWidget {
@@ -22,7 +19,7 @@ class MenuSettingsPage extends StatefulWidget {
 
   final String? language;
 
-  static const String appVersion = '1.0.0+3';
+  static const String appVersion = '3.0.0beta';
 
   @override
   State<MenuSettingsPage> createState() => _MenuSettingsPageState();
@@ -63,12 +60,6 @@ class _MenuSettingsPageState extends State<MenuSettingsPage> {
 
   late String _units;
   late String _savedUnits;
-
-  String? _googleEmail;
-  String? _lastBackupAt;
-  bool _backupBusy = false;
-  bool _autoSync = false;
-  final TextEditingController _emailCtrl = TextEditingController();
 
   // Which sections start expanded
   final Set<String> _open = {
@@ -147,15 +138,6 @@ class _MenuSettingsPageState extends State<MenuSettingsPage> {
     _animSpeed = _savedAnimSpeed;
     _simpleMotion = _savedSimpleMotion;
     _units = _savedUnits;
-    try {
-      _googleEmail = SettingsStore.googleBackupEmail;
-      _lastBackupAt = SettingsStore.lastBackupAt;
-      _autoSync = SettingsStore.autoSyncEnabled;
-      final pref = SettingsStore.preferredGoogleEmail;
-      if (pref != null) {
-        _emailCtrl.text = pref;
-      } else if (_googleEmail != null) _emailCtrl.text = _googleEmail!;
-    } catch (_) {}
   }
 
   bool get _dirty =>
@@ -181,17 +163,22 @@ class _MenuSettingsPageState extends State<MenuSettingsPage> {
 
   @override
   void dispose() {
-    _emailCtrl.dispose();
     super.dispose();
   }
 
   void _close() => MenuExpandScope.close(context);
 
-  Future<void> _maybeHaptic() async {
-    if (!_haptics) return;
+  Future<void> _maybeHaptic({bool force = false}) async {
+    if (!force && !_haptics) return;
     try {
-      await HapticFeedback.lightImpact();
-    } catch (_) {}
+      // selectionClick is the most reliable on modern Android; medium as fallback.
+      await HapticFeedback.selectionClick();
+      await HapticFeedback.mediumImpact();
+    } catch (_) {
+      try {
+        await HapticFeedback.vibrate();
+      } catch (_) {}
+    }
   }
 
   Future<void> _saveAndClose() async {
@@ -292,248 +279,8 @@ class _MenuSettingsPageState extends State<MenuSettingsPage> {
   }
 
 
-  Future<String?> _promptPassword({required String title, required String hint}) async {
-    final ctrl = TextEditingController();
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          title: Text(title),
-          content: TextField(
-            controller: ctrl,
-            obscureText: true,
-            autofocus: true,
-            decoration: InputDecoration(hintText: hint),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(_t('settings_cancel')),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(_t('settings_ok')),
-            ),
-          ],
-        );
-      },
-    );
-    final text = ctrl.text;
-    ctrl.dispose();
-    if (ok == true && text.trim().length >= 6) return text.trim();
-    if (ok == true) {
-      if (mounted) {
-        SnackBarer.show(
-          context,
-          message: _t('backup_weak_password'),
-          template: SnackbarTemplate.caution,
-        );
-      }
-      return null;
-    }
-    return null;
-  }
-
-  void _backupToast(String key, {bool error = false}) {
-    if (!mounted) return;
-    SnackBarer.show(
-      context,
-      message: _t(key),
-      template: error ? SnackbarTemplate.caution : SnackbarTemplate.neutral,
-      duration: const Duration(seconds: 3),
-    );
-  }
-
-  Future<void> _backupLocal() async {
-    if (_backupBusy) return;
-    final pass = await _promptPassword(
-      title: _t('backup_password_title'),
-      hint: _t('backup_password_hint'),
-    );
-    if (pass == null) return;
-    setState(() => _backupBusy = true);
-    try {
-      final path = await BackupService.instance.saveLocalEncrypted(pass);
-      try {
-        _lastBackupAt = SettingsStore.lastBackupAt;
-      } catch (_) {}
-      if (mounted) setState(() {});
-      _backupToast('backup_local_ok');
-      debugPrint('Local backup: $path');
-    } catch (e) {
-      debugPrint('local backup: $e');
-      _backupToast('backup_failed', error: true);
-    } finally {
-      if (mounted) setState(() => _backupBusy = false);
-    }
-  }
-
-  Future<void> _restoreLocal() async {
-    if (_backupBusy) return;
-    final files = await BackupService.instance.listLocalBackups();
-    if (files.isEmpty) {
-      _backupToast('backup_missing', error: true);
-      return;
-    }
-    final pass = await _promptPassword(
-      title: _t('backup_restore_password_title'),
-      hint: _t('backup_password_hint'),
-    );
-    if (pass == null) return;
-    setState(() => _backupBusy = true);
-    try {
-      await BackupService.instance.restoreLocalFile(files.first.path, pass);
-      _backupToast('backup_restore_ok');
-    } catch (e) {
-      debugPrint('restore local: $e');
-      final key = e.toString().contains('bad_password')
-          ? 'backup_bad_password'
-          : 'backup_failed';
-      _backupToast(key, error: true);
-    } finally {
-      if (mounted) setState(() => _backupBusy = false);
-    }
-  }
-
-  Future<void> _signInWithGoogle() async {
-    if (_backupBusy) return;
-    setState(() => _backupBusy = true);
-    try {
-      final ok = await GoogleDriveBackup.instance.signInWithGoogle();
-      if (!ok) {
-        _backupToast('backup_sign_in_cancelled', error: true);
-        return;
-      }
-      setState(() {
-        _googleEmail = GoogleDriveBackup.instance.email ??
-            SettingsStore.googleBackupEmail;
-        if (_googleEmail != null) _emailCtrl.text = _googleEmail!;
-      });
-      _backupToast('backup_sign_in_ok');
-    } catch (e) {
-      debugPrint('google sign-in: $e');
-      _backupToast('backup_sign_in_failed', error: true);
-    } finally {
-      if (mounted) setState(() => _backupBusy = false);
-    }
-  }
-
-  Future<void> _signInWithEmail() async {
-    if (_backupBusy) return;
-    setState(() => _backupBusy = true);
-    try {
-      final ok =
-          await GoogleDriveBackup.instance.signInWithEmail(_emailCtrl.text);
-      if (!ok) {
-        _backupToast('backup_sign_in_cancelled', error: true);
-        return;
-      }
-      setState(() {
-        _googleEmail = GoogleDriveBackup.instance.email ??
-            SettingsStore.googleBackupEmail;
-        if (_googleEmail != null) _emailCtrl.text = _googleEmail!;
-      });
-      _backupToast('backup_sign_in_ok');
-    } catch (e) {
-      debugPrint('email sign-in: $e');
-      final key = e.toString().contains('bad_email')
-          ? 'backup_bad_email'
-          : 'backup_sign_in_failed';
-      _backupToast(key, error: true);
-    } finally {
-      if (mounted) setState(() => _backupBusy = false);
-    }
-  }
-
-  Future<void> _logOut() async {
-    await GoogleDriveBackup.instance.logOut();
-    try {
-      await SettingsStore.setAutoSyncEnabled(false);
-      await BackupAutoSync.instance.clearPassword();
-    } catch (_) {}
-    if (mounted) {
-      setState(() {
-        _googleEmail = null;
-        _autoSync = false;
-      });
-    }
-    _backupToast('backup_sign_out_ok');
-  }
-
-  Future<void> _setAutoSync(bool on) async {
-    if (on) {
-      final pass = await _promptPassword(
-        title: _t('backup_password_title'),
-        hint: _t('backup_password_hint'),
-      );
-      if (pass == null) return;
-      await BackupAutoSync.instance.savePassword(pass);
-      await SettingsStore.setAutoSyncEnabled(true);
-      if (mounted) setState(() => _autoSync = true);
-      _backupToast('backup_auto_on_ok');
-    } else {
-      await SettingsStore.setAutoSyncEnabled(false);
-      // Keep stored password so user can re-enable without retyping; clear on logout only.
-      if (mounted) setState(() => _autoSync = false);
-      _backupToast('backup_auto_off_ok');
-    }
-  }
-
-  Future<void> _syncNow() async {
-    if (_backupBusy) return;
-    if (_googleEmail == null && !GoogleDriveBackup.instance.isSignedIn) {
-      _backupToast('backup_need_sign_in', error: true);
-      return;
-    }
-    final pass = await _promptPassword(
-      title: _t('backup_password_title'),
-      hint: _t('backup_password_hint'),
-    );
-    if (pass == null) return;
-    setState(() => _backupBusy = true);
-    try {
-      await BackupAutoSync.instance.syncNow(pass);
-      try {
-        _lastBackupAt = SettingsStore.lastBackupAt;
-      } catch (_) {}
-      if (mounted) setState(() {});
-      _backupToast('backup_drive_ok');
-    } catch (e) {
-      debugPrint('sync now: $e');
-      _backupToast('backup_failed', error: true);
-    } finally {
-      if (mounted) setState(() => _backupBusy = false);
-    }
-  }
-
-
-  Future<void> _restoreDrive() async {
-    if (_backupBusy) return;
-    if (_googleEmail == null && !GoogleDriveBackup.instance.isSignedIn) {
-      _backupToast('backup_need_sign_in', error: true);
-      return;
-    }
-    final pass = await _promptPassword(
-      title: _t('backup_restore_password_title'),
-      hint: _t('backup_password_hint'),
-    );
-    if (pass == null) return;
-    setState(() => _backupBusy = true);
-    try {
-      await GoogleDriveBackup.instance.restoreLatest(pass);
-      _backupToast('backup_restore_ok');
-    } catch (e) {
-      debugPrint('drive restore: $e');
-      final s = e.toString();
-      final key = s.contains('bad_password')
-          ? 'backup_bad_password'
-          : (s.contains('backup_missing') ? 'backup_missing' : 'backup_failed');
-      _backupToast(key, error: true);
-    } finally {
-      if (mounted) setState(() => _backupBusy = false);
-    }
-  }
-
+  /// Settings opens inside [MenuExpandHost] Overlay — normal dialogs render
+  /// *under* that layer. Insert the picker on the root overlay instead.
   Future<void> _editInt({
     required String title,
     required int value,
@@ -543,57 +290,120 @@ class _MenuSettingsPageState extends State<MenuSettingsPage> {
     required ValueChanged<int> onChanged,
   }) async {
     var draft = value;
-    final ok = await showDialog<bool>(
-      context: context,
+    final overlay = Overlay.of(context, rootOverlay: true);
+    final completer = Completer<bool>();
+    late OverlayEntry entry;
+    entry = OverlayEntry(
       builder: (ctx) {
-        return StatefulBuilder(
-          builder: (ctx, setLocal) {
-            return AlertDialog(
-              title: Text(title),
-              content: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    onPressed: draft - step >= min
-                        ? () => setLocal(
-                              () => draft = (draft - step).clamp(min, max),
-                            )
-                        : null,
-                    icon: const Icon(Icons.remove_circle_outline),
-                  ),
-                  Text(
-                    '$draft',
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: draft + step <= max
-                        ? () => setLocal(
-                              () => draft = (draft + step).clamp(min, max),
-                            )
-                        : null,
-                    icon: const Icon(Icons.add_circle_outline),
-                  ),
-                ],
+        final cs = Theme.of(context).colorScheme;
+        return Material(
+          color: Colors.black.withValues(alpha: 0.45),
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              if (!completer.isCompleted) completer.complete(false);
+            },
+            child: Center(
+              child: GestureDetector(
+                onTap: () {},
+                child: StatefulBuilder(
+                  builder: (ctx, setLocal) {
+                    return ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 320),
+                      child: Material(
+                        color: cs.surface,
+                        elevation: 8,
+                        borderRadius: BorderRadius.circular(20),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                title,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: context.m,
+                                  color: cs.onSurface,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  IconButton.filledTonal(
+                                    onPressed: draft - step >= min
+                                        ? () => setLocal(
+                                              () => draft =
+                                                  (draft - step).clamp(min, max),
+                                            )
+                                        : null,
+                                    icon: const Icon(Icons.remove_rounded),
+                                  ),
+                                  SizedBox(
+                                    width: 72,
+                                    child: Text(
+                                      step == 1 && max <= 23
+                                          ? '${draft.toString().padLeft(2, '0')}:00'
+                                          : '$draft',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 26,
+                                        fontWeight: FontWeight.w800,
+                                        color: cs.primary,
+                                      ),
+                                    ),
+                                  ),
+                                  IconButton.filledTonal(
+                                    onPressed: draft + step <= max
+                                        ? () => setLocal(
+                                              () => draft =
+                                                  (draft + step).clamp(min, max),
+                                            )
+                                        : null,
+                                    icon: const Icon(Icons.add_rounded),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  TextButton(
+                                    onPressed: () {
+                                      if (!completer.isCompleted) {
+                                        completer.complete(false);
+                                      }
+                                    },
+                                    child: Text(_t('settings_cancel')),
+                                  ),
+                                  FilledButton(
+                                    onPressed: () {
+                                      if (!completer.isCompleted) {
+                                        completer.complete(true);
+                                      }
+                                    },
+                                    child: Text(_t('settings_ok')),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: Text(_t('settings_cancel')),
-                ),
-                FilledButton(
-                  onPressed: () => Navigator.pop(ctx, true),
-                  child: Text(_t('settings_ok')),
-                ),
-              ],
-            );
-          },
+            ),
+          ),
         );
       },
     );
-    if (ok == true) {
+    overlay.insert(entry);
+    final ok = await completer.future;
+    entry.remove();
+    if (ok) {
       setState(() => onChanged(draft));
       await _maybeHaptic();
     }
@@ -627,12 +437,18 @@ class _MenuSettingsPageState extends State<MenuSettingsPage> {
                 }
               });
             },
-            leading: Icon(icon, color: cs.primary, size: 22),
+            tilePadding: EdgeInsets.symmetric(
+              horizontal: context.hS,
+              vertical: 0,
+            ),
+            visualDensity: const VisualDensity(horizontal: 0, vertical: -1),
+            leading: Icon(icon, color: cs.primary, size: 20),
             title: Text(
               _t(titleKey),
               style: TextStyle(
                 fontWeight: FontWeight.w700,
-                fontSize: context.m,
+                fontSize: context.m * 0.95,
+                height: 1.15,
                 color: cs.onSurface,
               ),
             ),
@@ -650,30 +466,51 @@ class _MenuSettingsPageState extends State<MenuSettingsPage> {
     required String labelPrefix,
     required ValueChanged<String> onSelect,
   }) {
+    final cs = Theme.of(context).colorScheme;
     return Padding(
-      padding: EdgeInsets.fromLTRB(context.hS, 0, context.hS, context.vS),
-      child: Row(
-        children: [
-          for (final key in keys)
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: ChoiceChip(
-                  selected: selected == key,
-                  label: Center(
-                    child: Text(
-                      _t("$labelPrefix$key"),
-                      style: TextStyle(
-                        fontSize: context.s * 0.92,
-                        fontWeight: FontWeight.w600,
+      padding: EdgeInsets.fromLTRB(context.hM, 0, context.hM, context.vS),
+      child: SizedBox(
+        height: 40,
+        width: double.infinity,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: cs.surfaceContainerHighest.withValues(alpha: 0.75),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              for (final key in keys)
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(3),
+                    child: Material(
+                      color: selected == key ? cs.primary : Colors.transparent,
+                      borderRadius: BorderRadius.circular(10),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(10),
+                        onTap: () => onSelect(key),
+                        child: Center(
+                          child: Text(
+                            _t('$labelPrefix$key'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: context.s * 0.88,
+                              fontWeight: FontWeight.w700,
+                              height: 1.1,
+                              color: selected == key
+                                  ? cs.onPrimary
+                                  : cs.onSurface.withValues(alpha: 0.65),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                  onSelected: (_) => onSelect(key),
                 ),
-              ),
-            ),
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -717,14 +554,16 @@ class _MenuSettingsPageState extends State<MenuSettingsPage> {
   TextStyle get _subStyle {
     final cs = Theme.of(context).colorScheme;
     return TextStyle(
-      fontSize: context.s * 0.9,
-      color: cs.onSurface.withValues(alpha: 0.55),
+      fontSize: context.s * 0.85,
+      height: 1.25,
+      color: cs.onSurface.withValues(alpha: 0.52),
     );
   }
 
   TextStyle get _titleStyle => TextStyle(
         fontWeight: FontWeight.w600,
-        fontSize: context.m * 0.95,
+        fontSize: context.m * 0.92,
+        height: 1.2,
       );
 
   @override
@@ -747,7 +586,25 @@ class _MenuSettingsPageState extends State<MenuSettingsPage> {
                 onSave: _dirty ? _saveAndClose : null,
               ),
               Expanded(
-                child: ListView(
+                child: Theme(
+                  data: Theme.of(context).copyWith(
+                    listTileTheme: ListTileThemeData(
+                      dense: true,
+                      visualDensity:
+                          const VisualDensity(horizontal: 0, vertical: -2),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: context.hM,
+                        vertical: 0,
+                      ),
+                      minVerticalPadding: 6,
+                      titleTextStyle: _titleStyle.copyWith(
+                        color: cs.onSurface,
+                      ),
+                      subtitleTextStyle: _subStyle,
+                    ),
+                    dividerColor: Colors.transparent,
+                  ),
+                  child: ListView(
                   padding: EdgeInsets.fromLTRB(
                     context.hM,
                     context.vX2s,
@@ -788,14 +645,11 @@ class _MenuSettingsPageState extends State<MenuSettingsPage> {
                               onTap: () {
                                 if (selected) return;
                                 setState(() => _previewLang = opt.code);
+                                _maybeHaptic();
                               },
                             ),
                           );
                         }),
-                        Divider(
-                          height: 1,
-                          color: cs.outlineVariant.withValues(alpha: 0.35),
-                        ),
                         Padding(
                           padding: EdgeInsets.fromLTRB(
                             context.hM,
@@ -848,6 +702,7 @@ class _MenuSettingsPageState extends State<MenuSettingsPage> {
                                     GoalCalculator.activeMinutesGoal();
                               }
                             });
+                            _maybeHaptic();
                           },
                           title: Text(
                             _t('settings_goals_auto'),
@@ -859,7 +714,6 @@ class _MenuSettingsPageState extends State<MenuSettingsPage> {
                           ),
                         ),
                         if (!_useAutoGoals) ...[
-                          const Divider(height: 1),
                           _goalTile(
                             label: _t('settings_goal_steps'),
                             value: '$_stepsGoal',
@@ -872,7 +726,6 @@ class _MenuSettingsPageState extends State<MenuSettingsPage> {
                               onChanged: (v) => _stepsGoal = v,
                             ),
                           ),
-                          const Divider(height: 1),
                           _goalTile(
                             label: _t('settings_goal_calories'),
                             value: '$_calGoal',
@@ -885,7 +738,6 @@ class _MenuSettingsPageState extends State<MenuSettingsPage> {
                               onChanged: (v) => _calGoal = v,
                             ),
                           ),
-                          const Divider(height: 1),
                           _goalTile(
                             label: _t('settings_goal_active'),
                             value: '$_activeGoal',
@@ -899,7 +751,6 @@ class _MenuSettingsPageState extends State<MenuSettingsPage> {
                             ),
                           ),
                         ],
-                        const Divider(height: 1),
                         _goalTile(
                           label: _t('settings_day_reset'),
                           value: _dayReset == 0
@@ -914,7 +765,6 @@ class _MenuSettingsPageState extends State<MenuSettingsPage> {
                             onChanged: (v) => _dayReset = v,
                           ),
                         ),
-                        const Divider(height: 1),
                         ListTile(
                           onTap: _resetGoalsToDefault,
                           leading: Icon(
@@ -941,7 +791,10 @@ class _MenuSettingsPageState extends State<MenuSettingsPage> {
                       children: [
                         SwitchListTile.adaptive(
                           value: _liveNotif,
-                          onChanged: (v) => setState(() => _liveNotif = v),
+                          onChanged: (v) {
+                            setState(() => _liveNotif = v);
+                            _maybeHaptic();
+                          },
                           title: Text(
                             _t('settings_notif_live'),
                             style: _titleStyle,
@@ -951,10 +804,12 @@ class _MenuSettingsPageState extends State<MenuSettingsPage> {
                             style: _subStyle,
                           ),
                         ),
-                        const Divider(height: 1),
                         SwitchListTile.adaptive(
                           value: _quietHours,
-                          onChanged: (v) => setState(() => _quietHours = v),
+                          onChanged: (v) {
+                            setState(() => _quietHours = v);
+                            _maybeHaptic();
+                          },
                           title: Text(
                             _t('settings_quiet_hours'),
                             style: _titleStyle,
@@ -965,7 +820,6 @@ class _MenuSettingsPageState extends State<MenuSettingsPage> {
                           ),
                         ),
                         if (_quietHours) ...[
-                          const Divider(height: 1),
                           _goalTile(
                             label: _t('settings_quiet_start'),
                             value:
@@ -979,7 +833,6 @@ class _MenuSettingsPageState extends State<MenuSettingsPage> {
                               onChanged: (v) => _quietStart = v,
                             ),
                           ),
-                          const Divider(height: 1),
                           _goalTile(
                             label: _t('settings_quiet_end'),
                             value: '${_quietEnd.toString().padLeft(2, '0')}:00',
@@ -1018,13 +871,18 @@ class _MenuSettingsPageState extends State<MenuSettingsPage> {
                           keys: const ['calm', 'medium', 'fast'],
                           selected: _animSpeed,
                           labelPrefix: 'settings_anim_',
-                          onSelect: (k) => setState(() => _animSpeed = k),
+                          onSelect: (k) {
+                            if (k == _animSpeed) return;
+                            setState(() => _animSpeed = k);
+                            _maybeHaptic();
+                          },
                         ),
-                        const Divider(height: 1),
                         SwitchListTile.adaptive(
                           value: _simpleMotion,
-                          onChanged: (v) =>
-                              setState(() => _simpleMotion = v),
+                          onChanged: (v) {
+                            setState(() => _simpleMotion = v);
+                            _maybeHaptic();
+                          },
                           title: Text(
                             _t('settings_simple_motion'),
                             style: _titleStyle,
@@ -1045,7 +903,11 @@ class _MenuSettingsPageState extends State<MenuSettingsPage> {
                       children: [
                         SwitchListTile.adaptive(
                           value: _haptics,
-                          onChanged: (v) => setState(() => _haptics = v),
+                          onChanged: (v) async {
+                            setState(() => _haptics = v);
+                            // Preview even when turning on from off.
+                            await _maybeHaptic(force: v);
+                          },
                           title: Text(
                             _t('settings_haptics'),
                             style: _titleStyle,
@@ -1058,167 +920,22 @@ class _MenuSettingsPageState extends State<MenuSettingsPage> {
                       ],
                     ),
 
-                    // ── Backup ──
-                    _group(
-                      id: 'backup',
-                      titleKey: 'settings_cat_backup',
-                      icon: Icons.cloud_outlined,
-                      children: [
-                        if (_backupBusy)
-                          const Padding(
-                            padding: EdgeInsets.all(16),
-                            child: Center(
-                              child: SizedBox(
-                                width: 28,
-                                height: 28,
-                                child: CircularProgressIndicator(strokeWidth: 2.5),
-                              ),
-                            ),
-                          ),
-                        ListTile(
-                          title: Text(_t('backup_status'), style: _titleStyle),
-                          subtitle: Text(
-                            _googleEmail != null
-                                ? _googleEmail!
-                                : _t('backup_status_local_only'),
-                            style: _subStyle,
+                    Padding(
+                      padding: EdgeInsets.only(top: context.vM, bottom: context.vS),
+                      child: Center(
+                        child: Text(
+                          'helsa ${MenuSettingsPage.appVersion}',
+                          style: TextStyle(
+                            fontSize: context.s * 0.85,
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 0.3,
+                            color: cs.onSurface.withValues(alpha: 0.38),
                           ),
                         ),
-                        if (_lastBackupAt != null) ...[
-                          const Divider(height: 1),
-                          ListTile(
-                            title: Text(_t('backup_last'), style: _titleStyle),
-                            subtitle: Text(_lastBackupAt!, style: _subStyle),
-                          ),
-                        ],
-                        const Divider(height: 1),
-                        // Sign in with email
-                        Padding(
-                          padding: EdgeInsets.fromLTRB(
-                            context.hM, context.vS, context.hM, context.vX2s,
-                          ),
-                          child: Text(_t('backup_sign_in_email'), style: _titleStyle),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.fromLTRB(
-                            context.hM, 0, context.hM, context.vX2s,
-                          ),
-                          child: TextField(
-                            controller: _emailCtrl,
-                            keyboardType: TextInputType.emailAddress,
-                            enabled: !_backupBusy,
-                            decoration: InputDecoration(
-                              hintText: _t('backup_email_hint'),
-                              border: const OutlineInputBorder(),
-                              isDense: true,
-                            ),
-                          ),
-                        ),
-                        ListTile(
-                          enabled: !_backupBusy,
-                          leading: Icon(Icons.email_outlined,
-                              color: Theme.of(context).colorScheme.primary),
-                          title: Text(_t('backup_login_email'), style: _titleStyle),
-                          subtitle: Text(_t('backup_login_email_hint'), style: _subStyle),
-                          onTap: _signInWithEmail,
-                        ),
-                        const Divider(height: 1),
-                        // Sign in with Google
-                        ListTile(
-                          enabled: !_backupBusy,
-                          leading: Icon(Icons.g_mobiledata_rounded,
-                              color: Theme.of(context).colorScheme.primary),
-                          title: Text(_t('backup_login_google'), style: _titleStyle),
-                          subtitle: Text(_t('backup_login_google_hint'), style: _subStyle),
-                          onTap: _signInWithGoogle,
-                        ),
-                        if (_googleEmail != null) ...[
-                          const Divider(height: 1),
-                          ListTile(
-                            enabled: !_backupBusy,
-                            leading: Icon(Icons.logout_rounded,
-                                color: Theme.of(context).colorScheme.error),
-                            title: Text(_t('backup_logout'), style: _titleStyle),
-                            onTap: _logOut,
-                          ),
-                        ],
-                        const Divider(height: 1),
-                        // Auto sync
-                        SwitchListTile.adaptive(
-                          value: _autoSync,
-                          onChanged: _backupBusy
-                              ? null
-                              : (v) => _setAutoSync(v),
-                          title: Text(_t('backup_auto_sync'), style: _titleStyle),
-                          subtitle: Text(
-                            _t('backup_auto_sync_hint'),
-                            style: _subStyle,
-                          ),
-                        ),
-                        if (!_autoSync) ...[
-                          const Divider(height: 1),
-                          ListTile(
-                            enabled: !_backupBusy,
-                            leading: Icon(Icons.sync_rounded,
-                                color: Theme.of(context).colorScheme.primary),
-                            title: Text(_t('backup_sync_now'), style: _titleStyle),
-                            subtitle: Text(_t('backup_sync_now_hint'), style: _subStyle),
-                            onTap: _syncNow,
-                          ),
-                        ],
-                        const Divider(height: 1),
-                        ListTile(
-                          enabled: !_backupBusy,
-                          leading: Icon(Icons.save_alt_rounded,
-                              color: Theme.of(context).colorScheme.primary),
-                          title: Text(_t('backup_local_now'), style: _titleStyle),
-                          subtitle: Text(_t('backup_local_hint'), style: _subStyle),
-                          onTap: _backupLocal,
-                        ),
-                        const Divider(height: 1),
-                        ListTile(
-                          enabled: !_backupBusy,
-                          leading: Icon(Icons.restore_rounded,
-                              color: Theme.of(context).colorScheme.primary),
-                          title: Text(_t('backup_restore_local'), style: _titleStyle),
-                          onTap: _restoreLocal,
-                        ),
-                        const Divider(height: 1),
-                        ListTile(
-                          enabled: !_backupBusy,
-                          leading: Icon(Icons.cloud_download_rounded,
-                              color: Theme.of(context).colorScheme.primary),
-                          title: Text(_t('backup_restore_drive'), style: _titleStyle),
-                          onTap: _restoreDrive,
-                        ),
-                      ],
+                      ),
                     ),
-
-                    // ── About ──
-                    _group(
-                      id: 'about',
-                      titleKey: 'settings_cat_about',
-                      icon: Icons.info_outline_rounded,
-                      children: [
-                        ListTile(
-                          title: Text(
-                            _t('settings_version'),
-                            style: _titleStyle,
-                          ),
-                          trailing: Text(
-                            MenuSettingsPage.appVersion,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: cs.primary,
-                              fontSize: context.m * 0.95,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    SizedBox(height: context.vS),
                   ],
+                ),
                 ),
               ),
               AppearanceApplyBar(
@@ -1267,15 +984,15 @@ class _LanguageTile extends StatelessWidget {
         child: Container(
           padding: EdgeInsets.symmetric(
             horizontal: context.hM,
-            vertical: context.vS * 1.1,
+            vertical: context.vS * 0.7,
           ),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: selected
                   ? cs.primary.withValues(alpha: 0.85)
                   : cs.onSurface.withValues(alpha: 0.08),
-              width: selected ? 1.6 : 1,
+              width: selected ? 1.5 : 1,
             ),
           ),
           child: Row(

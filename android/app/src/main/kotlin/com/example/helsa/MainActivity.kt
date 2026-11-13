@@ -82,44 +82,50 @@ class MainActivity : FlutterActivity() {
         val pkg = applicationContext.packageName
 
         return try {
-            // 1) Disable every alias (HyperOS rejects dual LAUNCHER).
-            for ((_, fqName) in aliases) {
-                pm.setComponentEnabledSetting(
-                    ComponentName(pkg, fqName),
-                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                    PackageManager.DONT_KILL_APP,
-                )
-            }
-            // 2) Enable target
             val enableComponent = ComponentName(pkg, target)
+            val current = pm.getComponentEnabledSetting(enableComponent)
+            val alreadyOn =
+                current == PackageManager.COMPONENT_ENABLED_STATE_ENABLED ||
+                    (current == PackageManager.COMPONENT_ENABLED_STATE_DEFAULT &&
+                        target == aliases["mint"])
+
+            // Already the active launcher icon — do nothing (avoids process kill).
+            if (alreadyOn) {
+                var othersOff = true
+                for ((_, fqName) in aliases) {
+                    if (fqName == target) continue
+                    val st = pm.getComponentEnabledSetting(ComponentName(pkg, fqName))
+                    if (st == PackageManager.COMPONENT_ENABLED_STATE_ENABLED) {
+                        othersOff = false
+                        break
+                    }
+                }
+                if (othersOff) {
+                    Log.d(TAG, "setLauncherIcon skip — already active key=$key")
+                    return true
+                }
+            }
+
+            // CRITICAL: enable target FIRST so at least one LAUNCHER component
+            // stays enabled. Disabling all first kills the process on many OEMs
+            // (despite DONT_KILL_APP), which aborts theme save and reverts icon.
             pm.setComponentEnabledSetting(
                 enableComponent,
                 PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
                 PackageManager.DONT_KILL_APP,
             )
 
-            // 3) Nudge launchers (stock + MIUI/HyperOS) to drop icon cache ASAP
-            nudgeLauncherRefresh(pkg, enableComponent)
+            // Then disable the other aliases only.
+            for ((_, fqName) in aliases) {
+                if (fqName == target) continue
+                pm.setComponentEnabledSetting(
+                    ComponentName(pkg, fqName),
+                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                    PackageManager.DONT_KILL_APP,
+                )
+            }
 
-            // 4) Second pulse a moment later — HyperOS often applies on the second toggle
-            Handler(Looper.getMainLooper()).postDelayed({
-                try {
-                    pm.setComponentEnabledSetting(
-                        enableComponent,
-                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                        PackageManager.DONT_KILL_APP,
-                    )
-                    pm.setComponentEnabledSetting(
-                        enableComponent,
-                        PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                        PackageManager.DONT_KILL_APP,
-                    )
-                    nudgeLauncherRefresh(pkg, enableComponent)
-                    Log.d(TAG, "setLauncherIcon pulse2 done target=$target")
-                } catch (e: Exception) {
-                    Log.w(TAG, "setLauncherIcon pulse2 failed", e)
-                }
-            }, 120)
+            nudgeLauncherRefresh(pkg, enableComponent)
 
             val state = pm.getComponentEnabledSetting(enableComponent)
             val ok = state == PackageManager.COMPONENT_ENABLED_STATE_ENABLED ||
