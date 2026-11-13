@@ -1,6 +1,14 @@
 // مسیر: android/build.gradle.kts
 allprojects {
     repositories {
+        // China mirrors first; keep official repositories as fallbacks.
+        maven {
+            url = uri("https://maven.aliyun.com/repository/google")
+        }
+        maven {
+            url = uri("https://maven.aliyun.com/repository/public")
+        }
+
         google()
         mavenCentral()
     }
